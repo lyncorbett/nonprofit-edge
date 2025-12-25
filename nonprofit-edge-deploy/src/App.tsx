@@ -171,6 +171,17 @@ function App() {
       />
     )
   }
+    // Resource Library page
+  if (currentPage === 'library') {
+    return (
+      <ResourceLibrary
+        user={userData}
+        organization={userData.organization}
+        onNavigate={setCurrentPage}
+        onLogout={handleLogout}
+      />
+    )
+  }
   // Main Dashboard
   return (
     <Dashboard
