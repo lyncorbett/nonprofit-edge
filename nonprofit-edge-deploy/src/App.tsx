@@ -3,6 +3,7 @@ import { supabase, fetchUserWithOrg, fetchMonthlyUsage, fetchTeamMembers, trackD
 import Dashboard from './components/Dashboard'
 import TeamAdmin from './components/TeamAdmin'
 import Login from './components/Login'
+import ResourceLibrary from './components/ResourceLibrary'
 import AdminDashboard from './components/AdminDashboard'
 // ============================================
 // THE NONPROFIT EDGE - MAIN APP
