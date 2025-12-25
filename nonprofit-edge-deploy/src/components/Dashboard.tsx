@@ -207,7 +207,15 @@ const Dashboard: React.FC<DashboardProps> = ({
             </a>
           </div>
         )}
-
+        {/* Platform Admin (Owner only) */}
+        {user.email === 'lyn@thepivotalgroup.com' && (
+          <div className="py-3 border-t border-gray-100">
+            <a onClick={() => onNavigate('admin')} className="flex items-center gap-3 px-4 py-2.5 cursor-pointer text-gray-600 hover:bg-gray-50 transition-all">
+              <span className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center text-sm">🔐</span>
+              <span className="flex-1 text-sm font-medium text-red-600">Platform Admin</span>
+            </a>
+          </div>
+        )}
         {/* User */}
         <div className="px-4 py-4 border-t border-gray-100">
           <div className="flex items-center gap-3">
