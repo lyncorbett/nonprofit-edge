@@ -3,7 +3,7 @@ import { supabase, fetchUserWithOrg, fetchMonthlyUsage, fetchTeamMembers, trackD
 import Dashboard from './components/Dashboard'
 import TeamAdmin from './components/TeamAdmin'
 import Login from './components/Login'
-
+import AdminDashboard from './components/AdminDashboard'
 // ============================================
 // THE NONPROFIT EDGE - MAIN APP
 // ============================================
@@ -162,7 +162,14 @@ function App() {
       />
     )
   }
-
+  // Platform Admin page
+  if (currentPage === 'admin') {
+    return (
+      <AdminDashboard
+        onBack={() => setCurrentPage('dashboard')}
+      />
+    )
+  }
   // Main Dashboard
   return (
     <Dashboard
