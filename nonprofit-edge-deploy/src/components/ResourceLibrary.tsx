@@ -74,10 +74,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
             ].map(item => (
               <a
                 key={item.id}
-               onClick={() => {
-  setActiveNav(item.id)
-  onNavigate(item.id)
-}}
+              onClick={() => onNavigate(item.id)}
                 className={`flex items-center gap-3 px-5 py-2.5 cursor-pointer transition-all border-l-3 ${
                   item.active 
                     ? 'bg-[#e6f9fa] text-[#0097A9] border-l-[3px] border-[#0097A9] font-semibold' 
