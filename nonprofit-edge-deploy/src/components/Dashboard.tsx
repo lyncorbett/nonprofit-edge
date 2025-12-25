@@ -119,7 +119,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Logo */}
         {/* Logo */}
         <div className="px-4 py-4 border-b border-gray-100">
-          <img src="/logo.svg" alt="The Nonprofit Edge" className="h-16 w-auto" />
+          <img src="/logo.svg" alt="The Nonprofit Edge" className="h-20 w-auto" />
         </div>
 
         {/* Main Nav */}
@@ -133,7 +133,10 @@ const Dashboard: React.FC<DashboardProps> = ({
             ].map(item => (
               <a
                 key={item.id}
-                onClick={() => setActiveNav(item.id)}
+                onClick={() => {
+  setActiveNav(item.id)
+  onNavigate(item.id)
+}}
                 className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-all ${
                   activeNav === item.id ? 'text-[#00a0b0] font-semibold' : 'text-gray-600 hover:bg-gray-50'
                 }`}
