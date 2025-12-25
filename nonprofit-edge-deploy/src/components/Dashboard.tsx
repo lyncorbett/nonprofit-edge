@@ -117,18 +117,9 @@ const Dashboard: React.FC<DashboardProps> = ({
       {/* Left Sidebar */}
       <aside className="w-52 bg-white border-r border-gray-200 flex flex-col fixed h-screen overflow-y-auto">
         {/* Logo */}
+        {/* Logo */}
         <div className="px-4 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-2">
-            <svg width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-              <path d="M32 4 C16.5 4 4 16.5 4 32 C4 47.5 16.5 60 32 60 C40 60 47 56.5 52 51" fill="none" stroke="#1a365d" strokeWidth="6" strokeLinecap="round"/>
-              <path d="M28 32 L44 16 L44 26 L56 26 L56 38 L44 38 L44 48 Z" fill="#00a0b0"/>
-            </svg>
-            <div className="leading-none">
-              <div className="text-[10px] font-extrabold text-[#1a365d]">THE</div>
-              <div className="text-xs font-extrabold text-[#00a0b0]">NONPROFIT</div>
-              <div className="text-sm font-extrabold text-[#1a365d]">EDGE</div>
-            </div>
-          </div>
+          <img src="/logo.svg" alt="The Nonprofit Edge" className="h-10" />
         </div>
 
         {/* Main Nav */}
