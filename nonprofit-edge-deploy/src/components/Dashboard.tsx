@@ -119,7 +119,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Logo */}
         {/* Logo */}
         <div className="px-4 py-4 border-b border-gray-100">
-          <img src="/logo.svg" alt="The Nonprofit Edge" className="h-14 w-auto" />
+          <img src="/logo.svg" alt="The Nonprofit Edge" className="h-16 w-auto" />
         </div>
 
         {/* Main Nav */}
