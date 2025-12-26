@@ -77,7 +77,7 @@ function App() {
           *,
           organization:organizations(*)
         `)
-        .eq('id', userId)
+       .eq('auth_user_id', userId)
         .single()
 
       if (userError) throw userError
