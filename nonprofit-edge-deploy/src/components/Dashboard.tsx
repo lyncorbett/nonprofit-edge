@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react'
 
 // ============================================
@@ -201,12 +202,20 @@ const Dashboard: React.FC<DashboardProps> = ({
             </a>
           </div>
         )}
-        {/* Platform Admin (Owner only) */}
+        {/* Platform Admin & Owner Tools (Lyn only) */}
         {user.email === 'lyn@thepivotalgroup.com' && (
           <div className="py-3 border-t border-gray-100">
             <a onClick={() => onNavigate('admin')} className="flex items-center gap-3 px-4 py-2.5 cursor-pointer text-gray-600 hover:bg-gray-50 transition-all">
               <span className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center text-sm">🔐</span>
               <span className="flex-1 text-sm font-medium text-red-600">Platform Admin</span>
+            </a>
+            <a onClick={() => onNavigate('content-manager')} className="flex items-center gap-3 px-4 py-2.5 cursor-pointer text-gray-600 hover:bg-gray-50 transition-all">
+              <span className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-sm">📁</span>
+              <span className="flex-1 text-sm font-medium text-blue-600">Content Manager</span>
+            </a>
+            <a onClick={() => onNavigate('owner-dashboard')} className="flex items-center gap-3 px-4 py-2.5 cursor-pointer text-gray-600 hover:bg-gray-50 transition-all">
+              <span className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center text-sm">💰</span>
+              <span className="flex-1 text-sm font-medium text-green-600">Owner Dashboard</span>
             </a>
           </div>
         )}
