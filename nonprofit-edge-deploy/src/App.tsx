@@ -5,6 +5,8 @@ import TeamAdmin from './components/TeamAdmin'
 import Login from './components/Login'
 import ResourceLibrary from './components/ResourceLibrary'
 import AdminDashboard from './components/AdminDashboard'
+import ContentManager from './components/ContentManager'
+import PlatformOwnerDashboard from './components/PlatformOwnerDashboard'
 // ============================================
 // THE NONPROFIT EDGE - MAIN APP
 // ============================================
@@ -163,6 +165,7 @@ function App() {
       />
     )
   }
+
   // Platform Admin page
   if (currentPage === 'admin') {
     return (
@@ -171,7 +174,30 @@ function App() {
       />
     )
   }
-    // Resource Library page
+
+  // Content Manager (for admin team)
+  if (currentPage === 'content-manager') {
+    return (
+      <ContentManager
+        supabase={supabase}
+        onNavigate={setCurrentPage}
+        onLogout={handleLogout}
+      />
+    )
+  }
+
+  // Owner Dashboard (for Lyn only - financial metrics)
+  if (currentPage === 'owner-dashboard') {
+    return (
+      <PlatformOwnerDashboard
+        supabase={supabase}
+        onNavigate={setCurrentPage}
+        onLogout={handleLogout}
+      />
+    )
+  }
+
+  // Resource Library page
   if (currentPage === 'library') {
     return (
       <ResourceLibrary
@@ -182,6 +208,7 @@ function App() {
       />
     )
   }
+
   // Main Dashboard
   return (
     <Dashboard
