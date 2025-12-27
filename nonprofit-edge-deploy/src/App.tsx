@@ -1,10 +1,19 @@
+
 /**
  * THE NONPROFIT EDGE - App.tsx
  * Updated with Role-Based Access Routes
  * 
- * New routes added:
+ * Routes:
+ *   - dashboard → Dashboard (all members)
+ *   - library → ResourceLibrary (all members)
+ *   - events → EventsCalendar (all members)
+ *   - team → TeamAdmin (org admins)
+ *   - admin → AdminDashboard (platform admin)
  *   - content-manager → ContentManager (admin + owner)
  *   - owner-dashboard → PlatformOwnerDashboard (owner only)
+ *   - enhanced-owner → EnhancedOwnerDashboard (owner only)
+ *   - marketing → MarketingDashboard (owner only)
+ *   - link-manager → LinkManager (owner only)
  *   - team-access → TeamAccessManager (owner only)
  */
 
@@ -19,10 +28,10 @@ import ContentManager from './components/ContentManager'
 import PlatformOwnerDashboard from './components/PlatformOwnerDashboard'
 import TeamAccessManager from './components/TeamAccessManager'
 import ResourceLibrary from './components/ResourceLibrary'
-// Import your other tool components as needed
-// import BoardAssessment from './components/BoardAssessment'
-// import StrategicCheckup from './components/StrategicCheckup'
-// etc.
+import EventsCalendar from './components/EventsCalendar'
+import MarketingDashboard from './components/MarketingDashboard'
+import LinkManager from './components/LinkManager'
+import EnhancedOwnerDashboard from './components/EnhancedOwnerDashboard'
 
 // Supabase client
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -246,6 +255,39 @@ function App() {
     )
   }
 
+  // Enhanced Owner Dashboard (for Lyn only - GHL integration)
+  if (currentPage === 'enhanced-owner') {
+    return (
+      <EnhancedOwnerDashboard
+        user={userData}
+        supabase={supabase}
+        onNavigate={setCurrentPage}
+      />
+    )
+  }
+
+  // Marketing Dashboard (for Lyn only - ad performance)
+  if (currentPage === 'marketing') {
+    return (
+      <MarketingDashboard
+        user={userData}
+        onNavigate={setCurrentPage}
+        onLogout={handleLogout}
+      />
+    )
+  }
+
+  // Link Manager (for Lyn only - manage all links)
+  if (currentPage === 'link-manager') {
+    return (
+      <LinkManager
+        user={userData}
+        supabase={supabase}
+        onNavigate={setCurrentPage}
+      />
+    )
+  }
+
   // Team Access Manager (for Lyn only - manage who has admin access)
   if (currentPage === 'team-access') {
     return (
@@ -263,6 +305,17 @@ function App() {
       <ResourceLibrary
         user={userData}
         organization={userData.organization}
+        onNavigate={setCurrentPage}
+        onLogout={handleLogout}
+      />
+    )
+  }
+
+  // Events Calendar page
+  if (currentPage === 'events') {
+    return (
+      <EventsCalendar
+        user={userData}
         onNavigate={setCurrentPage}
         onLogout={handleLogout}
       />
