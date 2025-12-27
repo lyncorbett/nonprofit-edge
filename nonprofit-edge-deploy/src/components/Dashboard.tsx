@@ -3,7 +3,7 @@
  * Updated with new design: image-based tool cards, modern layout
  * 
  * Roles:
- *   owner  → Sees: Content Manager + Platform Admin + Owner Dashboard
+ *   owner  → Sees: Content Manager + Platform Admin + Owner Dashboard + Marketing + Links
  *   admin  → Sees: Content Manager only
  *   member → Sees: Neither (regular dashboard only)
  */
@@ -85,7 +85,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       name: 'CEO Evaluation',
       status: 'Completed',
       statusColor: '#16a34a',
-      image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=200&fit=crop',
+      image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=200&fit=crop&crop=top',
       route: 'ceo-evaluation'
     },
     {
@@ -209,7 +209,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               onClick={() => onNavigate('events')}
               className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 cursor-pointer"
             >
-              Events
+              📅 Events
             </a>
           </nav>
         </div>
@@ -319,21 +319,47 @@ const Dashboard: React.FC<DashboardProps> = ({
                 className="block px-4 py-2 text-sm hover:bg-blue-50 cursor-pointer"
                 style={{ color: NAVY }}
               >
-                Content Manager
+                📝 Content Manager
               </a>
               <a 
                 onClick={() => onNavigate('admin')}
                 className="block px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 cursor-pointer"
               >
-                Platform Admin
+                ⚙️ Platform Admin
               </a>
               {adminAccess.isOwner && (
-                <a 
-                  onClick={() => onNavigate('owner-dashboard')}
-                  className="block px-4 py-2 text-sm text-green-600 hover:bg-green-50 cursor-pointer"
-                >
-                  Owner Dashboard
-                </a>
+                <>
+                  <a 
+                    onClick={() => onNavigate('owner-dashboard')}
+                    className="block px-4 py-2 text-sm text-green-600 hover:bg-green-50 cursor-pointer"
+                  >
+                    💰 Owner Dashboard
+                  </a>
+                  <a 
+                    onClick={() => onNavigate('enhanced-owner')}
+                    className="block px-4 py-2 text-sm text-emerald-600 hover:bg-emerald-50 cursor-pointer"
+                  >
+                    📊 Analytics + GHL
+                  </a>
+                  <a 
+                    onClick={() => onNavigate('marketing')}
+                    className="block px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 cursor-pointer"
+                  >
+                    📣 Marketing
+                  </a>
+                  <a 
+                    onClick={() => onNavigate('link-manager')}
+                    className="block px-4 py-2 text-sm text-violet-600 hover:bg-violet-50 cursor-pointer"
+                  >
+                    🔗 Link Manager
+                  </a>
+                  <a 
+                    onClick={() => onNavigate('team-access')}
+                    className="block px-4 py-2 text-sm text-pink-600 hover:bg-pink-50 cursor-pointer"
+                  >
+                    👥 Team Access
+                  </a>
+                </>
               )}
             </nav>
           </div>
@@ -355,6 +381,12 @@ const Dashboard: React.FC<DashboardProps> = ({
               <div className="text-[10px] text-gray-400">{tierInfo.name}</div>
             </div>
           </div>
+          <button
+            onClick={onLogout}
+            className="mt-3 w-full text-xs text-gray-500 hover:text-gray-700 py-1"
+          >
+            Sign out
+          </button>
         </div>
       </aside>
 
@@ -504,7 +536,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       style={{ background: NAVY }}
                     >
                       <div className="text-xl font-extrabold text-white leading-none">12</div>
-                      <div className="text-[10px] font-semibold text-white/70 uppercase">DEC</div>
+                      <div className="text-[10px] font-semibold text-white/70 uppercase">JAN</div>
                     </div>
                   </div>
                   <div className="flex-1">
@@ -530,7 +562,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       style={{ background: NAVY }}
                     >
                       <div className="text-xl font-extrabold text-white leading-none">15</div>
-                      <div className="text-[10px] font-semibold text-white/70 uppercase">DEC</div>
+                      <div className="text-[10px] font-semibold text-white/70 uppercase">JAN</div>
                     </div>
                   </div>
                   <div className="flex-1">
