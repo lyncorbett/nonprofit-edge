@@ -15,12 +15,12 @@ interface EventsCalendarProps {
     id: string
     full_name: string
     email: string
-    role: 'owner' | 'admin' | 'member'
+    role?: 'owner' | 'admin' | 'member'
   }
-  organization: {
-    id: string
-    name: string
-    tier: 'starter' | 'professional' | 'enterprise'
+  organization?: {
+    id?: string
+    name?: string
+    tier?: 'starter' | 'professional' | 'enterprise'
   }
   onNavigate: (page: string) => void
   onLogout: () => void
@@ -161,12 +161,13 @@ const EventsCalendar: React.FC<EventsCalendarProps> = ({
   }
 
   const getTierName = () => {
+    const tier = organization?.tier || 'professional'
     const tiers: Record<string, string> = {
       starter: 'Essential',
       professional: 'Professional',
       enterprise: 'Premium'
     }
-    return tiers[organization.tier] || 'Professional'
+    return tiers[tier] || 'Professional'
   }
 
   return (
