@@ -430,7 +430,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                           : 'border-gray-200 hover:border-[#00a0b0]'
                       }`}
                     >
-                      <div className="h-36 overflow-hidden relative bg-gray-100">
+                      <div className="h-40 overflow-hidden relative bg-gray-100">
                         <img 
                           src={tool.image} 
                           alt={tool.name}
