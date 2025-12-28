@@ -210,7 +210,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               onClick={() => onNavigate('events')}
               className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 cursor-pointer"
             >
-              📅 Events
+              Events
             </a>
           </nav>
         </div>
@@ -317,48 +317,47 @@ const Dashboard: React.FC<DashboardProps> = ({
             <nav>
               <a 
                 onClick={() => onNavigate('content-manager')}
-                className="block px-4 py-2 text-sm hover:bg-blue-50 cursor-pointer"
-                style={{ color: NAVY }}
+                className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 cursor-pointer"
               >
-                📝 Content Manager
+                Content Manager
               </a>
               <a 
                 onClick={() => onNavigate('admin')}
-                className="block px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 cursor-pointer"
+                className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 cursor-pointer"
               >
-                ⚙️ Platform Admin
+                Platform Admin
               </a>
               {adminAccess.isOwner && (
                 <>
                   <a 
                     onClick={() => onNavigate('owner-dashboard')}
-                    className="block px-4 py-2 text-sm text-green-600 hover:bg-green-50 cursor-pointer"
+                    className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 cursor-pointer"
                   >
-                    💰 Owner Dashboard
+                    Owner Dashboard
                   </a>
                   <a 
                     onClick={() => onNavigate('enhanced-owner')}
-                    className="block px-4 py-2 text-sm text-emerald-600 hover:bg-emerald-50 cursor-pointer"
+                    className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 cursor-pointer"
                   >
-                    📊 Analytics + GHL
+                    Analytics + GHL
                   </a>
                   <a 
                     onClick={() => onNavigate('marketing')}
-                    className="block px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 cursor-pointer"
+                    className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 cursor-pointer"
                   >
-                    📣 Marketing
+                    Marketing
                   </a>
                   <a 
                     onClick={() => onNavigate('link-manager')}
-                    className="block px-4 py-2 text-sm text-violet-600 hover:bg-violet-50 cursor-pointer"
+                    className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 cursor-pointer"
                   >
-                    🔗 Link Manager
+                    Link Manager
                   </a>
                   <a 
                     onClick={() => onNavigate('team-access')}
-                    className="block px-4 py-2 text-sm text-pink-600 hover:bg-pink-50 cursor-pointer"
+                    className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 cursor-pointer"
                   >
-                    👥 Team Access
+                    Team Access
                   </a>
                 </>
               )}
