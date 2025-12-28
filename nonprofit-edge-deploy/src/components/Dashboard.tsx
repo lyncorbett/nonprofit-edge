@@ -62,14 +62,14 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [loading, setLoading] = useState(true);
 
   // Tool data with carefully selected professional images
-  // Using wider crop to show more of each image
+  // Using larger source images (1200x600) so more content shows when cropped
   const tools: Tool[] = [
     {
       id: 'board-assessment',
       name: 'Board Assessment',
       status: 'In Process',
       statusColor: TEAL,
-      image: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=400&h=200&fit=crop',
+      image: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=1200&h=600&fit=crop',
       route: 'board-assessment',
       isActive: true
     },
@@ -78,7 +78,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       name: 'Strategic Plan Check-Up',
       status: 'Score: 92',
       statusColor: '#6b7280',
-      image: 'https://images.unsplash.com/photo-1542626991-cbc4e32524cc?w=400&h=200&fit=crop',
+      image: 'https://images.unsplash.com/photo-1542626991-cbc4e32524cc?w=1200&h=600&fit=crop',
       route: 'strategic-checkup'
     },
     {
@@ -86,7 +86,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       name: 'CEO Evaluation',
       status: 'Completed',
       statusColor: '#16a34a',
-      image: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=400&h=200&fit=crop',
+      image: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=1200&h=600&fit=crop',
       route: 'ceo-evaluation'
     },
     {
@@ -94,7 +94,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       name: 'Scenario Planner',
       status: 'Ready',
       statusColor: '#6b7280',
-      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=200&fit=crop',
+      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&h=600&fit=crop',
       route: 'scenario-planner'
     },
     {
@@ -102,7 +102,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       name: 'Template Vault',
       status: '147 templates',
       statusColor: '#6b7280',
-      image: 'https://images.unsplash.com/photo-1568667256549-094345857637?w=400&h=200&fit=crop',
+      image: 'https://images.unsplash.com/photo-1568667256549-094345857637?w=1200&h=600&fit=crop',
       route: 'templates'
     },
     {
@@ -110,7 +110,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       name: 'Grant Review',
       status: 'Ready',
       statusColor: '#6b7280',
-      image: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=400&h=200&fit=crop',
+      image: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1200&h=600&fit=crop',
       route: 'grant-review'
     }
   ];
@@ -430,11 +430,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                           : 'border-gray-200 hover:border-[#00a0b0]'
                       }`}
                     >
-                      <div className="h-24 overflow-hidden relative bg-gray-50">
+                      <div className="h-24 overflow-hidden relative bg-gray-100">
                         <img 
                           src={tool.image} 
                           alt={tool.name}
-                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
                       <div 
