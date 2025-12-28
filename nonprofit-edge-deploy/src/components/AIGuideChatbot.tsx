@@ -41,7 +41,7 @@ const AIGuideChatbot: React.FC<AIGuideChatbotProps> = ({
   const [showNotification, setShowNotification] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const firstName = user.full_name?.split(' ')[0] || 'there'
+  const firstName = user?.full_name?.split(' ')[0] || 'there'
 
   // Generate welcome message based on context
   const getWelcomeMessage = (): ChatMessage => {
@@ -67,7 +67,7 @@ const AIGuideChatbot: React.FC<AIGuideChatbotProps> = ({
       quickActions: [
         { label: 'Browse Templates', action: 'templates' },
         { label: 'Start an Assessment', action: 'board-assessment' },
-        { label: 'Ask the Professor', action: 'professor' }
+        { label: 'View Events', action: 'events' }
       ]
     }
   }
@@ -91,11 +91,11 @@ const AIGuideChatbot: React.FC<AIGuideChatbotProps> = ({
         { role: 'user', content: 'Show me something new' } as ChatMessage,
         { 
           role: 'assistant', 
-          content: "Here are some things you might find valuable:\n\n• **Strategic Plan Check-Up** - See how your plan scores against best practices\n• **Template Vault** - 147+ ready-to-use nonprofit templates\n• **Ask the Professor** - Get AI coaching on your toughest challenges",
+          content: "Here are some things you might find valuable:\n\n• **Strategic Plan Check-Up** - See how your plan scores against best practices\n• **Template Vault** - 147+ ready-to-use nonprofit templates\n• **Upcoming Events** - Live webinars and Q&A sessions",
           quickActions: [
             { label: 'Strategic Check-Up', action: 'strategic-checkup' },
             { label: 'Templates', action: 'templates' },
-            { label: 'Ask the Professor', action: 'professor' }
+            { label: 'Events', action: 'events' }
           ]
         } as ChatMessage
       ])
@@ -152,13 +152,6 @@ const AIGuideChatbot: React.FC<AIGuideChatbotProps> = ({
         quickActions: [{ label: 'Start CEO Evaluation', action: 'ceo-evaluation' }]
       }
     }
-    if (lower.includes('professor') || lower.includes('coaching') || lower.includes('advice') || lower.includes('help')) {
-      return {
-        role: 'assistant',
-        content: "Ask the Professor is your AI coaching companion - trained on nonprofit best practices. Ask about board governance, fundraising, strategic planning, and more!",
-        quickActions: [{ label: 'Ask the Professor', action: 'professor' }]
-      }
-    }
     if (lower.includes('event') || lower.includes('webinar') || lower.includes('workshop')) {
       return {
         role: 'assistant',
@@ -180,14 +173,38 @@ const AIGuideChatbot: React.FC<AIGuideChatbotProps> = ({
         quickActions: [{ label: 'Manage Team', action: 'team' }]
       }
     }
+    if (lower.includes('dashboard') || lower.includes('home')) {
+      return {
+        role: 'assistant',
+        content: "I'll take you back to the Dashboard.",
+        quickActions: [{ label: 'Go to Dashboard', action: 'dashboard' }]
+      }
+    }
+    if (lower.includes('hello') || lower.includes('hi') || lower.includes('hey')) {
+      return {
+        role: 'assistant',
+        content: `Hello! How can I help you today, ${firstName}?`,
+        quickActions: [
+          { label: 'Browse Templates', action: 'templates' },
+          { label: 'View Events', action: 'events' }
+        ]
+      }
+    }
+    if (lower.includes('thank')) {
+      return {
+        role: 'assistant',
+        content: "You're welcome! Let me know if you need anything else.",
+        quickActions: []
+      }
+    }
 
     // Default helpful response
     return {
       role: 'assistant',
-      content: "I'm here to help! You can ask me about any of our tools, or I can help you navigate to templates, assessments, or Ask the Professor.",
+      content: "I can help you navigate to any of our tools or resources. Try asking about templates, assessments, events, or the resource library!",
       quickActions: [
         { label: 'Browse Tools', action: 'dashboard' },
-        { label: 'Ask the Professor', action: 'professor' }
+        { label: 'View Events', action: 'events' }
       ]
     }
   }
@@ -259,7 +276,7 @@ const AIGuideChatbot: React.FC<AIGuideChatbotProps> = ({
                 </div>
                 
                 {/* Quick Actions */}
-                {msg.quickActions && msg.role === 'assistant' && (
+                {msg.quickActions && msg.quickActions.length > 0 && msg.role === 'assistant' && (
                   <div className="flex flex-wrap gap-2 mt-2 ml-1">
                     {msg.quickActions.map((action, actionIdx) => (
                       <button
@@ -303,7 +320,7 @@ const AIGuideChatbot: React.FC<AIGuideChatbotProps> = ({
         <div className="relative">
           {/* Notification dot */}
           {showNotification && (
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center animate-pulse">
               <span className="text-white text-xs">1</span>
             </div>
           )}
