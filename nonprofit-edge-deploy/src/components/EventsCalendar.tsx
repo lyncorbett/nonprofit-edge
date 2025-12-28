@@ -15,12 +15,12 @@ interface EventsCalendarProps {
     id: string
     full_name: string
     email: string
-    role?: 'owner' | 'admin' | 'member'
+    role: 'owner' | 'admin' | 'member'
   }
-  organization?: {
-    id?: string
-    name?: string
-    tier?: 'starter' | 'professional' | 'enterprise'
+  organization: {
+    id: string
+    name: string
+    tier: 'starter' | 'professional' | 'enterprise'
   }
   onNavigate: (page: string) => void
   onLogout: () => void
@@ -32,13 +32,13 @@ interface Event {
   description: string
   date: string
   month: string
+  monthYear: string
   day: string
   time: string
-  type: 'webinar' | 'workshop' | 'qa' | 'office-hours'
+  type: 'webinar' | 'workshop' | 'qa'
   typeLabel: string
   typeColor: string
   typeBg: string
-  image: string
   host: string
   registered: number
   isRegistered?: boolean
@@ -51,6 +51,7 @@ const EventsCalendar: React.FC<EventsCalendarProps> = ({
   onLogout,
 }) => {
   const initials = user.full_name.split(' ').map(n => n[0]).join('').toUpperCase()
+  const [activeFilter, setActiveFilter] = useState('all')
 
   const [events, setEvents] = useState<Event[]>([
     {
@@ -59,13 +60,13 @@ const EventsCalendar: React.FC<EventsCalendarProps> = ({
       description: 'Learn practical strategies for transforming passive board members into engaged champions of your mission.',
       date: '2025-01-12',
       month: 'JAN',
+      monthYear: 'January 2025',
       day: '12',
       time: '12:00 PM PT',
       type: 'webinar',
       typeLabel: 'WEBINAR',
       typeColor: TEAL,
       typeBg: TEAL_LIGHT,
-      image: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800&h=400&fit=crop',
       host: 'Dr. Lyn Corbett',
       registered: 47,
       isRegistered: true
@@ -76,13 +77,13 @@ const EventsCalendar: React.FC<EventsCalendarProps> = ({
       description: 'Open discussion for founding members. Bring your questions about the platform or any organizational challenges.',
       date: '2025-01-15',
       month: 'JAN',
+      monthYear: 'January 2025',
       day: '15',
       time: '10:00 AM PT',
       type: 'qa',
       typeLabel: 'Q&A SESSION',
       typeColor: '#6366f1',
       typeBg: '#eef2ff',
-      image: 'https://images.unsplash.com/photo-1531498860502-7c67cf02f657?w=800&h=400&fit=crop',
       host: 'Dr. Lyn Corbett',
       registered: 23
     },
@@ -92,63 +93,63 @@ const EventsCalendar: React.FC<EventsCalendarProps> = ({
       description: 'A hands-on workshop to help you craft a compelling strategic vision for the year ahead.',
       date: '2025-01-22',
       month: 'JAN',
+      monthYear: 'January 2025',
       day: '22',
       time: '1:00 PM PT',
       type: 'workshop',
       typeLabel: 'WORKSHOP',
       typeColor: '#f59e0b',
       typeBg: '#fef3c7',
-      image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=400&fit=crop',
       host: 'Dr. Lyn Corbett',
       registered: 31
     },
     {
       id: '4',
-      title: 'Office Hours: Grant Writing & RFP Strategy',
-      description: 'Drop in for personalized feedback on your grant proposals or RFP responses.',
-      date: '2025-01-28',
-      month: 'JAN',
-      day: '28',
-      time: '2:00 PM PT',
-      type: 'office-hours',
-      typeLabel: 'OFFICE HOURS',
-      typeColor: '#10b981',
-      typeBg: '#d1fae5',
-      image: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&h=400&fit=crop',
-      host: 'Dr. Lyn Corbett',
-      registered: 12
-    },
-    {
-      id: '5',
       title: 'CEO Evaluation Best Practices',
       description: 'Learn how to design and implement fair, effective CEO evaluation processes.',
       date: '2025-02-05',
       month: 'FEB',
+      monthYear: 'February 2025',
       day: '5',
       time: '11:00 AM PT',
       type: 'webinar',
       typeLabel: 'WEBINAR',
       typeColor: TEAL,
       typeBg: TEAL_LIGHT,
-      image: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&h=400&fit=crop',
       host: 'Dr. Lyn Corbett',
       registered: 19
     },
     {
-      id: '6',
+      id: '5',
       title: 'Scenario Planning for Uncertain Times',
       description: 'Build resilience by learning to anticipate and prepare for multiple futures.',
       date: '2025-02-12',
       month: 'FEB',
+      monthYear: 'February 2025',
       day: '12',
       time: '12:00 PM PT',
       type: 'webinar',
       typeLabel: 'WEBINAR',
       typeColor: TEAL,
       typeBg: TEAL_LIGHT,
-      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=400&fit=crop',
       host: 'Dr. Lyn Corbett',
       registered: 28
+    },
+    {
+      id: '6',
+      title: 'Founding Members Q&A Session',
+      description: 'Monthly open discussion for founding members. Share wins, challenges, and get personalized guidance.',
+      date: '2025-02-19',
+      month: 'FEB',
+      monthYear: 'February 2025',
+      day: '19',
+      time: '10:00 AM PT',
+      type: 'qa',
+      typeLabel: 'Q&A SESSION',
+      typeColor: '#6366f1',
+      typeBg: '#eef2ff',
+      host: 'Dr. Lyn Corbett',
+      registered: 15
     }
   ])
 
@@ -161,14 +162,35 @@ const EventsCalendar: React.FC<EventsCalendarProps> = ({
   }
 
   const getTierName = () => {
-    const tier = organization?.tier || 'professional'
     const tiers: Record<string, string> = {
       starter: 'Essential',
       professional: 'Professional',
       enterprise: 'Premium'
     }
-    return tiers[tier] || 'Professional'
+    return tiers[organization.tier] || 'Professional'
   }
+
+  // Filter events
+  const filteredEvents = activeFilter === 'all' 
+    ? events 
+    : events.filter(e => e.type === activeFilter)
+
+  // Group events by month
+  const groupedEvents = filteredEvents.reduce((groups, event) => {
+    const month = event.monthYear
+    if (!groups[month]) {
+      groups[month] = []
+    }
+    groups[month].push(event)
+    return groups
+  }, {} as Record<string, Event[]>)
+
+  const filters = [
+    { id: 'all', label: 'All Events' },
+    { id: 'webinar', label: 'Webinars' },
+    { id: 'workshop', label: 'Workshops' },
+    { id: 'qa', label: 'Q&A Sessions' }
+  ]
 
   return (
     <div className="flex min-h-screen bg-gray-50 font-sans">
@@ -329,113 +351,127 @@ const EventsCalendar: React.FC<EventsCalendarProps> = ({
 
       {/* Main Content */}
       <div className="flex-1 ml-52">
-        <div className="p-8">
+        <div className="p-8 max-w-4xl">
           {/* Page Header */}
           <div className="mb-8">
             <h1 className="text-2xl font-extrabold mb-2" style={{ color: NAVY }}>Events & Webinars</h1>
-            <p className="text-gray-500 max-w-xl">Live learning sessions, workshops, and Q&A opportunities with Dr. Lyn Corbett and guest experts.</p>
+            <p className="text-gray-500">Live learning sessions, workshops, and Q&A opportunities with Dr. Lyn Corbett.</p>
           </div>
 
           {/* Filter Tabs */}
           <div className="flex gap-2 mb-8">
-            {['All Events', 'Webinars', 'Workshops', 'Q&A Sessions', 'Office Hours'].map((tab, idx) => (
+            {filters.map(filter => (
               <button
-                key={tab}
+                key={filter.id}
+                onClick={() => setActiveFilter(filter.id)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  idx === 0 
+                  activeFilter === filter.id 
                     ? 'text-white' 
                     : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-300'
                 }`}
-                style={idx === 0 ? { backgroundColor: TEAL } : {}}
+                style={activeFilter === filter.id ? { backgroundColor: TEAL } : {}}
               >
-                {tab}
+                {filter.label}
               </button>
             ))}
           </div>
 
-          {/* Upcoming Events Header */}
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold" style={{ color: NAVY }}>Upcoming Events</h2>
-            <span className="text-sm text-gray-500">{events.length} events scheduled</span>
-          </div>
-
-          {/* Events Grid */}
-          <div className="grid grid-cols-2 gap-6">
-            {events.map(event => (
-              <div
-                key={event.id}
-                className="bg-white rounded-2xl border border-gray-200 overflow-hidden transition-all hover:shadow-lg hover:border-[#00a0b0] group"
-              >
-                {/* Event Image */}
-                <div className="h-40 overflow-hidden relative">
-                  <img 
-                    src={event.image} 
-                    alt={event.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  {/* Date Badge */}
-                  <div 
-                    className="absolute top-4 left-4 rounded-lg text-center py-2 px-3 shadow-lg"
-                    style={{ backgroundColor: NAVY }}
-                  >
-                    <div className="text-xl font-extrabold text-white leading-none">{event.day}</div>
-                    <div className="text-[10px] font-semibold text-white/70 uppercase">{event.month}</div>
-                  </div>
-                </div>
-
-                {/* Event Content */}
-                <div className="p-5">
-                  {/* Type Badge */}
-                  <span 
-                    className="inline-block text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded mb-3"
-                    style={{ backgroundColor: event.typeBg, color: event.typeColor }}
-                  >
-                    {event.typeLabel}
-                  </span>
-
-                  {/* Title */}
-                  <h3 className="font-bold text-lg mb-2 leading-tight" style={{ color: NAVY }}>
-                    {event.title}
-                  </h3>
-
-                  {/* Description */}
-                  <p className="text-sm text-gray-500 mb-4 line-clamp-2">
-                    {event.description}
-                  </p>
-
-                  {/* Meta Info */}
-                  <div className="flex items-center gap-4 text-xs text-gray-400 mb-4">
-                    <span>🕐 {event.time}</span>
-                    <span>👤 {event.host}</span>
-                    <span>👥 {event.registered} registered</span>
-                  </div>
-
-                  {/* Register Button */}
-                  <button
-                    onClick={() => handleRegister(event.id)}
-                    className={`w-full py-3 rounded-xl font-semibold text-sm transition-all ${
-                      event.isRegistered
-                        ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        : 'text-white hover:opacity-90'
-                    }`}
-                    style={!event.isRegistered ? { backgroundColor: TEAL } : {}}
-                  >
-                    {event.isRegistered ? '✓ Registered' : 'Register Now'}
-                  </button>
-                </div>
+          {/* Events Grouped by Month */}
+          {Object.entries(groupedEvents).map(([month, monthEvents]) => (
+            <div key={month} className="mb-10">
+              {/* Month Header */}
+              <div className="flex items-center gap-4 mb-4">
+                <h2 className="text-lg font-bold" style={{ color: NAVY }}>{month}</h2>
+                <div className="flex-1 h-px bg-gray-200"></div>
+                <span className="text-sm text-gray-400">{monthEvents.length} event{monthEvents.length !== 1 ? 's' : ''}</span>
               </div>
-            ))}
-          </div>
+
+              {/* Events List */}
+              <div className="space-y-4">
+                {monthEvents.map(event => (
+                  <div
+                    key={event.id}
+                    className="bg-white rounded-xl border border-gray-200 p-5 transition-all hover:shadow-md hover:border-[#00a0b0]"
+                  >
+                    <div className="flex gap-5">
+                      {/* Date Box */}
+                      <div className="flex-shrink-0">
+                        <div 
+                          className="w-16 rounded-lg text-center py-3"
+                          style={{ backgroundColor: NAVY }}
+                        >
+                          <div className="text-2xl font-extrabold text-white leading-none">{event.day}</div>
+                          <div className="text-[10px] font-semibold text-white/70 uppercase mt-1">{event.month}</div>
+                        </div>
+                      </div>
+
+                      {/* Event Details */}
+                      <div className="flex-1 min-w-0">
+                        {/* Type Badge */}
+                        <span 
+                          className="inline-block text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded mb-2"
+                          style={{ backgroundColor: event.typeBg, color: event.typeColor }}
+                        >
+                          {event.typeLabel}
+                        </span>
+
+                        {/* Title */}
+                        <h3 className="font-bold text-base mb-1" style={{ color: NAVY }}>
+                          {event.title}
+                        </h3>
+
+                        {/* Description */}
+                        <p className="text-sm text-gray-500 mb-3 line-clamp-2">
+                          {event.description}
+                        </p>
+
+                        {/* Meta Info */}
+                        <div className="flex items-center gap-4 text-xs text-gray-400">
+                          <span>{event.time}</span>
+                          <span>•</span>
+                          <span>{event.host}</span>
+                          <span>•</span>
+                          <span>{event.registered} registered</span>
+                        </div>
+                      </div>
+
+                      {/* Register Button */}
+                      <div className="flex-shrink-0 self-center">
+                        <button
+                          onClick={() => handleRegister(event.id)}
+                          className={`px-6 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+                            event.isRegistered
+                              ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                              : 'text-white hover:opacity-90'
+                          }`}
+                          style={!event.isRegistered ? { backgroundColor: TEAL } : {}}
+                        >
+                          {event.isRegistered ? '✓ Registered' : 'Register'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {/* Empty State */}
+          {Object.keys(groupedEvents).length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-500">No events found for this filter.</p>
+            </div>
+          )}
 
           {/* Past Events Section */}
-          <div className="mt-12">
-            <div className="flex items-center justify-between mb-6">
+          <div className="mt-12 pt-8 border-t border-gray-200">
+            <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold" style={{ color: NAVY }}>Past Events</h2>
               <a href="#" className="text-sm font-semibold hover:underline" style={{ color: TEAL }}>
                 View recordings →
               </a>
             </div>
-            <div className="bg-white rounded-2xl border border-gray-200 p-6">
+            <div className="bg-white rounded-xl border border-gray-200 p-5">
               <p className="text-gray-500 text-sm">
                 Access recordings of past webinars and workshops in the Resource Library.
               </p>
