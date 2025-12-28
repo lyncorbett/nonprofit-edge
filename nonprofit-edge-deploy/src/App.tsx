@@ -1,4 +1,3 @@
-
 /**
  * THE NONPROFIT EDGE - App.tsx
  * Updated with Role-Based Access Routes
@@ -86,7 +85,7 @@ function App() {
           *,
           organization:organizations(*)
         `)
-       .eq('auth_user_id', userId)
+        .eq('auth_user_id', userId)
         .single()
 
       if (userError) throw userError
@@ -316,6 +315,7 @@ function App() {
     return (
       <EventsCalendar
         user={userData}
+        organization={userData.organization}
         onNavigate={setCurrentPage}
         onLogout={handleLogout}
       />
