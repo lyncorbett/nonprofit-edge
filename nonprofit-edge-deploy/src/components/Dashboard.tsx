@@ -61,14 +61,15 @@ const Dashboard: React.FC<DashboardProps> = ({
   });
   const [loading, setLoading] = useState(true);
 
-  // Tool data with status
+  // Tool data with carefully selected professional images
   const tools: Tool[] = [
     {
       id: 'board-assessment',
       name: 'Board Assessment',
       status: 'In Process',
       statusColor: TEAL,
-      image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=200&fit=crop',
+      // Professional diverse team in boardroom meeting
+      image: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800&h=400&fit=crop&crop=center',
       route: 'board-assessment',
       isActive: true
     },
@@ -77,7 +78,8 @@ const Dashboard: React.FC<DashboardProps> = ({
       name: 'Strategic Plan Check-Up',
       status: 'Score: 92',
       statusColor: '#6b7280',
-      image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&h=200&fit=crop',
+      // Strategic planning with sticky notes and whiteboard
+      image: 'https://images.unsplash.com/photo-1542626991-cbc4e32524cc?w=800&h=400&fit=crop&crop=center',
       route: 'strategic-checkup'
     },
     {
@@ -85,7 +87,8 @@ const Dashboard: React.FC<DashboardProps> = ({
       name: 'CEO Evaluation',
       status: 'Completed',
       statusColor: '#16a34a',
-      image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=200&fit=crop&crop=top',
+      // Professional woman executive in office
+      image: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&h=400&fit=crop&crop=center',
       route: 'ceo-evaluation'
     },
     {
@@ -93,7 +96,8 @@ const Dashboard: React.FC<DashboardProps> = ({
       name: 'Scenario Planner',
       status: 'Ready',
       statusColor: '#6b7280',
-      image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=200&fit=crop',
+      // Data analytics dashboard visualization
+      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=400&fit=crop&crop=center',
       route: 'scenario-planner'
     },
     {
@@ -101,7 +105,8 @@ const Dashboard: React.FC<DashboardProps> = ({
       name: 'Template Vault',
       status: '147 templates',
       statusColor: '#6b7280',
-      image: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=400&h=200&fit=crop',
+      // Organized library/documents
+      image: 'https://images.unsplash.com/photo-1568667256549-094345857637?w=800&h=400&fit=crop&crop=center',
       route: 'templates'
     },
     {
@@ -109,7 +114,8 @@ const Dashboard: React.FC<DashboardProps> = ({
       name: 'Grant Review',
       status: 'Ready',
       statusColor: '#6b7280',
-      image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=400&h=200&fit=crop',
+      // Professional signing/reviewing document
+      image: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&h=400&fit=crop&crop=center',
       route: 'grant-review'
     }
   ];
@@ -423,26 +429,30 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <div 
                       key={tool.id}
                       onClick={() => onNavigate(tool.route)}
-                      className={`rounded-xl border-2 cursor-pointer hover:shadow-md transition-all overflow-hidden ${
+                      className={`rounded-xl border-2 cursor-pointer hover:shadow-lg transition-all overflow-hidden group ${
                         tool.isActive 
-                          ? 'border-[#00a0b0] bg-[#e6f7f9]' 
-                          : 'border-transparent bg-gray-50 hover:border-[#00a0b0] hover:bg-[#e6f7f9]'
+                          ? 'border-[#00a0b0]' 
+                          : 'border-gray-200 hover:border-[#00a0b0]'
                       }`}
                     >
-                      <div className="h-24 overflow-hidden">
+                      <div className="h-32 overflow-hidden relative bg-gray-100">
                         <img 
                           src={tool.image} 
                           alt={tool.name}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
                         />
                       </div>
-                      <div className="p-3 text-center">
+                      <div 
+                        className="p-3 text-center"
+                        style={{ backgroundColor: tool.isActive ? TEAL_LIGHT : '#fff' }}
+                      >
                         <div className="font-semibold text-sm" style={{ color: NAVY }}>
                           {tool.name}
                         </div>
                         <div 
-                          className="text-xs mt-1"
-                          style={{ color: tool.statusColor, fontWeight: tool.isActive ? 500 : 400 }}
+                          className="text-xs mt-1 font-medium"
+                          style={{ color: tool.statusColor }}
                         >
                           {tool.status}
                         </div>
