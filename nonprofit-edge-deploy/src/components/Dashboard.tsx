@@ -62,14 +62,14 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [loading, setLoading] = useState(true);
 
   // Tool data with carefully selected professional images
+  // Using wider aspect ratio (600x300) to show more of each image
   const tools: Tool[] = [
     {
       id: 'board-assessment',
       name: 'Board Assessment',
       status: 'In Process',
       statusColor: TEAL,
-      // Professional diverse team in boardroom meeting
-      image: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800&h=400&fit=crop&crop=center',
+      image: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=600&h=300&fit=crop',
       route: 'board-assessment',
       isActive: true
     },
@@ -78,8 +78,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       name: 'Strategic Plan Check-Up',
       status: 'Score: 92',
       statusColor: '#6b7280',
-      // Strategic planning with sticky notes and whiteboard
-      image: 'https://images.unsplash.com/photo-1542626991-cbc4e32524cc?w=800&h=400&fit=crop&crop=center',
+      image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=300&fit=crop',
       route: 'strategic-checkup'
     },
     {
@@ -87,8 +86,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       name: 'CEO Evaluation',
       status: 'Completed',
       statusColor: '#16a34a',
-      // Professional woman executive in office
-      image: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&h=400&fit=crop&crop=center',
+      image: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=600&h=300&fit=crop',
       route: 'ceo-evaluation'
     },
     {
@@ -96,8 +94,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       name: 'Scenario Planner',
       status: 'Ready',
       statusColor: '#6b7280',
-      // Data analytics dashboard visualization
-      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=400&fit=crop&crop=center',
+      image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=300&fit=crop',
       route: 'scenario-planner'
     },
     {
@@ -105,8 +102,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       name: 'Template Vault',
       status: '147 templates',
       statusColor: '#6b7280',
-      // Organized library/documents
-      image: 'https://images.unsplash.com/photo-1568667256549-094345857637?w=800&h=400&fit=crop&crop=center',
+      image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&h=300&fit=crop',
       route: 'templates'
     },
     {
@@ -114,8 +110,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       name: 'Grant Review',
       status: 'Ready',
       statusColor: '#6b7280',
-      // Professional signing/reviewing document
-      image: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&h=400&fit=crop&crop=center',
+      image: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=600&h=300&fit=crop',
       route: 'grant-review'
     }
   ];
@@ -435,12 +430,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                           : 'border-gray-200 hover:border-[#00a0b0]'
                       }`}
                     >
-                      <div className="h-32 overflow-hidden relative bg-gray-100">
+                      <div className="h-24 overflow-hidden relative bg-gray-100">
                         <img 
                           src={tool.image} 
                           alt={tool.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          loading="lazy"
                         />
                       </div>
                       <div 
