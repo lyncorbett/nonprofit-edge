@@ -430,12 +430,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                           : 'border-gray-200 hover:border-[#00a0b0]'
                       }`}
                     >
-                      <div className="h-16 overflow-hidden relative bg-gray-100">
+                      <div className="h-36 overflow-hidden relative bg-gray-100">
                         <img 
                           src={tool.image} 
                           alt={tool.name}
-                          className="w-full h-auto object-cover object-center group-hover:scale-105 transition-transform duration-300"
-                          style={{ marginTop: '-10%' }}
+                          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
                       <div 
