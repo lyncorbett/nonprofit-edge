@@ -2,12 +2,18 @@
  * THE NONPROFIT EDGE - Dashboard
  * With Product Tour, Chatbot, and Owner Access
  * 
- * Owner email: lyncorbett@thepivotalgroup.com
+ * Onboarding shows for:
+ * - First 7 days after signup, OR
+ * - Until profile is complete, OR
+ * - Until user clicks "I'm done with onboarding"
+ * 
+ * Owner email: lyn@thepivotalgroup.com
  */
 
 import React, { useState, useEffect } from 'react';
 import ProductTour from './ProductTour';
 import AIGuideChatbot from './AIGuideChatbot';
+import WelcomeModal from './WelcomeModal';
 
 // Brand colors
 const NAVY = '#1a365d';
@@ -54,41 +60,74 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [showTour, setShowTour] = useState(false);
   const [tourCompleted, setTourCompleted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
   // Check if user is the owner
   const isOwner = user?.email?.toLowerCase() === OWNER_EMAIL.toLowerCase();
 
-  // Check if tour was already completed
+  // Check if tour was already completed and onboarding dismissed
   useEffect(() => {
     const completed = localStorage.getItem('nonprofit-edge-tour-completed');
+    const dismissed = localStorage.getItem('nonprofit-edge-onboarding-dismissed');
+    const welcomeCompleted = localStorage.getItem('nonprofit-edge-welcome-completed');
+    
     if (completed) {
       setTourCompleted(true);
       setShowWelcomeBanner(false);
     }
+    if (dismissed) {
+      setOnboardingDismissed(true);
+    }
+    
+    // Show welcome modal if profile not complete and hasn't been shown
+    if (!welcomeCompleted && !isProfileComplete()) {
+      setShowWelcomeModal(true);
+    }
   }, []);
 
-  // Determine if user is new (no activity)
-  const isNewMember = !usage || (
-    (usage.tools_used_this_month || 0) === 0 && 
-    (usage.downloads_this_month || 0) === 0 &&
-    (usage.professor_sessions_this_month || 0) === 0
-  );
+  // Calculate if within 7 days of signup
+  const isWithin7Days = () => {
+    const createdAt = user?.created_at;
+    if (!createdAt) return true; // Default to showing onboarding if no date
+    const signupDate = new Date(createdAt);
+    const now = new Date();
+    const daysSinceSignup = Math.floor((now.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24));
+    return daysSinceSignup <= 7;
+  };
+
+  // Check if profile is complete (has avatar/photo and organization logo)
+  const isProfileComplete = () => {
+    const hasAvatar = user?.avatar_url || user?.profile_photo;
+    const hasOrgLogo = organization?.logo_url;
+    return hasAvatar && hasOrgLogo;
+  };
+
+  // Determine if we should show onboarding
+  // Show if: (within 7 days OR profile incomplete) AND not dismissed
+  const shouldShowOnboarding = !onboardingDismissed && (isWithin7Days() || !isProfileComplete());
+
+  // Handle dismissing onboarding
+  const handleDismissOnboarding = () => {
+    setOnboardingDismissed(true);
+    localStorage.setItem('nonprofit-edge-onboarding-dismissed', 'true');
+  };
 
   // Tool data
   const tools: Tool[] = [
     {
       id: 'board-assessment',
       name: 'Board Assessment',
-      status: isNewMember ? 'Ready' : 'In Process',
-      statusColor: isNewMember ? '#6b7280' : TEAL,
+      status: shouldShowOnboarding ? 'Ready' : 'In Process',
+      statusColor: shouldShowOnboarding ? '#6b7280' : TEAL,
       image: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800&h=400&fit=crop',
       route: 'board-assessment',
-      isActive: !isNewMember
+      isActive: !shouldShowOnboarding
     },
     {
       id: 'strategic-plan',
       name: 'Strategic Plan Check-Up',
-      status: isNewMember ? 'Ready' : 'Score: 92',
+      status: shouldShowOnboarding ? 'Ready' : 'Score: 92',
       statusColor: '#6b7280',
       image: 'https://images.unsplash.com/photo-1542626991-cbc4e32524cc?w=800&h=400&fit=crop',
       route: 'strategic-checkup'
@@ -96,8 +135,8 @@ const Dashboard: React.FC<DashboardProps> = ({
     {
       id: 'ceo-evaluation',
       name: 'CEO Evaluation',
-      status: isNewMember ? 'Ready' : 'Completed',
-      statusColor: isNewMember ? '#6b7280' : '#16a34a',
+      status: shouldShowOnboarding ? 'Ready' : 'Completed',
+      statusColor: shouldShowOnboarding ? '#6b7280' : '#16a34a',
       image: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&h=400&fit=crop',
       route: 'ceo-evaluation'
     },
@@ -318,6 +357,22 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Welcome Modal - First time profile setup */}
+      <WelcomeModal
+        isOpen={showWelcomeModal}
+        user={user}
+        organization={organization}
+        supabase={supabase}
+        onComplete={() => {
+          setShowWelcomeModal(false);
+          // Optionally start tour after completing profile
+          if (!tourCompleted) {
+            setShowTour(true);
+          }
+        }}
+        onSkip={() => setShowWelcomeModal(false)}
+      />
+
       {/* Product Tour */}
       <ProductTour 
         isOpen={showTour}
@@ -351,7 +406,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           <div className="flex-1 space-y-6">
 
             {/* Welcome Banner - For new members */}
-            {isNewMember && showWelcomeBanner && !tourCompleted && (
+            {shouldShowOnboarding && showWelcomeBanner && !tourCompleted && (
               <div 
                 className="rounded-2xl p-5 lg:p-6 text-white relative overflow-hidden"
                 style={{ background: `linear-gradient(135deg, ${TEAL}, #008090)` }}
@@ -388,37 +443,88 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
             )}
 
-            {/* Recommended First Steps - For new members */}
-            {isNewMember && (
+            {/* Recommended First Steps - With badges and icons */}
+            {shouldShowOnboarding && (
               <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-                <div className="px-4 py-3 border-b border-gray-200">
+                <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
                   <h2 className="text-sm font-bold" style={{ color: NAVY }}>Recommended First Steps</h2>
+                  <button
+                    onClick={handleDismissOnboarding}
+                    className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1"
+                  >
+                    ✓ I'm done with onboarding
+                  </button>
                 </div>
                 <div className="p-4">
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                    {[
-                      { num: 1, title: 'Complete Your Profile', desc: 'Upload your pic and logo', route: 'settings' },
-                      { num: 2, title: 'Explore Templates', desc: '147+ ready-to-use docs', route: 'library' },
-                      { num: 3, title: 'Strategic Check-Up', desc: 'See how your plan scores', route: 'strategic-checkup', highlight: true },
-                      { num: 4, title: 'Scenario Planner', desc: 'Test future strategies', route: 'scenario-planner' }
-                    ].map((step) => (
-                      <div 
-                        key={step.num}
-                        onClick={() => onNavigate(step.route)}
-                        className={`rounded-xl border-2 p-3 cursor-pointer hover:shadow-lg transition group ${
-                          step.highlight ? 'border-[#00a0b0] bg-[#e6f7f9]' : 'border-gray-200 hover:border-[#00a0b0]'
-                        }`}
-                      >
-                        <div 
-                          className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold mb-2 group-hover:scale-110 transition"
-                          style={{ backgroundColor: step.highlight ? TEAL : NAVY }}
-                        >
-                          {step.num}
-                        </div>
-                        <div className="font-bold text-xs mb-1" style={{ color: NAVY }}>{step.title}</div>
-                        <div className="text-[10px] text-gray-500">{step.desc}</div>
+                    {/* Step 1: Complete Profile */}
+                    <div 
+                      onClick={() => onNavigate('settings')}
+                      className="rounded-xl border-2 border-gray-200 p-4 cursor-pointer hover:shadow-lg hover:border-gray-300 transition bg-white group"
+                    >
+                      <span className="inline-block text-[10px] font-bold uppercase px-2 py-1 rounded mb-3" style={{ backgroundColor: '#fef3c7', color: '#b45309' }}>
+                        FIRST
+                      </span>
+                      <div className="text-3xl mb-3">👤</div>
+                      <div className="font-bold text-sm mb-1" style={{ color: NAVY }}>
+                        Complete Your Profile
                       </div>
-                    ))}
+                      <div className="text-xs text-gray-500">
+                        Upload your pic and agency logo
+                      </div>
+                    </div>
+
+                    {/* Step 2: Template Vault */}
+                    <div 
+                      onClick={() => onNavigate('library')}
+                      className="rounded-xl border-2 border-gray-200 p-4 cursor-pointer hover:shadow-lg hover:border-gray-300 transition bg-white group"
+                    >
+                      <span className="inline-block text-[10px] font-bold uppercase px-2 py-1 rounded mb-3" style={{ backgroundColor: '#dbeafe', color: '#1d4ed8' }}>
+                        EXPLORE
+                      </span>
+                      <div className="text-3xl mb-3">📁</div>
+                      <div className="font-bold text-sm mb-1" style={{ color: NAVY }}>
+                        Explore the Template Vault
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        147+ ready-to-use templates
+                      </div>
+                    </div>
+
+                    {/* Step 3: Strategic Plan Check-Up (Highlighted) */}
+                    <div 
+                      onClick={() => onNavigate('strategic-checkup')}
+                      className="rounded-xl border-2 p-4 cursor-pointer hover:shadow-lg transition group"
+                      style={{ borderColor: TEAL, backgroundColor: TEAL_LIGHT }}
+                    >
+                      <span className="inline-block text-[10px] font-bold uppercase px-2 py-1 rounded mb-3 text-white" style={{ backgroundColor: TEAL }}>
+                        TRY THIS
+                      </span>
+                      <div className="text-3xl mb-3">📋</div>
+                      <div className="font-bold text-sm mb-1" style={{ color: NAVY }}>
+                        Run Your Strategic Plan Check-Up
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        See how your plan scores
+                      </div>
+                    </div>
+
+                    {/* Step 4: Scenario Planner */}
+                    <div 
+                      onClick={() => onNavigate('scenario-planner')}
+                      className="rounded-xl border-2 border-gray-200 p-4 cursor-pointer hover:shadow-lg hover:border-gray-300 transition bg-white group"
+                    >
+                      <span className="inline-block text-[10px] font-bold uppercase px-2 py-1 rounded mb-3" style={{ backgroundColor: '#fee2e2', color: '#dc2626' }}>
+                        PLAN AHEAD
+                      </span>
+                      <div className="text-3xl mb-3">🎯</div>
+                      <div className="font-bold text-sm mb-1" style={{ color: NAVY }}>
+                        Test Your Future Strategy
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        With our Scenario Planner
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -484,7 +590,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             {/* Recommended For You - For returning members */}
-            {!isNewMember && (
+            {!shouldShowOnboarding && (
               <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
                 <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
                   <h2 className="text-sm font-bold" style={{ color: NAVY }}>Recommended For You</h2>
