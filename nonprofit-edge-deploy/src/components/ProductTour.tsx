@@ -71,12 +71,19 @@ const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose, onComplete }
         const rect = element.getBoundingClientRect();
         setTargetRect(rect);
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        // Element not found - show tooltip in center of screen
+        setTargetRect(null);
       }
     };
 
-    updatePosition();
+    // Small delay to let page render
+    const timer = setTimeout(updatePosition, 100);
     window.addEventListener('resize', updatePosition);
-    return () => window.removeEventListener('resize', updatePosition);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', updatePosition);
+    };
   }, [isOpen, currentStep]);
 
   if (!isOpen) return null;
