@@ -33,7 +33,7 @@ const NAVY = '#1a365d'
 const TEAL = '#00a0b0'
 
 // Owner email for admin access
-const OWNER_EMAIL = 'lyncorbett@thepivotalgroup.com'
+const OWNER_EMAIL = 'lyn@thepivotalgroup.com'
 
 function App() {
   const [session, setSession] = useState<Session | null>(null)
@@ -240,7 +240,7 @@ function App() {
             <img 
               src="/logo.svg" 
               alt="The Nonprofit Edge" 
-              className="w-48 h-auto mx-auto mb-6"
+              className="w-64 h-auto mx-auto mb-6"
               onError={(e) => {
                 const img = e.target as HTMLImageElement
                 if (img.src.includes('.svg')) {
