@@ -1,18 +1,20 @@
 /**
  * THE NONPROFIT EDGE - Product Tour
  * Guided walkthrough with Next/Back buttons and progress indicator
+ * Fixed to properly scroll and find all elements including sidebar items
  */
 
 import React, { useState, useEffect } from 'react';
 
 const NAVY = '#1a365d';
 const TEAL = '#00a0b0';
+const TEAL_LIGHT = '#e6f7f9';
 
 interface TourStep {
   target: string;
   title: string;
   content: string;
-  position: 'top' | 'bottom' | 'left' | 'right';
+  position: 'top' | 'bottom' | 'left' | 'right' | 'center';
 }
 
 interface ProductTourProps {
@@ -57,6 +59,7 @@ const tourSteps: TourStep[] = [
 const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose, onComplete }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  const [elementFound, setElementFound] = useState(true);
 
   useEffect(() => {
     if (!isOpen) {
@@ -67,22 +70,36 @@ const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose, onComplete }
     const updatePosition = () => {
       const step = tourSteps[currentStep];
       const element = document.getElementById(step.target);
+      
       if (element) {
-        const rect = element.getBoundingClientRect();
-        setTargetRect(rect);
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Scroll element into view first
+        element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+        
+        // Wait for scroll to complete, then get position
+        setTimeout(() => {
+          const rect = element.getBoundingClientRect();
+          setTargetRect(rect);
+          setElementFound(true);
+        }, 300);
       } else {
-        // Element not found - show tooltip in center of screen
+        // Element not found - show centered tooltip
+        console.log(`Tour: Element #${step.target} not found`);
         setTargetRect(null);
+        setElementFound(false);
       }
     };
 
-    // Small delay to let page render
-    const timer = setTimeout(updatePosition, 100);
+    // Initial delay to let page render
+    const timer = setTimeout(updatePosition, 200);
+    
+    // Also update on resize
     window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition);
+    
     return () => {
       clearTimeout(timer);
       window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition);
     };
   }, [isOpen, currentStep]);
 
@@ -112,36 +129,64 @@ const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose, onComplete }
 
   // Calculate tooltip position
   const getTooltipStyle = (): React.CSSProperties => {
-    if (!targetRect) return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
+    if (!targetRect || !elementFound) {
+      // Center on screen if element not found
+      return { 
+        top: '50%', 
+        left: '50%', 
+        transform: 'translate(-50%, -50%)',
+        position: 'fixed'
+      };
+    }
 
-    const padding = 16;
+    const padding = 20;
     const tooltipWidth = 320;
-    const tooltipHeight = 200;
+    const tooltipHeight = 250;
+
+    let top = 0;
+    let left = 0;
 
     switch (step.position) {
       case 'top':
-        return {
-          top: targetRect.top - tooltipHeight - padding,
-          left: targetRect.left + targetRect.width / 2 - tooltipWidth / 2,
-        };
+        top = targetRect.top - tooltipHeight - padding;
+        left = targetRect.left + targetRect.width / 2 - tooltipWidth / 2;
+        break;
       case 'bottom':
-        return {
-          top: targetRect.bottom + padding,
-          left: targetRect.left + targetRect.width / 2 - tooltipWidth / 2,
-        };
+        top = targetRect.bottom + padding;
+        left = targetRect.left + targetRect.width / 2 - tooltipWidth / 2;
+        break;
       case 'left':
-        return {
-          top: targetRect.top + targetRect.height / 2 - tooltipHeight / 2,
-          left: targetRect.left - tooltipWidth - padding,
-        };
+        top = targetRect.top + targetRect.height / 2 - tooltipHeight / 2;
+        left = targetRect.left - tooltipWidth - padding;
+        break;
       case 'right':
-        return {
-          top: targetRect.top + targetRect.height / 2 - tooltipHeight / 2,
-          left: targetRect.right + padding,
-        };
+        top = targetRect.top + targetRect.height / 2 - tooltipHeight / 2;
+        left = targetRect.right + padding;
+        break;
+      case 'center':
       default:
-        return { top: '50%', left: '50%' };
+        return { 
+          top: '50%', 
+          left: '50%', 
+          transform: 'translate(-50%, -50%)',
+          position: 'fixed'
+        };
     }
+
+    // Keep tooltip on screen
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    if (left < 10) left = 10;
+    if (left + tooltipWidth > viewportWidth - 10) left = viewportWidth - tooltipWidth - 10;
+    if (top < 10) top = 10;
+    if (top + tooltipHeight > viewportHeight - 10) top = viewportHeight - tooltipHeight - 10;
+
+    return {
+      top,
+      left,
+      position: 'fixed'
+    };
   };
 
   return (
@@ -153,23 +198,23 @@ const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose, onComplete }
       />
 
       {/* Spotlight on target element */}
-      {targetRect && (
+      {targetRect && elementFound && (
         <div
-          className="absolute bg-transparent border-4 border-white rounded-xl shadow-2xl"
+          className="absolute bg-transparent border-4 border-white rounded-xl pointer-events-none"
           style={{
             top: targetRect.top - 8,
             left: targetRect.left - 8,
             width: targetRect.width + 16,
             height: targetRect.height + 16,
             boxShadow: '0 0 0 9999px rgba(0,0,0,0.6), 0 0 30px rgba(0,160,176,0.5)',
-            pointerEvents: 'none'
+            position: 'fixed'
           }}
         />
       )}
 
       {/* Tooltip */}
       <div
-        className="absolute bg-white rounded-2xl shadow-2xl overflow-hidden"
+        className="bg-white rounded-2xl shadow-2xl overflow-hidden"
         style={{
           ...getTooltipStyle(),
           width: 320,
@@ -196,20 +241,29 @@ const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose, onComplete }
             {step.content}
           </p>
 
+          {/* Element not found message */}
+          {!elementFound && (
+            <p className="text-amber-600 text-xs mb-4 bg-amber-50 p-2 rounded">
+              💡 This feature is located in the sidebar or elsewhere on the page.
+            </p>
+          )}
+
           {/* Progress Dots */}
           <div className="flex justify-center gap-2 mb-4">
             {tourSteps.map((_, index) => (
               <div
                 key={index}
-                className={`w-2 h-2 rounded-full transition-all ${
+                className={`h-2 rounded-full transition-all ${
                   index === currentStep 
                     ? 'w-6' 
-                    : index < currentStep 
-                      ? 'bg-gray-300' 
-                      : 'bg-gray-200'
+                    : 'w-2'
                 }`}
                 style={{ 
-                  backgroundColor: index === currentStep ? TEAL : undefined 
+                  backgroundColor: index === currentStep 
+                    ? TEAL 
+                    : index < currentStep 
+                      ? '#a0e0e6' 
+                      : '#e5e7eb'
                 }}
               />
             ))}
@@ -261,7 +315,5 @@ const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose, onComplete }
     </div>
   );
 };
-
-const TEAL_LIGHT = '#e6f7f9';
 
 export default ProductTour;
