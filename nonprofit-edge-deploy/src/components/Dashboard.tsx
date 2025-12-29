@@ -15,7 +15,7 @@ const TEAL = '#00a0b0';
 const TEAL_LIGHT = '#e6f7f9';
 
 // Owner email - gets full admin access
-const OWNER_EMAIL = 'lyncorbett@thepivotalgroup.com';
+const OWNER_EMAIL = 'lyn@thepivotalgroup.com';
 
 interface DashboardProps {
   user: any;
