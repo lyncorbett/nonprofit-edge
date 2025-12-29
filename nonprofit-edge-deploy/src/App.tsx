@@ -108,14 +108,18 @@ function App() {
     try {
       setLoading(true)
       
-      // Get user with organization
+      // Get the user's email from auth
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      if (!authUser?.email) throw new Error('No email found')
+      
+      // Get user with organization using email
       const { data: user, error: userError } = await supabase
         .from('users')
         .select(`
           *,
           organization:organizations(*)
         `)
-        .eq('auth_id', userId)
+        .eq('email', authUser.email)
         .single()
 
       if (userError) throw userError
