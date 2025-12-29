@@ -60,6 +60,19 @@ const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose, onComplete }
   const [currentStep, setCurrentStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [elementFound, setElementFound] = useState(true);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+
+  // Fade in when tour opens
+  useEffect(() => {
+    if (isOpen) {
+      // Small delay then fade in
+      const timer = setTimeout(() => setIsVisible(true), 50);
+      return () => clearTimeout(timer);
+    } else {
+      setIsVisible(false);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -80,26 +93,27 @@ const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose, onComplete }
           const rect = element.getBoundingClientRect();
           setTargetRect(rect);
           setElementFound(true);
-        }, 300);
+          // End transition after position is set
+          setTimeout(() => setIsTransitioning(false), 100);
+        }, 400);
       } else {
         // Element not found - show centered tooltip
         console.log(`Tour: Element #${step.target} not found`);
         setTargetRect(null);
         setElementFound(false);
+        setTimeout(() => setIsTransitioning(false), 100);
       }
     };
 
     // Initial delay to let page render
-    const timer = setTimeout(updatePosition, 200);
+    const timer = setTimeout(updatePosition, 300);
     
     // Also update on resize
     window.addEventListener('resize', updatePosition);
-    window.addEventListener('scroll', updatePosition);
     
     return () => {
       clearTimeout(timer);
       window.removeEventListener('resize', updatePosition);
-      window.removeEventListener('scroll', updatePosition);
     };
   }, [isOpen, currentStep]);
 
@@ -111,20 +125,24 @@ const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose, onComplete }
 
   const handleNext = () => {
     if (isLastStep) {
-      onComplete();
+      setIsVisible(false);
+      setTimeout(() => onComplete(), 300);
     } else {
-      setCurrentStep(prev => prev + 1);
+      setIsTransitioning(true);
+      setTimeout(() => setCurrentStep(prev => prev + 1), 150);
     }
   };
 
   const handleBack = () => {
     if (!isFirstStep) {
-      setCurrentStep(prev => prev - 1);
+      setIsTransitioning(true);
+      setTimeout(() => setCurrentStep(prev => prev - 1), 150);
     }
   };
 
   const handleSkip = () => {
-    onClose();
+    setIsVisible(false);
+    setTimeout(() => onClose(), 300);
   };
 
   // Calculate tooltip position
@@ -190,11 +208,19 @@ const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose, onComplete }
   };
 
   return (
-    <div className="fixed inset-0 z-[9999]">
+    <div 
+      className="fixed inset-0 z-[9999]"
+      style={{
+        opacity: isVisible ? 1 : 0,
+        transition: 'opacity 0.3s ease-in-out',
+        pointerEvents: isVisible ? 'auto' : 'none'
+      }}
+    >
       {/* Overlay */}
       <div 
         className="absolute inset-0 bg-black/60"
         onClick={handleSkip}
+        style={{ transition: 'background-color 0.3s ease' }}
       />
 
       {/* Spotlight on target element */}
@@ -207,7 +233,9 @@ const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose, onComplete }
             width: targetRect.width + 16,
             height: targetRect.height + 16,
             boxShadow: '0 0 0 9999px rgba(0,0,0,0.6), 0 0 30px rgba(0,160,176,0.5)',
-            position: 'fixed'
+            position: 'fixed',
+            transition: 'all 0.4s ease-in-out',
+            opacity: isTransitioning ? 0.5 : 1
           }}
         />
       )}
@@ -218,7 +246,12 @@ const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose, onComplete }
         style={{
           ...getTooltipStyle(),
           width: 320,
-          zIndex: 10000
+          zIndex: 10000,
+          transition: 'all 0.4s ease-in-out, opacity 0.3s ease',
+          opacity: isTransitioning ? 0 : 1,
+          transform: isTransitioning 
+            ? 'translate(-50%, -50%) scale(0.95)' 
+            : getTooltipStyle().transform || 'none'
         }}
       >
         {/* Header */}
