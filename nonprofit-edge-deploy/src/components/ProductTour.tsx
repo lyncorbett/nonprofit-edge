@@ -1,211 +1,172 @@
-import { useState, useEffect } from 'react'
+/**
+ * THE NONPROFIT EDGE - Product Tour
+ * Guided walkthrough with Next/Back buttons and progress indicator
+ */
 
-// ============================================
-// PRODUCT TOUR - Guided Walkthrough
-// Optional 5-step tour for new members
-// Brand Colors: Navy #1a365d | Teal #00a0b0
-// ============================================
+import React, { useState, useEffect } from 'react';
 
-const NAVY = '#1a365d'
-const TEAL = '#00a0b0'
+const NAVY = '#1a365d';
+const TEAL = '#00a0b0';
 
 interface TourStep {
-  id: string
-  target: string // CSS selector or element ID
-  title: string
-  content: string
-  position: 'top' | 'bottom' | 'left' | 'right'
+  target: string;
+  title: string;
+  content: string;
+  position: 'top' | 'bottom' | 'left' | 'right';
 }
 
 interface ProductTourProps {
-  isOpen: boolean
-  onClose: () => void
-  onComplete: () => void
+  isOpen: boolean;
+  onClose: () => void;
+  onComplete: () => void;
 }
 
 const tourSteps: TourStep[] = [
   {
-    id: 'tools',
     target: 'tools-section',
     title: 'Your Strategic Tools',
-    content: "These are your strategic tools. Each one helps you assess and strengthen a different area of your organization — from board governance to strategic planning.",
-    position: 'bottom'
+    content: 'Access powerful assessments and planning tools designed specifically for nonprofit leaders. Each tool provides actionable insights.',
+    position: 'top'
   },
   {
-    id: 'library',
     target: 'sidebar-library',
     title: 'Resource Library',
-    content: "Templates, playbooks, book summaries, and guides live here. 265+ resources ready to download and customize for your organization.",
+    content: 'Browse 147+ templates, guides, and book summaries curated for nonprofit professionals.',
     position: 'right'
   },
   {
-    id: 'events',
     target: 'sidebar-events',
-    title: 'Live Events',
-    content: "Join live webinars, workshops, and Q&A sessions with Dr. Corbett and other nonprofit experts. Learn alongside peers facing similar challenges.",
+    title: 'Live Events & Webinars',
+    content: 'Join live workshops, training sessions, and community events to learn alongside other nonprofit leaders.',
     position: 'right'
   },
   {
-    id: 'professor',
     target: 'professor-card',
     title: 'Ask the Professor',
-    content: "Need a thinking partner? Ask the Professor anything about nonprofit leadership, strategy, board governance, or fundraising. It's like having an expert on call 24/7.",
+    content: 'Your AI-powered strategic advisor. Get expert guidance on governance, planning, and leadership challenges anytime.',
     position: 'left'
   },
   {
-    id: 'chatbot',
     target: 'chatbot-button',
-    title: "I'm Here to Help",
-    content: "Anytime you need help navigating or have a quick question, just click this button. I'm always here to point you in the right direction!",
-    position: 'top'
+    title: 'Need Help?',
+    content: 'Click the help button anytime to get quick assistance navigating the platform or finding resources.',
+    position: 'left'
   }
-]
+];
 
 const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose, onComplete }) => {
-  const [currentStep, setCurrentStep] = useState(0)
-  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 })
-  const [arrowPosition, setArrowPosition] = useState({ top: 0, left: 0, rotation: 0 })
+  const [currentStep, setCurrentStep] = useState(0);
+  const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
 
-  const step = tourSteps[currentStep]
-  const isLastStep = currentStep === tourSteps.length - 1
-  const isFirstStep = currentStep === 0
-
-  // Calculate tooltip position based on target element
   useEffect(() => {
-    if (!isOpen || !step) return
-
-    const calculatePosition = () => {
-      const targetEl = document.getElementById(step.target)
-      
-      if (!targetEl) {
-        // Default center position if element not found
-        setTooltipPosition({
-          top: window.innerHeight / 2 - 100,
-          left: window.innerWidth / 2 - 175
-        })
-        return
-      }
-
-      const rect = targetEl.getBoundingClientRect()
-      const tooltipWidth = 350
-      const tooltipHeight = 180
-      const padding = 20
-
-      let top = 0
-      let left = 0
-      let arrowTop = 0
-      let arrowLeft = 0
-      let rotation = 0
-
-      switch (step.position) {
-        case 'bottom':
-          top = rect.bottom + padding
-          left = rect.left + rect.width / 2 - tooltipWidth / 2
-          arrowTop = rect.bottom + 5
-          arrowLeft = rect.left + rect.width / 2 - 10
-          rotation = -90
-          break
-        case 'top':
-          top = rect.top - tooltipHeight - padding
-          left = rect.left + rect.width / 2 - tooltipWidth / 2
-          arrowTop = rect.top - padding + 5
-          arrowLeft = rect.left + rect.width / 2 - 10
-          rotation = 90
-          break
-        case 'right':
-          top = rect.top + rect.height / 2 - tooltipHeight / 2
-          left = rect.right + padding
-          arrowTop = rect.top + rect.height / 2 - 10
-          arrowLeft = rect.right + 5
-          rotation = 180
-          break
-        case 'left':
-          top = rect.top + rect.height / 2 - tooltipHeight / 2
-          left = rect.left - tooltipWidth - padding
-          arrowTop = rect.top + rect.height / 2 - 10
-          arrowLeft = rect.left - padding + 5
-          rotation = 0
-          break
-      }
-
-      // Keep tooltip within viewport
-      if (left < 20) left = 20
-      if (left + tooltipWidth > window.innerWidth - 20) left = window.innerWidth - tooltipWidth - 20
-      if (top < 20) top = 20
-      if (top + tooltipHeight > window.innerHeight - 20) top = window.innerHeight - tooltipHeight - 20
-
-      setTooltipPosition({ top, left })
-      setArrowPosition({ top: arrowTop, left: arrowLeft, rotation })
-
-      // Highlight the target element
-      targetEl.style.position = 'relative'
-      targetEl.style.zIndex = '1001'
-      targetEl.style.boxShadow = `0 0 0 4px ${TEAL}, 0 0 20px rgba(0, 160, 176, 0.4)`
-      targetEl.style.borderRadius = '12px'
+    if (!isOpen) {
+      setCurrentStep(0);
+      return;
     }
 
-    calculatePosition()
+    const updatePosition = () => {
+      const step = tourSteps[currentStep];
+      const element = document.getElementById(step.target);
+      if (element) {
+        const rect = element.getBoundingClientRect();
+        setTargetRect(rect);
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    };
 
-    // Cleanup previous highlights
-    return () => {
-      tourSteps.forEach(s => {
-        const el = document.getElementById(s.target)
-        if (el) {
-          el.style.zIndex = ''
-          el.style.boxShadow = ''
-          el.style.position = ''
-        }
-      })
-    }
-  }, [isOpen, currentStep, step])
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    return () => window.removeEventListener('resize', updatePosition);
+  }, [isOpen, currentStep]);
+
+  if (!isOpen) return null;
+
+  const step = tourSteps[currentStep];
+  const isLastStep = currentStep === tourSteps.length - 1;
+  const isFirstStep = currentStep === 0;
 
   const handleNext = () => {
     if (isLastStep) {
-      onComplete()
+      onComplete();
     } else {
-      setCurrentStep(prev => prev + 1)
+      setCurrentStep(prev => prev + 1);
     }
-  }
+  };
 
   const handleBack = () => {
     if (!isFirstStep) {
-      setCurrentStep(prev => prev - 1)
+      setCurrentStep(prev => prev - 1);
     }
-  }
+  };
 
   const handleSkip = () => {
-    onClose()
-  }
+    onClose();
+  };
 
-  if (!isOpen) return null
+  // Calculate tooltip position
+  const getTooltipStyle = (): React.CSSProperties => {
+    if (!targetRect) return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
+
+    const padding = 16;
+    const tooltipWidth = 320;
+    const tooltipHeight = 200;
+
+    switch (step.position) {
+      case 'top':
+        return {
+          top: targetRect.top - tooltipHeight - padding,
+          left: targetRect.left + targetRect.width / 2 - tooltipWidth / 2,
+        };
+      case 'bottom':
+        return {
+          top: targetRect.bottom + padding,
+          left: targetRect.left + targetRect.width / 2 - tooltipWidth / 2,
+        };
+      case 'left':
+        return {
+          top: targetRect.top + targetRect.height / 2 - tooltipHeight / 2,
+          left: targetRect.left - tooltipWidth - padding,
+        };
+      case 'right':
+        return {
+          top: targetRect.top + targetRect.height / 2 - tooltipHeight / 2,
+          left: targetRect.right + padding,
+        };
+      default:
+        return { top: '50%', left: '50%' };
+    }
+  };
 
   return (
-    <>
+    <div className="fixed inset-0 z-[9999]">
       {/* Overlay */}
       <div 
-        className="fixed inset-0 bg-black/60 z-[1000]"
+        className="absolute inset-0 bg-black/60"
         onClick={handleSkip}
       />
 
-      {/* Arrow pointing to element */}
-      <div
-        className="fixed z-[1002] text-4xl transition-all duration-300"
-        style={{
-          top: arrowPosition.top,
-          left: arrowPosition.left,
-          transform: `rotate(${arrowPosition.rotation}deg)`,
-          color: TEAL
-        }}
-      >
-        ➤
-      </div>
+      {/* Spotlight on target element */}
+      {targetRect && (
+        <div
+          className="absolute bg-transparent border-4 border-white rounded-xl shadow-2xl"
+          style={{
+            top: targetRect.top - 8,
+            left: targetRect.left - 8,
+            width: targetRect.width + 16,
+            height: targetRect.height + 16,
+            boxShadow: '0 0 0 9999px rgba(0,0,0,0.6), 0 0 30px rgba(0,160,176,0.5)',
+            pointerEvents: 'none'
+          }}
+        />
+      )}
 
       {/* Tooltip */}
       <div
-        className="fixed z-[1002] w-[350px] bg-white rounded-2xl shadow-2xl overflow-hidden transition-all duration-300"
+        className="absolute bg-white rounded-2xl shadow-2xl overflow-hidden"
         style={{
-          top: tooltipPosition.top,
-          left: tooltipPosition.left
+          ...getTooltipStyle(),
+          width: 320,
+          zIndex: 10000
         }}
       >
         {/* Header */}
@@ -213,13 +174,13 @@ const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose, onComplete }
           className="px-5 py-3 flex items-center justify-between"
           style={{ backgroundColor: NAVY }}
         >
-          <div className="flex items-center gap-2">
-            <span className="text-lg">🎓</span>
-            <span className="text-white font-semibold text-sm">{step.title}</span>
-          </div>
-          <span className="text-white/60 text-xs">
-            {currentStep + 1} of {tourSteps.length}
-          </span>
+          <h3 className="text-white font-bold text-sm">{step.title}</h3>
+          <button
+            onClick={handleSkip}
+            className="text-white/70 hover:text-white text-lg leading-none"
+          >
+            ✕
+          </button>
         </div>
 
         {/* Content */}
@@ -228,53 +189,72 @@ const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose, onComplete }
             {step.content}
           </p>
 
-          {/* Progress dots */}
+          {/* Progress Dots */}
           <div className="flex justify-center gap-2 mb-4">
-            {tourSteps.map((_, idx) => (
+            {tourSteps.map((_, index) => (
               <div
-                key={idx}
+                key={index}
                 className={`w-2 h-2 rounded-full transition-all ${
-                  idx === currentStep ? 'w-6' : ''
+                  index === currentStep 
+                    ? 'w-6' 
+                    : index < currentStep 
+                      ? 'bg-gray-300' 
+                      : 'bg-gray-200'
                 }`}
                 style={{ 
-                  backgroundColor: idx === currentStep ? TEAL : '#e5e7eb'
+                  backgroundColor: index === currentStep ? TEAL : undefined 
                 }}
               />
             ))}
           </div>
 
-          {/* Buttons */}
-          <div className="flex items-center justify-between">
-            <button
-              onClick={handleSkip}
-              className="text-xs text-gray-400 hover:text-gray-600"
-            >
-              Skip tour
-            </button>
-            
-            <div className="flex gap-2">
-              {!isFirstStep && (
-                <button
-                  onClick={handleBack}
-                  className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 hover:bg-gray-50 transition"
-                  style={{ color: NAVY }}
-                >
-                  ← Back
-                </button>
-              )}
-              <button
-                onClick={handleNext}
-                className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition"
-                style={{ backgroundColor: TEAL }}
-              >
-                {isLastStep ? 'Finish Tour 🎉' : 'Next →'}
-              </button>
-            </div>
+          {/* Step Counter */}
+          <div className="text-center text-xs text-gray-400 mb-4">
+            Step {currentStep + 1} of {tourSteps.length}
           </div>
-        </div>
-      </div>
-    </>
-  )
-}
 
-export default ProductTour
+          {/* Navigation Buttons */}
+          <div className="flex gap-2">
+            {!isFirstStep && (
+              <button
+                onClick={handleBack}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
+              >
+                ← Back
+              </button>
+            )}
+            <button
+              onClick={handleNext}
+              className="flex-1 px-4 py-2 rounded-lg text-sm font-bold text-white transition hover:opacity-90"
+              style={{ backgroundColor: TEAL }}
+            >
+              {isLastStep ? '✓ Finish Tour' : 'Next →'}
+            </button>
+          </div>
+
+          {/* Skip Link */}
+          <button
+            onClick={handleSkip}
+            className="w-full mt-3 text-xs text-gray-400 hover:text-gray-600"
+          >
+            Skip tour
+          </button>
+        </div>
+
+        {/* Completion Message for Last Step */}
+        {isLastStep && (
+          <div 
+            className="px-5 py-3 text-center text-xs"
+            style={{ backgroundColor: TEAL_LIGHT, color: TEAL }}
+          >
+            🎉 You're all set! Start exploring your tools.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const TEAL_LIGHT = '#e6f7f9';
+
+export default ProductTour;
