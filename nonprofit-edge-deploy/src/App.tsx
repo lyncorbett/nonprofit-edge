@@ -1,15 +1,13 @@
 /**
  * THE NONPROFIT EDGE - App.tsx
- * With React Router, SignupFlow, and Consistent Navigation
+ * Complete with ForgotPassword, ResetPassword, and Role-Based Access
  */
 
 import React, { useState, useEffect } from 'react'
 import { createClient, Session } from '@supabase/supabase-js'
-import { BrowserRouter, Routes, Route, useNavigate, Navigate } from 'react-router-dom'
 
 // Components
 import Dashboard from './components/Dashboard'
-import SignupFlow from './components/SignupFlow'
 import TeamAdmin from './components/TeamAdmin'
 import AdminDashboard from './components/AdminDashboard'
 import ContentManager from './components/ContentManager'
@@ -20,7 +18,8 @@ import EventsCalendar from './components/EventsCalendar'
 import MarketingDashboard from './components/MarketingDashboard'
 import LinkManager from './components/LinkManager'
 import EnhancedOwnerDashboard from './components/EnhancedOwnerDashboard'
-import AIGuideChatbot from './components/AIGuideChatbot'
+import ForgotPassword from './components/ForgotPassword'
+import ResetPassword from './components/ResetPassword'
 
 // Supabase client
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -31,30 +30,39 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey)
 const NAVY = '#1a365d'
 const TEAL = '#00a0b0'
 
-// Main App wrapper with Router
-function App() {
-  return (
-    <BrowserRouter>
-      <AppContent />
-    </BrowserRouter>
-  )
-}
+// Owner email for admin access
+const OWNER_EMAIL = 'lyn@thepivotalgroup.com'
 
-// App content with routing
-function AppContent() {
+function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const [userData, setUserData] = useState<any>(null)
   const [teamMembers, setTeamMembers] = useState<any[]>([])
   const [usage, setUsage] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
-  const [showSignup, setShowSignup] = useState(false)
+  const [currentPage, setCurrentPage] = useState('dashboard')
   
-  const navigate = useNavigate()
+  // Auth view: 'login' | 'forgot' | 'reset' | 'signup'
+  const [authView, setAuthView] = useState<'login' | 'forgot' | 'reset' | 'signup'>('login')
+  
+  // Login form state
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [authLoading, setAuthLoading] = useState(false)
+  const [authError, setAuthError] = useState<string | null>(null)
+
+  // Check for password reset token in URL
+  useEffect(() => {
+    const hash = window.location.hash
+    if (hash.includes('type=recovery')) {
+      setAuthView('reset')
+    }
+  }, [])
 
   // Auth state listener
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('[Auth] Initial session:', session ? 'Found' : 'None')
       setSession(session)
       if (session) {
         loadUserData(session.user.id)
@@ -64,8 +72,8 @@ function AppContent() {
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('[Auth] Event:', event)
+      (event, session) => {
+        console.log('[Auth] State changed:', event, session ? 'Has session' : 'No session')
         setSession(session)
         
         if (event === 'SIGNED_OUT') {
@@ -73,135 +81,124 @@ function AppContent() {
           setTeamMembers([])
           setUsage(null)
           setError(null)
-          setLoading(false)
-          setShowSignup(false)
-          navigate('/')
-        } else if (event === 'SIGNED_IN' && session) {
-          await loadUserData(session.user.id)
-          setShowSignup(false)
-          navigate('/dashboard')
-        } else if (session) {
+          setCurrentPage('dashboard')
+          setAuthView('login')
+        }
+        
+        if (event === 'SIGNED_IN' && session) {
           loadUserData(session.user.id)
-        } else {
-          setLoading(false)
+          // Clear reset view after successful password reset
+          if (authView === 'reset') {
+            setAuthView('login')
+            window.location.hash = ''
+          }
+        }
+
+        if (event === 'PASSWORD_RECOVERY') {
+          setAuthView('reset')
         }
       }
     )
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [authView])
 
+  // Load user data
   const loadUserData = async (userId: string) => {
     try {
       setLoading(true)
       
-      // Check if user exists in users table
-      let { data: user, error: userError } = await supabase
+      // Get user with organization
+      const { data: user, error: userError } = await supabase
         .from('users')
-        .select(`*, organization:organizations(*)`)
-        .eq('auth_user_id', userId)
+        .select(`
+          *,
+          organization:organizations(*)
+        `)
+        .eq('auth_id', userId)
         .single()
 
-      // If user doesn't exist, create them
-      if (userError && userError.code === 'PGRST116') {
-        console.log('[Auth] Creating new user record...')
-        
-        // Get auth user details
-        const { data: authUser } = await supabase.auth.getUser()
-        const metadata = authUser?.user?.user_metadata || {}
-        
-        // Create organization for new user
-        const { data: newOrg, error: orgError } = await supabase
-          .from('organizations')
-          .insert({
-            name: metadata.org_name || 'My Organization',
-            tier: metadata.selected_plan || 'professional'
-          })
-          .select()
-          .single()
-
-        if (orgError) {
-          console.error('Error creating org:', orgError)
-          throw orgError
-        }
-
-        // Create user record
-        const { data: newUser, error: createError } = await supabase
-          .from('users')
-          .insert({
-            auth_user_id: userId,
-            email: authUser?.user?.email,
-            full_name: metadata.full_name || 'New User',
-            organization_id: newOrg.id,
-            role: 'owner'
-          })
-          .select(`*, organization:organizations(*)`)
-          .single()
-
-        if (createError) {
-          console.error('Error creating user:', createError)
-          throw createError
-        }
-        
-        user = newUser
-      } else if (userError) {
-        throw userError
-      }
+      if (userError) throw userError
 
       setUserData(user)
 
-      // Load team members
-      if (user?.organization_id) {
-        const { data: team } = await supabase
+      // Get team members if user has an organization
+      if (user.organization_id) {
+        const { data: members } = await supabase
           .from('users')
           .select('*')
           .eq('organization_id', user.organization_id)
-        setTeamMembers(team || [])
+
+        setTeamMembers(members || [])
       }
 
-      // Load usage
-      const currentMonth = new Date().toISOString().slice(0, 7)
+      // Get usage stats
+      const startOfMonth = new Date()
+      startOfMonth.setDate(1)
+      startOfMonth.setHours(0, 0, 0, 0)
+
       const { data: usageData } = await supabase
-        .from('monthly_usage')
+        .from('usage_tracking')
         .select('*')
-        .eq('user_id', user?.id)
-        .eq('month', currentMonth)
-        .single()
+        .eq('user_id', user.id)
+        .gte('created_at', startOfMonth.toISOString())
 
-      setUsage(usageData || {
-        downloads_this_month: 0,
-        professor_sessions_this_month: 0,
-        tools_used_this_month: 0
-      })
-
+      setUsage(usageData || [])
       setError(null)
     } catch (err: any) {
-      console.error('Error loading user data:', err)
+      console.error('[App] Error loading user:', err)
       setError(err.message)
     } finally {
       setLoading(false)
     }
   }
 
+  // Handle login
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setAuthLoading(true)
+    setAuthError(null)
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) throw error
+    } catch (err: any) {
+      setAuthError(err.message || 'Failed to sign in')
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
+  // Handle logout
   const handleLogout = async () => {
-    setLoading(true)
     await supabase.auth.signOut()
   }
 
+  // Handle download tracking
   const handleDownload = async (resourceId: string) => {
-    if (!session || !userData) return
+    if (!userData) return
     
-    await supabase.from('activity_logs').insert({
-      user_id: session.user.id,
+    await supabase.from('usage_tracking').insert({
+      user_id: userData.id,
       organization_id: userData.organization_id,
-      action: 'download',
+      action_type: 'download',
       resource_id: resourceId
     })
-    loadUserData(session.user.id)
   }
 
-  const handleNavigate = (page: string) => {
-    navigate(`/${page}`)
+  // Handle professor session
+  const handleStartProfessor = async () => {
+    if (!userData) return
+    
+    await supabase.from('usage_tracking').insert({
+      user_id: userData.id,
+      organization_id: userData.organization_id,
+      action_type: 'professor_session'
+    })
   }
 
   // Loading state
@@ -209,337 +206,302 @@ function AppContent() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div 
-            className="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4"
-            style={{ borderColor: TEAL, borderTopColor: 'transparent' }}
-          />
+          <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     )
   }
 
-  // Not logged in - show login or signup
+  // Not logged in - show auth views
   if (!session) {
-    if (showSignup) {
-      return (
-        <SignupFlow
-          onComplete={() => {}}
-          onBack={() => setShowSignup(false)}
-          supabase={supabase}
-        />
-      )
+    // Forgot Password view
+    if (authView === 'forgot') {
+      return <ForgotPassword onBack={() => setAuthView('login')} />
     }
-    return <LoginScreen supabase={supabase} onShowSignup={() => setShowSignup(true)} />
-  }
 
-  // Has session but no user data yet
-  if (!userData) {
+    // Reset Password view (from email link)
+    if (authView === 'reset') {
+      return <ResetPassword onSuccess={() => setAuthView('login')} />
+    }
+
+    // Login form
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center max-w-md p-8">
-          <div 
-            className="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4"
-            style={{ borderColor: TEAL, borderTopColor: 'transparent' }}
-          />
-          <p className="text-gray-600">Setting up your account...</p>
-        </div>
-      </div>
-    )
-  }
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <img 
+              src="/logo.svg" 
+              alt="The Nonprofit Edge" 
+              className="h-12 mx-auto mb-4"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/logo.png'
+              }}
+            />
+            <p className="text-gray-600">Strategic tools for nonprofit leaders</p>
+          </div>
 
-  // Shared props for all routes
-  const sharedProps = {
-    user: userData,
-    organization: userData.organization,
-    usage,
-    teamCount: teamMembers.length,
-    onNavigate: handleNavigate,
-    onDownload: handleDownload,
-    onStartProfessor: () => handleNavigate('professor'),
-    onLogout: handleLogout,
-    supabase
-  }
-
-  return (
-    <>
-      <Routes>
-        {/* Main Dashboard */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<Dashboard {...sharedProps} />} />
-        
-        {/* Core Features */}
-        <Route path="/library" element={
-          <ResourceLibrary 
-            user={userData}
-            organization={userData.organization}
-            onNavigate={handleNavigate}
-            onLogout={handleLogout}
-          />
-        } />
-        <Route path="/events" element={
-          <EventsCalendar
-            user={userData}
-            organization={userData.organization}
-            onNavigate={handleNavigate}
-            onLogout={handleLogout}
-          />
-        } />
-        <Route path="/team" element={
-          <TeamAdmin
-            organization={userData.organization}
-            currentUser={userData}
-            teamMembers={teamMembers}
-            onBack={() => handleNavigate('dashboard')}
-            onRefresh={() => loadUserData(session.user.id)}
-          />
-        } />
-
-        {/* Admin Routes */}
-        <Route path="/admin" element={
-          <AdminDashboard onBack={() => handleNavigate('dashboard')} />
-        } />
-        <Route path="/content-manager" element={
-          <ContentManager
-            supabase={supabase}
-            onNavigate={handleNavigate}
-            onLogout={handleLogout}
-          />
-        } />
-        <Route path="/owner-dashboard" element={
-          <PlatformOwnerDashboard
-            supabase={supabase}
-            onNavigate={handleNavigate}
-            onLogout={handleLogout}
-          />
-        } />
-        <Route path="/enhanced-owner" element={
-          <EnhancedOwnerDashboard
-            user={userData}
-            supabase={supabase}
-            onNavigate={handleNavigate}
-          />
-        } />
-        <Route path="/marketing" element={
-          <MarketingDashboard
-            user={userData}
-            onNavigate={handleNavigate}
-            onLogout={handleLogout}
-          />
-        } />
-        <Route path="/link-manager" element={
-          <LinkManager
-            user={userData}
-            supabase={supabase}
-            onNavigate={handleNavigate}
-          />
-        } />
-        <Route path="/team-access" element={
-          <TeamAccessManager
-            supabase={supabase}
-            currentUserEmail={userData.email}
-            onNavigate={handleNavigate}
-          />
-        } />
-
-        {/* Tool Routes - Placeholder */}
-        <Route path="/board-assessment" element={<ToolPlaceholder name="Board Assessment" onBack={() => handleNavigate('dashboard')} />} />
-        <Route path="/strategic-checkup" element={<ToolPlaceholder name="Strategic Plan Check-Up" onBack={() => handleNavigate('dashboard')} />} />
-        <Route path="/ceo-evaluation" element={<ToolPlaceholder name="CEO Evaluation" onBack={() => handleNavigate('dashboard')} />} />
-        <Route path="/scenario-planner" element={<ToolPlaceholder name="Scenario Planner" onBack={() => handleNavigate('dashboard')} />} />
-        <Route path="/grant-review" element={<ToolPlaceholder name="Grant & RFP Review" onBack={() => handleNavigate('dashboard')} />} />
-        <Route path="/templates" element={<Navigate to="/library" replace />} />
-        <Route path="/professor" element={<ToolPlaceholder name="Ask the Professor" onBack={() => handleNavigate('dashboard')} />} />
-        <Route path="/settings" element={<ToolPlaceholder name="Settings" onBack={() => handleNavigate('dashboard')} />} />
-        <Route path="/reports" element={<ToolPlaceholder name="My Reports" onBack={() => handleNavigate('dashboard')} />} />
-
-        {/* Signup Route */}
-        <Route path="/signup" element={
-          <SignupFlow
-            onComplete={() => {}}
-            onBack={() => navigate('/')}
-            supabase={supabase}
-          />
-        } />
-
-        {/* Catch all */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-
-      {/* Chatbot - shows on all pages */}
-      <AIGuideChatbot
-        user={userData}
-        organization={userData.organization}
-        onNavigate={handleNavigate}
-      />
-    </>
-  )
-}
-
-// Tool Placeholder Component
-interface ToolPlaceholderProps {
-  name: string
-  onBack: () => void
-}
-
-const ToolPlaceholder: React.FC<ToolPlaceholderProps> = ({ name, onBack }) => {
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center">
-        <div 
-          className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl mx-auto mb-4"
-          style={{ backgroundColor: TEAL }}
-        >
-          🚧
-        </div>
-        <h1 className="text-2xl font-bold mb-2" style={{ color: NAVY }}>{name}</h1>
-        <p className="text-gray-500 mb-6">This tool is coming soon!</p>
-        <button
-          onClick={onBack}
-          className="px-6 py-2 rounded-lg text-white font-medium hover:opacity-90 transition"
-          style={{ backgroundColor: TEAL }}
-        >
-          ← Back to Dashboard
-        </button>
-      </div>
-    </div>
-  )
-}
-
-// Login Screen Component
-interface LoginScreenProps {
-  supabase: any
-  onShowSignup: () => void
-}
-
-const LoginScreen: React.FC<LoginScreenProps> = ({ supabase, onShowSignup }) => {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-
-    try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      })
-      if (signInError) throw signInError
-    } catch (err: any) {
-      console.error('Auth error:', err)
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <div 
-      className="min-h-screen flex items-center justify-center p-4"
-      style={{ backgroundColor: '#F8FAFC' }}
-    >
-      <div className="max-w-md w-full">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <img 
-            src="/logo.svg" 
-            alt="The Nonprofit Edge" 
-            className="h-16 mx-auto mb-4"
-            onError={(e) => {
-              const img = e.target as HTMLImageElement
-              if (img.src.includes('.svg')) {
-                img.src = '/logo.jpg'
-              }
-            }}
-          />
-          <p className="text-gray-600">
-            Strategic tools for nonprofit leaders
-          </p>
-        </div>
-
-        {/* Login Card */}
-        <div className="bg-white rounded-xl shadow-lg p-8">
-          <h2 className="text-xl font-semibold mb-6" style={{ color: NAVY }}>
-            Welcome Back
-          </h2>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
-              {error}
+          {/* Error Message */}
+          {authError && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {authError}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Login Form */}
+          <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email Address
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                Email
               </label>
               <input
+                id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00a0b0] focus:border-transparent focus:outline-none"
-                placeholder="jane@nonprofit.org"
                 required
+                placeholder="you@organization.org"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
               <input
+                id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00a0b0] focus:border-transparent focus:outline-none"
-                placeholder="••••••••"
                 required
-                minLength={6}
+                placeholder="••••••••"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none"
               />
             </div>
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full py-3 rounded-lg text-white font-semibold transition-all hover:opacity-90 disabled:opacity-50"
+              disabled={authLoading}
+              className="w-full py-3 px-4 rounded-lg font-semibold text-white transition disabled:opacity-50"
               style={{ backgroundColor: TEAL }}
             >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Please wait...
-                </span>
-              ) : (
-                'Sign In'
-              )}
+              {authLoading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 
+          {/* Forgot Password Link */}
           <div className="mt-6 text-center">
             <button
-              onClick={onShowSignup}
+              onClick={() => setAuthView('forgot')}
               className="text-sm hover:underline"
               style={{ color: TEAL }}
             >
-              Don't have an account? Start free trial
+              Forgot password?
             </button>
           </div>
-        </div>
 
-        {/* Footer */}
-        <p className="text-center text-xs text-gray-400 mt-6">
-          © 2025 The Pivotal Group Consultants Inc. All rights reserved.
-        </p>
+          {/* Sign Up Link */}
+          <div className="mt-4 text-center">
+            <a
+              href="https://www.nonprofit-edge.com/waitlist"
+              className="text-sm hover:underline"
+              style={{ color: NAVY }}
+            >
+              Don't have an account? Join the waitlist
+            </a>
+          </div>
+        </div>
       </div>
-    </div>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span className="text-2xl">⚠️</span>
+          </div>
+          <h2 className="text-xl font-bold mb-4" style={{ color: NAVY }}>
+            Something went wrong
+          </h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={handleLogout}
+            className="text-sm hover:underline"
+            style={{ color: TEAL }}
+          >
+            Sign out and try again
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // No user data
+  if (!userData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
+          <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span className="text-2xl">👤</span>
+          </div>
+          <h2 className="text-xl font-bold mb-4" style={{ color: NAVY }}>
+            Account Not Found
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Your account hasn't been set up yet. Please contact support.
+          </p>
+          <button
+            onClick={handleLogout}
+            className="text-sm hover:underline"
+            style={{ color: TEAL }}
+          >
+            Sign out
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Check if user is owner
+  const isOwner = userData.email === OWNER_EMAIL || 
+                  userData.role === 'owner' || 
+                  userData.platform_role === 'owner'
+
+  // Check if user is admin (owner or admin role)
+  const isAdmin = isOwner || 
+                  userData.role === 'admin' || 
+                  userData.platform_role === 'admin'
+
+  // Team Admin page
+  if (currentPage === 'team') {
+    return (
+      <TeamAdmin
+        organization={userData.organization}
+        currentUser={userData}
+        teamMembers={teamMembers}
+        onBack={() => setCurrentPage('dashboard')}
+        onRefresh={() => loadUserData(session.user.id)}
+      />
+    )
+  }
+
+  // Platform Admin page (owner only)
+  if (currentPage === 'admin' && isOwner) {
+    return (
+      <AdminDashboard
+        onBack={() => setCurrentPage('dashboard')}
+      />
+    )
+  }
+
+  // Content Manager (admin + owner)
+  if (currentPage === 'content-manager' && isAdmin) {
+    return (
+      <ContentManager
+        supabase={supabase}
+        onNavigate={setCurrentPage}
+        onLogout={handleLogout}
+      />
+    )
+  }
+
+  // Owner Dashboard (owner only)
+  if (currentPage === 'owner-dashboard' && isOwner) {
+    return (
+      <PlatformOwnerDashboard
+        supabase={supabase}
+        onNavigate={setCurrentPage}
+        onLogout={handleLogout}
+      />
+    )
+  }
+
+  // Enhanced Owner Dashboard (owner only)
+  if (currentPage === 'enhanced-owner' && isOwner) {
+    return (
+      <EnhancedOwnerDashboard
+        supabase={supabase}
+        onNavigate={setCurrentPage}
+        onLogout={handleLogout}
+      />
+    )
+  }
+
+  // Marketing Dashboard (owner only)
+  if (currentPage === 'marketing' && isOwner) {
+    return (
+      <MarketingDashboard
+        supabase={supabase}
+        onNavigate={setCurrentPage}
+        onLogout={handleLogout}
+      />
+    )
+  }
+
+  // Link Manager (owner only)
+  if (currentPage === 'link-manager' && isOwner) {
+    return (
+      <LinkManager
+        supabase={supabase}
+        onNavigate={setCurrentPage}
+        onLogout={handleLogout}
+      />
+    )
+  }
+
+  // Team Access Manager (owner only)
+  if (currentPage === 'team-access' && isOwner) {
+    return (
+      <TeamAccessManager
+        supabase={supabase}
+        onNavigate={setCurrentPage}
+        onLogout={handleLogout}
+      />
+    )
+  }
+
+  // Resource Library page
+  if (currentPage === 'library') {
+    return (
+      <ResourceLibrary
+        user={userData}
+        organization={userData.organization}
+        onNavigate={setCurrentPage}
+        onLogout={handleLogout}
+      />
+    )
+  }
+
+  // Events Calendar page
+  if (currentPage === 'events') {
+    return (
+      <EventsCalendar
+        user={userData}
+        organization={userData.organization}
+        onNavigate={setCurrentPage}
+        onLogout={handleLogout}
+      />
+    )
+  }
+
+  // Main Dashboard
+  return (
+    <Dashboard
+      user={userData}
+      organization={userData.organization}
+      usage={usage}
+      teamCount={teamMembers.length}
+      onNavigate={setCurrentPage}
+      onDownload={handleDownload}
+      onStartProfessor={handleStartProfessor}
+      onLogout={handleLogout}
+      supabase={supabase}
+    />
   )
 }
 
