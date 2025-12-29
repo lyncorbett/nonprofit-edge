@@ -1,6 +1,8 @@
 /**
  * THE NONPROFIT EDGE - App.tsx
  * Complete with ForgotPassword, ResetPassword, and Role-Based Access
+ * 
+ * Owner: lyncorbett@thepivotalgroup.com
  */
 
 import React, { useState, useEffect } from 'react'
@@ -31,7 +33,7 @@ const NAVY = '#1a365d'
 const TEAL = '#00a0b0'
 
 // Owner email for admin access
-const OWNER_EMAIL = 'lyn@thepivotalgroup.com'
+const OWNER_EMAIL = 'lyncorbett@thepivotalgroup.com'
 
 function App() {
   const [session, setSession] = useState<Session | null>(null)
@@ -233,17 +235,23 @@ function App() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
-          {/* Logo */}
+          {/* Logo - LARGER SIZE */}
           <div className="text-center mb-8">
             <img 
               src="/logo.svg" 
               alt="The Nonprofit Edge" 
-              className="h-12 mx-auto mb-4"
+              className="w-48 h-auto mx-auto mb-6"
               onError={(e) => {
-                (e.target as HTMLImageElement).src = '/logo.png'
+                const img = e.target as HTMLImageElement
+                if (img.src.includes('.svg')) {
+                  img.src = '/logo.png'
+                } else {
+                  // Fallback to text logo
+                  img.style.display = 'none'
+                }
               }}
             />
-            <p className="text-gray-600">Strategic tools for nonprofit leaders</p>
+            <p className="text-gray-600 text-lg">Strategic tools for nonprofit leaders</p>
           </div>
 
           {/* Error Message */}
@@ -266,7 +274,7 @@ function App() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="you@organization.org"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none text-base"
               />
             </div>
 
@@ -281,14 +289,14 @@ function App() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="••••••••"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none text-base"
               />
             </div>
 
             <button
               type="submit"
               disabled={authLoading}
-              className="w-full py-3 px-4 rounded-lg font-semibold text-white transition disabled:opacity-50"
+              className="w-full py-4 px-4 rounded-xl font-semibold text-white text-lg transition disabled:opacity-50 hover:opacity-90"
               style={{ backgroundColor: TEAL }}
             >
               {authLoading ? 'Signing in...' : 'Sign In'}
@@ -299,7 +307,7 @@ function App() {
           <div className="mt-6 text-center">
             <button
               onClick={() => setAuthView('forgot')}
-              className="text-sm hover:underline"
+              className="text-base hover:underline"
               style={{ color: TEAL }}
             >
               Forgot password?
@@ -310,7 +318,7 @@ function App() {
           <div className="mt-4 text-center">
             <a
               href="https://www.nonprofit-edge.com/waitlist"
-              className="text-sm hover:underline"
+              className="text-base hover:underline"
               style={{ color: NAVY }}
             >
               Don't have an account? Join the waitlist
@@ -372,7 +380,7 @@ function App() {
   }
 
   // Check if user is owner
-  const isOwner = userData.email === OWNER_EMAIL || 
+  const isOwner = userData.email?.toLowerCase() === OWNER_EMAIL.toLowerCase() || 
                   userData.role === 'owner' || 
                   userData.platform_role === 'owner'
 
