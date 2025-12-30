@@ -55,7 +55,8 @@ function App() {
   const [teamMembers, setTeamMembers] = useState<any[]>([])
   const [usage, setUsage] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
-  const [currentPage, setCurrentPage] = useState('home')
+ const [currentPage, setCurrentPage] = useState('dashboard')
+to:
   
   // Auth view: 'login' | 'forgot' | 'reset' | 'signup'
   const [authView, setAuthView] = useState<'login' | 'forgot' | 'reset' | 'signup'>('login')
