@@ -1,15 +1,18 @@
 /**
  * THE NONPROFIT EDGE - App.tsx
- * Complete with ForgotPassword, ResetPassword, and Role-Based Access
+ * Complete with browser history, signup flow, and role-based access
  * 
- * Owner: lyncorbett@thepivotalgroup.com
+ * Owner: lyn@thepivotalgroup.com
  */
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { createClient, Session } from '@supabase/supabase-js'
 
 // Components
 import Dashboard from './components/Dashboard'
+import Homepage from './components/Homepage'
+import SignUp from './components/SignUp'
+import SignUpSuccess from './components/SignUpSuccess'
 import TeamAdmin from './components/TeamAdmin'
 import AdminDashboard from './components/AdminDashboard'
 import ContentManager from './components/ContentManager'
@@ -35,6 +38,16 @@ const TEAL = '#00a0b0'
 // Owner email for admin access
 const OWNER_EMAIL = 'lyn@thepivotalgroup.com'
 
+// Valid routes for URL handling
+const VALID_ROUTES = [
+  'home', 'signin', 'signup', 'signup-success', 'forgot', 'reset',
+  'dashboard', 'library', 'events', 'team', 'reports', 'settings',
+  'content-manager', 'owner-dashboard', 'enhanced-owner', 'marketing',
+  'link-manager', 'team-access', 'homepage-editor',
+  'strategic-checkup', 'board-assessment', 'ceo-evaluation', 
+  'scenario-planner', 'grant-review', 'professor'
+]
+
 function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
@@ -42,7 +55,7 @@ function App() {
   const [teamMembers, setTeamMembers] = useState<any[]>([])
   const [usage, setUsage] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
-  const [currentPage, setCurrentPage] = useState('dashboard')
+  const [currentPage, setCurrentPage] = useState('home')
   
   // Auth view: 'login' | 'forgot' | 'reset' | 'signup'
   const [authView, setAuthView] = useState<'login' | 'forgot' | 'reset' | 'signup'>('login')
@@ -52,6 +65,57 @@ function App() {
   const [password, setPassword] = useState('')
   const [authLoading, setAuthLoading] = useState(false)
   const [authError, setAuthError] = useState<string | null>(null)
+
+  // Navigate function that updates URL and history
+  const navigate = useCallback((page: string, replace: boolean = false) => {
+    if (!VALID_ROUTES.includes(page)) {
+      console.warn(`Invalid route: ${page}`);
+      page = session ? 'dashboard' : 'home';
+    }
+    
+    const url = `/${page === 'home' ? '' : page}`;
+    
+    if (replace) {
+      window.history.replaceState({ page }, '', url);
+    } else {
+      window.history.pushState({ page }, '', url);
+    }
+    
+    setCurrentPage(page);
+    
+    // Handle auth views
+    if (page === 'signin') setAuthView('login');
+    if (page === 'forgot') setAuthView('forgot');
+    if (page === 'signup') setAuthView('signup');
+  }, [session]);
+
+  // Handle browser back/forward buttons
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      const page = event.state?.page || getPageFromUrl();
+      setCurrentPage(page);
+      
+      if (page === 'signin') setAuthView('login');
+      if (page === 'forgot') setAuthView('forgot');
+      if (page === 'signup') setAuthView('signup');
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Get page from URL on initial load
+  const getPageFromUrl = (): string => {
+    const path = window.location.pathname.slice(1) || 'home';
+    return VALID_ROUTES.includes(path) ? path : 'home';
+  };
+
+  // Initialize page from URL on mount
+  useEffect(() => {
+    const initialPage = getPageFromUrl();
+    setCurrentPage(initialPage);
+    window.history.replaceState({ page: initialPage }, '', window.location.pathname);
+  }, []);
 
   // Check for password reset token in URL
   useEffect(() => {
@@ -83,7 +147,7 @@ function App() {
           setTeamMembers([])
           setUsage(null)
           setError(null)
-          setCurrentPage('dashboard')
+          navigate('dashboard', true)
           setAuthView('login')
         }
         
@@ -222,16 +286,42 @@ function App() {
   // Not logged in - show auth views
   if (!session) {
     // Forgot Password view
-    if (authView === 'forgot') {
-      return <ForgotPassword onBack={() => setAuthView('login')} />
+    if (authView === 'forgot' || currentPage === 'forgot') {
+      return <ForgotPassword onBack={() => navigate('signin')} />
     }
 
     // Reset Password view (from email link)
-    if (authView === 'reset') {
-      return <ResetPassword onSuccess={() => setAuthView('login')} />
+    if (authView === 'reset' || currentPage === 'reset') {
+      return <ResetPassword onSuccess={() => navigate('signin')} />
     }
 
-    // Login form
+    // SignUp flow
+    if (currentPage === 'signup') {
+      return (
+        <SignUp
+          onNavigate={navigate}
+          supabase={supabase}
+        />
+      )
+    }
+
+    // SignUp Success
+    if (currentPage === 'signup-success') {
+      return <SignUpSuccess onNavigate={navigate} />
+    }
+
+    // Public Homepage
+    if (currentPage === 'home' || currentPage === '') {
+      return (
+        <Homepage 
+          onNavigate={navigate}
+          isAdmin={false}
+          supabase={supabase}
+        />
+      )
+    }
+
+    // Login form (signin or any protected route)
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
@@ -306,7 +396,7 @@ function App() {
           {/* Forgot Password Link */}
           <div className="mt-6 text-center">
             <button
-              onClick={() => setAuthView('forgot')}
+              onClick={() => navigate('forgot')}
               className="text-base hover:underline"
               style={{ color: TEAL }}
             >
@@ -316,13 +406,23 @@ function App() {
 
           {/* Sign Up Link */}
           <div className="mt-4 text-center">
-            <a
-              href="https://www.nonprofit-edge.com/waitlist"
+            <button
+              onClick={() => navigate('signup')}
               className="text-base hover:underline"
               style={{ color: NAVY }}
             >
-              Don't have an account? Join the waitlist
-            </a>
+              Don't have an account? Start free trial
+            </button>
+          </div>
+
+          {/* Back to Homepage Link */}
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => navigate('home')}
+              className="text-sm hover:underline text-gray-500"
+            >
+              ← Back to Homepage
+            </button>
           </div>
         </div>
       </div>
@@ -396,7 +496,7 @@ function App() {
         organization={userData.organization}
         currentUser={userData}
         teamMembers={teamMembers}
-        onBack={() => setCurrentPage('dashboard')}
+        onBack={() => navigate('dashboard')}
         onRefresh={() => loadUserData(session.user.id)}
       />
     )
@@ -406,7 +506,7 @@ function App() {
   if (currentPage === 'admin' && isOwner) {
     return (
       <AdminDashboard
-        onBack={() => setCurrentPage('dashboard')}
+        onBack={() => navigate('dashboard')}
       />
     )
   }
@@ -416,7 +516,7 @@ function App() {
     return (
       <ContentManager
         supabase={supabase}
-        onNavigate={setCurrentPage}
+        onNavigate={navigate}
         onLogout={handleLogout}
       />
     )
@@ -427,7 +527,7 @@ function App() {
     return (
       <PlatformOwnerDashboard
         supabase={supabase}
-        onNavigate={setCurrentPage}
+        onNavigate={navigate}
         onLogout={handleLogout}
       />
     )
@@ -438,7 +538,7 @@ function App() {
     return (
       <EnhancedOwnerDashboard
         supabase={supabase}
-        onNavigate={setCurrentPage}
+        onNavigate={navigate}
         onLogout={handleLogout}
       />
     )
@@ -449,7 +549,7 @@ function App() {
     return (
       <MarketingDashboard
         supabase={supabase}
-        onNavigate={setCurrentPage}
+        onNavigate={navigate}
         onLogout={handleLogout}
       />
     )
@@ -460,7 +560,7 @@ function App() {
     return (
       <LinkManager
         supabase={supabase}
-        onNavigate={setCurrentPage}
+        onNavigate={navigate}
         onLogout={handleLogout}
       />
     )
@@ -471,8 +571,19 @@ function App() {
     return (
       <TeamAccessManager
         supabase={supabase}
-        onNavigate={setCurrentPage}
+        onNavigate={navigate}
         onLogout={handleLogout}
+      />
+    )
+  }
+
+  // Homepage Editor (owner only)
+  if (currentPage === 'homepage-editor' && isOwner) {
+    return (
+      <Homepage
+        onNavigate={navigate}
+        isAdmin={true}
+        supabase={supabase}
       />
     )
   }
@@ -483,7 +594,7 @@ function App() {
       <ResourceLibrary
         user={userData}
         organization={userData.organization}
-        onNavigate={setCurrentPage}
+        onNavigate={navigate}
         onLogout={handleLogout}
       />
     )
@@ -495,7 +606,7 @@ function App() {
       <EventsCalendar
         user={userData}
         organization={userData.organization}
-        onNavigate={setCurrentPage}
+        onNavigate={navigate}
         onLogout={handleLogout}
       />
     )
@@ -508,7 +619,7 @@ function App() {
       organization={userData.organization}
       usage={usage}
       teamCount={teamMembers.length}
-      onNavigate={setCurrentPage}
+      onNavigate={navigate}
       onDownload={handleDownload}
       onStartProfessor={handleStartProfessor}
       onLogout={handleLogout}
