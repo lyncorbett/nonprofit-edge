@@ -322,6 +322,13 @@ const Dashboard: React.FC<DashboardProps> = ({
               >
                 Team Access
               </a>
+
+              <a 
+                onClick={() => { onNavigate('homepage-editor'); setMobileMenuOpen(false); }}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer text-gray-600 hover:bg-gray-50"
+              >
+                Homepage Editor
+              </a>
             </>
           )}
         </nav>
