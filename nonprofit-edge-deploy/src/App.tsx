@@ -66,56 +66,56 @@ function App() {
   const [authLoading, setAuthLoading] = useState(false)
   const [authError, setAuthError] = useState<string | null>(null)
 
+  // Get page from URL
+  const getPageFromUrl = (): string => {
+    const path = window.location.pathname.slice(1) || 'home'
+    return VALID_ROUTES.includes(path) ? path : 'home'
+  }
+
   // Navigate function that updates URL and history
   const navigate = useCallback((page: string, replace: boolean = false) => {
     if (!VALID_ROUTES.includes(page)) {
-      console.warn(`Invalid route: ${page}`);
-      page = session ? 'dashboard' : 'home';
+      console.warn(`Invalid route: ${page}`)
+      page = session ? 'dashboard' : 'home'
     }
     
-    const url = `/${page === 'home' ? '' : page}`;
+    const url = `/${page === 'home' ? '' : page}`
     
     if (replace) {
-      window.history.replaceState({ page }, '', url);
+      window.history.replaceState({ page }, '', url)
     } else {
-      window.history.pushState({ page }, '', url);
+      window.history.pushState({ page }, '', url)
     }
     
-    setCurrentPage(page);
+    setCurrentPage(page)
     
     // Handle auth views
-    if (page === 'signin') setAuthView('login');
-    if (page === 'forgot') setAuthView('forgot');
-    if (page === 'signup') setAuthView('signup');
-  }, [session]);
+    if (page === 'signin') setAuthView('login')
+    if (page === 'forgot') setAuthView('forgot')
+    if (page === 'signup') setAuthView('signup')
+  }, [session])
 
   // Handle browser back/forward buttons
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
-      const page = event.state?.page || getPageFromUrl();
-      setCurrentPage(page);
+      const page = event.state?.page || getPageFromUrl()
+      setCurrentPage(page)
       
-      if (page === 'signin') setAuthView('login');
-      if (page === 'forgot') setAuthView('forgot');
-      if (page === 'signup') setAuthView('signup');
-    };
+      if (page === 'signin') setAuthView('login')
+      if (page === 'forgot') setAuthView('forgot')
+      if (page === 'signup') setAuthView('signup')
+    }
 
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-  // Get page from URL on initial load
-  const getPageFromUrl = (): string => {
-    const path = window.location.pathname.slice(1) || 'home';
-    return VALID_ROUTES.includes(path) ? path : 'home';
-  };
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
 
   // Initialize page from URL on mount
   useEffect(() => {
-    const initialPage = getPageFromUrl();
-    setCurrentPage(initialPage);
-    window.history.replaceState({ page: initialPage }, '', window.location.pathname);
-  }, []);
+    const initialPage = getPageFromUrl()
+    setCurrentPage(initialPage)
+    window.history.replaceState({ page: initialPage }, '', window.location.pathname)
+  }, [])
 
   // Check for password reset token in URL
   useEffect(() => {
@@ -147,7 +147,7 @@ function App() {
           setTeamMembers([])
           setUsage(null)
           setError(null)
-          navigate('dashboard', true)
+          navigate('home', true)
           setAuthView('login')
         }
         
@@ -167,7 +167,7 @@ function App() {
     )
 
     return () => subscription.unsubscribe()
-  }, [authView])
+  }, [authView, navigate])
 
   // Load user data
   const loadUserData = async (userId: string) => {
@@ -236,6 +236,9 @@ function App() {
       })
 
       if (error) throw error
+      
+      // Navigate to dashboard after successful login
+      navigate('dashboard', true)
     } catch (err: any) {
       setAuthError(err.message || 'Failed to sign in')
     } finally {
@@ -283,7 +286,7 @@ function App() {
     )
   }
 
-  // Not logged in - show auth views
+  // Not logged in - show public pages
   if (!session) {
     // Forgot Password view
     if (authView === 'forgot' || currentPage === 'forgot') {
@@ -325,7 +328,7 @@ function App() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
-          {/* Logo - LARGER SIZE */}
+          {/* Logo */}
           <div className="text-center mb-8">
             <img 
               src="/logo.svg" 
@@ -336,7 +339,6 @@ function App() {
                 if (img.src.includes('.svg')) {
                   img.src = '/logo.png'
                 } else {
-                  // Fallback to text logo
                   img.style.display = 'none'
                 }
               }}
@@ -378,7 +380,7 @@ function App() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                placeholder="••••••••"
+                placeholder="Enter your password"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none text-base"
               />
             </div>
@@ -386,7 +388,7 @@ function App() {
             <button
               type="submit"
               disabled={authLoading}
-              className="w-full py-4 px-4 rounded-xl font-semibold text-white text-lg transition disabled:opacity-50 hover:opacity-90"
+              className="w-full py-3 px-4 text-white font-semibold rounded-lg hover:opacity-90 transition disabled:opacity-50 text-base"
               style={{ backgroundColor: TEAL }}
             >
               {authLoading ? 'Signing in...' : 'Sign In'}
