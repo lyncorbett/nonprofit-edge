@@ -1,633 +1,442 @@
-/**
- * THE NONPROFIT EDGE - App.tsx
- * Complete with browser history, signup flow, and role-based access
- * 
- * Owner: lyn@thepivotalgroup.com
- */
+import React, { useState, useEffect } from 'react';
 
-import React, { useState, useEffect, useCallback } from 'react'
-import { createClient, Session } from '@supabase/supabase-js'
+// Core Pages
+import Homepage from './Homepage';
+import Dashboard from './Dashboard';
+import SignUp from './SignUp';
+import SignUpSuccess from './SignUpSuccess';
+
+// Tool Pages
+import ToolsPage from './ToolsPage';
+import StrategicPlanCheckup from './StrategicPlanCheckup';
+import AskTheProfessor from './AskTheProfessor';
+import CEOEvaluation from './CEOEvaluation';
+import BoardAssessment from './BoardAssessment';
+import GrantReview from './GrantReview';
+import ScenarioPlanner from './ScenarioPlanner';
+import AISummary from './AISummary';
+
+// Resource Pages
+import ResourceLibrary from './ResourceLibrary';
+import EventsCalendar from './EventsCalendar';
+
+// Owner/Admin Pages
+import EnhancedOwnerDashboard from './EnhancedOwnerDashboard';
+import MarketingDashboard from './MarketingDashboard';
+import LinkManager from './LinkManager';
+import TeamAccessManager from './TeamAccessManager';
 
 // Components
-import Dashboard from './components/Dashboard'
-import Homepage from './components/Homepage'
-import SignUp from './components/SignUp'
-import SignUpSuccess from './components/SignUpSuccess'
-import TeamAdmin from './components/TeamAdmin'
-import AdminDashboard from './components/AdminDashboard'
-import ContentManager from './components/ContentManager'
-import PlatformOwnerDashboard from './components/PlatformOwnerDashboard'
-import TeamAccessManager from './components/TeamAccessManager'
-import ResourceLibrary from './components/ResourceLibrary'
-import EventsCalendar from './components/EventsCalendar'
-import MarketingDashboard from './components/MarketingDashboard'
-import LinkManager from './components/LinkManager'
-import EnhancedOwnerDashboard from './components/EnhancedOwnerDashboard'
-import ForgotPassword from './components/ForgotPassword'
-import ResetPassword from './components/ResetPassword'
+import WelcomeModal from './WelcomeModal';
+import ProductTour from './ProductTour';
+import AIGuideChatbot from './AIGuideChatbot';
 
-// Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Types
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: 'owner' | 'admin' | 'member';
+  organization_id: string;
+  avatar_url?: string;
+  is_new_user?: boolean;
+  onboarding_completed?: boolean;
+}
 
-// Brand colors
-const NAVY = '#1a365d'
-const TEAL = '#00a0b0'
+type Route = 
+  | '/' 
+  | '/signup' 
+  | '/signup/success'
+  | '/dashboard' 
+  | '/tools'
+  | '/tools/strategic-plan'
+  | '/tools/ask-professor'
+  | '/tools/ceo-evaluation'
+  | '/tools/board-assessment'
+  | '/tools/grant-review'
+  | '/tools/scenario-planner'
+  | '/tools/ai-summary'
+  | '/resources'
+  | '/events'
+  | '/owner'
+  | '/owner/marketing'
+  | '/owner/links'
+  | '/owner/team';
 
-// Owner email for admin access
-const OWNER_EMAIL = 'lyn@thepivotalgroup.com'
-
-// Valid routes for URL handling
-const VALID_ROUTES = [
-  'home', 'signin', 'signup', 'signup-success', 'forgot', 'reset',
-  'dashboard', 'library', 'events', 'team', 'reports', 'settings',
-  'content-manager', 'owner-dashboard', 'enhanced-owner', 'marketing',
-  'link-manager', 'team-access', 'homepage-editor',
-  'strategic-checkup', 'board-assessment', 'ceo-evaluation', 
-  'scenario-planner', 'grant-review', 'professor'
-]
-
-function App() {
-  const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [userData, setUserData] = useState<any>(null)
-  const [teamMembers, setTeamMembers] = useState<any[]>([])
-  const [usage, setUsage] = useState<any>(null)
-  const [error, setError] = useState<string | null>(null)
- const [currentPage, setCurrentPage] = useState('dashboard')
-  
-  // Auth view: 'login' | 'forgot' | 'reset' | 'signup'
-  const [authView, setAuthView] = useState<'login' | 'forgot' | 'reset' | 'signup'>('login')
-  
-  // Login form state
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [authLoading, setAuthLoading] = useState(false)
-  const [authError, setAuthError] = useState<string | null>(null)
-
-  // Get page from URL
-  const getPageFromUrl = (): string => {
-    const path = window.location.pathname.slice(1) || 'home'
-    return VALID_ROUTES.includes(path) ? path : 'home'
-  }
-
-  // Navigate function that updates URL and history
-  const navigate = useCallback((page: string, replace: boolean = false) => {
-    if (!VALID_ROUTES.includes(page)) {
-      console.warn(`Invalid route: ${page}`)
-      page = session ? 'dashboard' : 'home'
-    }
-    
-    const url = `/${page === 'home' ? '' : page}`
-    
-    if (replace) {
-      window.history.replaceState({ page }, '', url)
-    } else {
-      window.history.pushState({ page }, '', url)
-    }
-    
-    setCurrentPage(page)
-    
-    // Handle auth views
-    if (page === 'signin') setAuthView('login')
-    if (page === 'forgot') setAuthView('forgot')
-    if (page === 'signup') setAuthView('signup')
-  }, [session])
+const App: React.FC = () => {
+  const [currentRoute, setCurrentRoute] = useState<Route>('/');
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [showProductTour, setShowProductTour] = useState(false);
+  const [showChatbot, setShowChatbot] = useState(false);
 
   // Handle browser back/forward buttons
   useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      const page = event.state?.page || getPageFromUrl()
-      setCurrentPage(page)
-      
-      if (page === 'signin') setAuthView('login')
-      if (page === 'forgot') setAuthView('forgot')
-      if (page === 'signup') setAuthView('signup')
-    }
+    const handlePopState = () => {
+      const path = window.location.pathname as Route;
+      setCurrentRoute(path || '/');
+    };
 
-    window.addEventListener('popstate', handlePopState)
-    return () => window.removeEventListener('popstate', handlePopState)
-  }, [])
-
-  // Initialize page from URL on mount
-  useEffect(() => {
-    const initialPage = getPageFromUrl()
-    setCurrentPage(initialPage)
-    window.history.replaceState({ page: initialPage }, '', window.location.pathname)
-  }, [])
-
-  // Check for password reset token in URL
-  useEffect(() => {
-    const hash = window.location.hash
-    if (hash.includes('type=recovery')) {
-      setAuthView('reset')
-    }
-  }, [])
-
-  // Auth state listener
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('[Auth] Initial session:', session ? 'Found' : 'None')
-      setSession(session)
-      if (session) {
-        loadUserData(session.user.id)
-      } else {
-        setLoading(false)
-      }
-    })
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('[Auth] State changed:', event, session ? 'Has session' : 'No session')
-        setSession(session)
-        
-        if (event === 'SIGNED_OUT') {
-          setUserData(null)
-          setTeamMembers([])
-          setUsage(null)
-          setError(null)
-          navigate('home', true)
-          setAuthView('login')
-        }
-        
-        if (event === 'SIGNED_IN' && session) {
-          loadUserData(session.user.id)
-          // Clear reset view after successful password reset
-          if (authView === 'reset') {
-            setAuthView('login')
-            window.location.hash = ''
-          }
-        }
-
-        if (event === 'PASSWORD_RECOVERY') {
-          setAuthView('reset')
-        }
-      }
-    )
-
-    return () => subscription.unsubscribe()
-  }, [authView, navigate])
-
-  // Load user data
-  const loadUserData = async (userId: string) => {
-    try {
-      setLoading(true)
-      
-      // Get the user's email from auth
-      const { data: { user: authUser } } = await supabase.auth.getUser()
-      if (!authUser?.email) throw new Error('No email found')
-      
-      // Get user with organization using email
-      const { data: user, error: userError } = await supabase
-        .from('users')
-        .select(`
-          *,
-          organization:organizations(*)
-        `)
-        .eq('email', authUser.email)
-        .single()
-
-      if (userError) throw userError
-
-      setUserData(user)
-
-      // Get team members if user has an organization
-      if (user.organization_id) {
-        const { data: members } = await supabase
-          .from('users')
-          .select('*')
-          .eq('organization_id', user.organization_id)
-
-        setTeamMembers(members || [])
-      }
-
-      // Get usage stats
-      const startOfMonth = new Date()
-      startOfMonth.setDate(1)
-      startOfMonth.setHours(0, 0, 0, 0)
-
-      const { data: usageData } = await supabase
-        .from('usage_tracking')
-        .select('*')
-        .eq('user_id', user.id)
-        .gte('created_at', startOfMonth.toISOString())
-
-      setUsage(usageData || [])
-      setError(null)
-    } catch (err: any) {
-      console.error('[App] Error loading user:', err)
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Handle login
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setAuthLoading(true)
-    setAuthError(null)
-
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (error) throw error
-      
-      // Navigate to dashboard after successful login
-      navigate('dashboard', true)
-    } catch (err: any) {
-      setAuthError(err.message || 'Failed to sign in')
-    } finally {
-      setAuthLoading(false)
-    }
-  }
-
-  // Handle logout
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-  }
-
-  // Handle download tracking
-  const handleDownload = async (resourceId: string) => {
-    if (!userData) return
+    window.addEventListener('popstate', handlePopState);
     
-    await supabase.from('usage_tracking').insert({
-      user_id: userData.id,
-      organization_id: userData.organization_id,
-      action_type: 'download',
-      resource_id: resourceId
-    })
-  }
+    // Set initial route from URL
+    const initialPath = window.location.pathname as Route;
+    if (initialPath && initialPath !== '/') {
+      setCurrentRoute(initialPath);
+    }
 
-  // Handle professor session
-  const handleStartProfessor = async () => {
-    if (!userData) return
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Check authentication on mount
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    setIsLoading(true);
+    try {
+      // In production, check Supabase session
+      // For now, check localStorage for demo
+      const savedUser = localStorage.getItem('nonprofit_edge_user');
+      if (savedUser) {
+        const userData = JSON.parse(savedUser);
+        setUser(userData);
+        
+        // Check if new user needs onboarding
+        if (userData.is_new_user && !userData.onboarding_completed) {
+          setShowWelcomeModal(true);
+        }
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const navigate = (route: Route) => {
+    setCurrentRoute(route);
+    window.history.pushState({}, '', route);
+  };
+
+  const handleLogin = async (email: string, password: string) => {
+    // In production, use Supabase auth
+    // Demo login for testing
+    const demoUser: User = {
+      id: '1',
+      email: email,
+      name: email.split('@')[0],
+      role: email.includes('owner') ? 'owner' : 'member',
+      organization_id: 'org_1',
+      is_new_user: false,
+      onboarding_completed: true,
+    };
     
-    await supabase.from('usage_tracking').insert({
-      user_id: userData.id,
-      organization_id: userData.organization_id,
-      action_type: 'professor_session'
-    })
-  }
+    setUser(demoUser);
+    localStorage.setItem('nonprofit_edge_user', JSON.stringify(demoUser));
+    navigate('/dashboard');
+  };
+
+  const handleSignUp = async (userData: any) => {
+    const newUser: User = {
+      id: Date.now().toString(),
+      email: userData.email,
+      name: userData.name,
+      role: 'member',
+      organization_id: 'org_' + Date.now(),
+      is_new_user: true,
+      onboarding_completed: false,
+    };
+    
+    setUser(newUser);
+    localStorage.setItem('nonprofit_edge_user', JSON.stringify(newUser));
+    navigate('/signup/success');
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('nonprofit_edge_user');
+    navigate('/');
+  };
+
+  const handleWelcomeComplete = (selectedAvatar?: string) => {
+    if (user) {
+      const updatedUser = {
+        ...user,
+        avatar_url: selectedAvatar,
+        is_new_user: false,
+      };
+      setUser(updatedUser);
+      localStorage.setItem('nonprofit_edge_user', JSON.stringify(updatedUser));
+    }
+    setShowWelcomeModal(false);
+    setShowProductTour(true);
+  };
+
+  const handleTourComplete = () => {
+    if (user) {
+      const updatedUser = {
+        ...user,
+        onboarding_completed: true,
+      };
+      setUser(updatedUser);
+      localStorage.setItem('nonprofit_edge_user', JSON.stringify(updatedUser));
+    }
+    setShowProductTour(false);
+  };
 
   // Loading state
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#f8fafc',
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: '48px',
+            height: '48px',
+            border: '4px solid #e2e8f0',
+            borderTopColor: '#0097A9',
+            borderRadius: '50%',
+            margin: '0 auto 16px',
+            animation: 'spin 1s linear infinite',
+          }} />
+          <p style={{ color: '#64748b' }}>Loading...</p>
         </div>
+        <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
-    )
+    );
   }
 
-  // Not logged in - show public pages
-  if (!session) {
-    // Forgot Password view
-    if (authView === 'forgot' || currentPage === 'forgot') {
-      return <ForgotPassword onBack={() => navigate('signin')} />
+  // Route rendering
+  const renderRoute = () => {
+    // Public routes (no auth required)
+    switch (currentRoute) {
+      case '/':
+        return (
+          <Homepage 
+            onNavigate={navigate}
+            onLogin={handleLogin}
+            isLoggedIn={!!user}
+          />
+        );
+      
+      case '/signup':
+        return <SignUp onNavigate={navigate} onSignUp={handleSignUp} />;
+      
+      case '/signup/success':
+        return <SignUpSuccess onNavigate={navigate} userEmail={user?.email} />;
     }
 
-    // Reset Password view (from email link)
-    if (authView === 'reset' || currentPage === 'reset') {
-      return <ResetPassword onSuccess={() => navigate('signin')} />
+    // Protected routes (require auth)
+    if (!user) {
+      navigate('/');
+      return null;
     }
 
-    // SignUp flow
-    if (currentPage === 'signup') {
-      return (
-        <SignUp
-          onNavigate={navigate}
-          supabase={supabase}
-        />
-      )
-    }
+    switch (currentRoute) {
+      // Main Dashboard
+      case '/dashboard':
+        return (
+          <Dashboard 
+            user={user}
+            onNavigate={navigate}
+            onLogout={handleLogout}
+            onStartTour={() => setShowProductTour(true)}
+          />
+        );
 
-    // SignUp Success
-    if (currentPage === 'signup-success') {
-      return <SignUpSuccess onNavigate={navigate} />
-    }
+      // Tools
+      case '/tools':
+        return (
+          <ToolsPage 
+            userTier="professional"
+            onNavigate={navigate}
+          />
+        );
+      
+      case '/tools/strategic-plan':
+        return <StrategicPlanCheckup />;
+      
+      case '/tools/ask-professor':
+        return <AskTheProfessor />;
+      
+      case '/tools/ceo-evaluation':
+        return <CEOEvaluation />;
+      
+      case '/tools/board-assessment':
+        return <BoardAssessment />;
+      
+      case '/tools/grant-review':
+        return <GrantReview />;
+      
+      case '/tools/scenario-planner':
+        return <ScenarioPlanner />;
+      
+      case '/tools/ai-summary':
+        return <AISummary />;
 
-    // Public Homepage
-    if (currentPage === 'home' || currentPage === '') {
-      return (
-        <Homepage 
-          onNavigate={navigate}
-          isAdmin={false}
-          supabase={supabase}
-        />
-      )
-    }
+      // Resources
+      case '/resources':
+        return (
+          <ResourceLibrary 
+            userRole={user.role}
+            onNavigate={navigate}
+          />
+        );
+      
+      case '/events':
+        return (
+          <EventsCalendar 
+            userRole={user.role}
+            onNavigate={navigate}
+          />
+        );
 
-    // Login form (signin or any protected route)
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
-          {/* Logo */}
-          <div className="text-center mb-8">
-            <img 
-              src="/logo.svg" 
-              alt="The Nonprofit Edge" 
-              className="w-64 h-auto mx-auto mb-6"
-              onError={(e) => {
-                const img = e.target as HTMLImageElement
-                if (img.src.includes('.svg')) {
-                  img.src = '/logo.png'
-                } else {
-                  img.style.display = 'none'
-                }
-              }}
-            />
-            <p className="text-gray-600 text-lg">Strategic tools for nonprofit leaders</p>
+      // Owner/Admin pages
+      case '/owner':
+        if (user.role !== 'owner' && user.role !== 'admin') {
+          navigate('/dashboard');
+          return null;
+        }
+        return (
+          <EnhancedOwnerDashboard 
+            onNavigate={navigate}
+          />
+        );
+      
+      case '/owner/marketing':
+        if (user.role !== 'owner' && user.role !== 'admin') {
+          navigate('/dashboard');
+          return null;
+        }
+        return <MarketingDashboard />;
+      
+      case '/owner/links':
+        if (user.role !== 'owner' && user.role !== 'admin') {
+          navigate('/dashboard');
+          return null;
+        }
+        return <LinkManager />;
+      
+      case '/owner/team':
+        if (user.role !== 'owner' && user.role !== 'admin') {
+          navigate('/dashboard');
+          return null;
+        }
+        return <TeamAccessManager />;
+
+      default:
+        return (
+          <div style={{
+            minHeight: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: '#f8fafc',
+          }}>
+            <div style={{ textAlign: 'center' }}>
+              <h1 style={{ fontSize: '4rem', color: '#0D2C54', margin: '0 0 16px 0' }}>404</h1>
+              <p style={{ color: '#64748b', marginBottom: '24px' }}>Page not found</p>
+              <button
+                onClick={() => navigate('/dashboard')}
+                style={{
+                  padding: '12px 24px',
+                  background: '#0097A9',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Go to Dashboard
+              </button>
+            </div>
           </div>
+        );
+    }
+  };
 
-          {/* Error Message */}
-          {authError && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-              {authError}
+  return (
+    <>
+      {renderRoute()}
+
+      {/* Welcome Modal for new users */}
+      {showWelcomeModal && user && (
+        <WelcomeModal
+          userName={user.name}
+          onComplete={handleWelcomeComplete}
+          onSkip={() => {
+            setShowWelcomeModal(false);
+            navigate('/dashboard');
+          }}
+        />
+      )}
+
+      {/* Product Tour */}
+      {showProductTour && (
+        <ProductTour
+          onComplete={handleTourComplete}
+          onSkip={handleTourComplete}
+        />
+      )}
+
+      {/* AI Chatbot (floating button) */}
+      {user && currentRoute !== '/tools/ask-professor' && (
+        <>
+          <button
+            onClick={() => setShowChatbot(!showChatbot)}
+            style={{
+              position: 'fixed',
+              bottom: '24px',
+              right: '24px',
+              width: '56px',
+              height: '56px',
+              borderRadius: '50%',
+              background: '#0D2C54',
+              color: 'white',
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '24px',
+              zIndex: 1000,
+            }}
+            title="Ask AI Assistant"
+          >
+            {showChatbot ? '✕' : '💬'}
+          </button>
+
+          {showChatbot && (
+            <div style={{
+              position: 'fixed',
+              bottom: '96px',
+              right: '24px',
+              width: '380px',
+              height: '500px',
+              zIndex: 999,
+            }}>
+              <AIGuideChatbot onClose={() => setShowChatbot(false)} />
             </div>
           )}
+        </>
+      )}
+    </>
+  );
+};
 
-          {/* Login Form */}
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="you@organization.org"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none text-base"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="Enter your password"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none text-base"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={authLoading}
-              className="w-full py-3 px-4 text-white font-semibold rounded-lg hover:opacity-90 transition disabled:opacity-50 text-base"
-              style={{ backgroundColor: TEAL }}
-            >
-              {authLoading ? 'Signing in...' : 'Sign In'}
-            </button>
-          </form>
-
-          {/* Forgot Password Link */}
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => navigate('forgot')}
-              className="text-base hover:underline"
-              style={{ color: TEAL }}
-            >
-              Forgot password?
-            </button>
-          </div>
-
-          {/* Sign Up Link */}
-          <div className="mt-4 text-center">
-            <button
-              onClick={() => navigate('signup')}
-              className="text-base hover:underline"
-              style={{ color: NAVY }}
-            >
-              Don't have an account? Start free trial
-            </button>
-          </div>
-
-          {/* Back to Homepage Link */}
-          <div className="mt-4 text-center">
-            <button
-              onClick={() => navigate('home')}
-              className="text-sm hover:underline text-gray-500"
-            >
-              ← Back to Homepage
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <span className="text-2xl">⚠️</span>
-          </div>
-          <h2 className="text-xl font-bold mb-4" style={{ color: NAVY }}>
-            Something went wrong
-          </h2>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <button
-            onClick={handleLogout}
-            className="text-sm hover:underline"
-            style={{ color: TEAL }}
-          >
-            Sign out and try again
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  // No user data
-  if (!userData) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
-          <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <span className="text-2xl">👤</span>
-          </div>
-          <h2 className="text-xl font-bold mb-4" style={{ color: NAVY }}>
-            Account Not Found
-          </h2>
-          <p className="text-gray-600 mb-6">
-            Your account hasn't been set up yet. Please contact support.
-          </p>
-          <button
-            onClick={handleLogout}
-            className="text-sm hover:underline"
-            style={{ color: TEAL }}
-          >
-            Sign out
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  // Check if user is owner
-  const isOwner = userData.email?.toLowerCase() === OWNER_EMAIL.toLowerCase() || 
-                  userData.role === 'owner' || 
-                  userData.platform_role === 'owner'
-
-  // Check if user is admin (owner or admin role)
-  const isAdmin = isOwner || 
-                  userData.role === 'admin' || 
-                  userData.platform_role === 'admin'
-
-  // Team Admin page
-  if (currentPage === 'team') {
-    return (
-      <TeamAdmin
-        organization={userData.organization}
-        currentUser={userData}
-        teamMembers={teamMembers}
-        onBack={() => navigate('dashboard')}
-        onRefresh={() => loadUserData(session.user.id)}
-      />
-    )
-  }
-
-  // Platform Admin page (owner only)
-  if (currentPage === 'admin' && isOwner) {
-    return (
-      <AdminDashboard
-        onBack={() => navigate('dashboard')}
-      />
-    )
-  }
-
-  // Content Manager (admin + owner)
-  if (currentPage === 'content-manager' && isAdmin) {
-    return (
-      <ContentManager
-        supabase={supabase}
-        onNavigate={navigate}
-        onLogout={handleLogout}
-      />
-    )
-  }
-
-  // Owner Dashboard (owner only)
-  if (currentPage === 'owner-dashboard' && isOwner) {
-    return (
-      <PlatformOwnerDashboard
-        supabase={supabase}
-        onNavigate={navigate}
-        onLogout={handleLogout}
-      />
-    )
-  }
-
-  // Enhanced Owner Dashboard (owner only)
-  if (currentPage === 'enhanced-owner' && isOwner) {
-    return (
-      <EnhancedOwnerDashboard
-        supabase={supabase}
-        onNavigate={navigate}
-        onLogout={handleLogout}
-      />
-    )
-  }
-
-  // Marketing Dashboard (owner only)
-  if (currentPage === 'marketing' && isOwner) {
-    return (
-      <MarketingDashboard
-        supabase={supabase}
-        onNavigate={navigate}
-        onLogout={handleLogout}
-      />
-    )
-  }
-
-  // Link Manager (owner only)
-  if (currentPage === 'link-manager' && isOwner) {
-    return (
-      <LinkManager
-        supabase={supabase}
-        onNavigate={navigate}
-        onLogout={handleLogout}
-      />
-    )
-  }
-
-  // Team Access Manager (owner only)
-  if (currentPage === 'team-access' && isOwner) {
-    return (
-      <TeamAccessManager
-        supabase={supabase}
-        onNavigate={navigate}
-        onLogout={handleLogout}
-      />
-    )
-  }
-
-  // Homepage Editor (owner only)
-  if (currentPage === 'homepage-editor' && isOwner) {
-    return (
-      <Homepage
-        onNavigate={navigate}
-        isAdmin={true}
-        supabase={supabase}
-      />
-    )
-  }
-
-  // Resource Library page
-  if (currentPage === 'library') {
-    return (
-      <ResourceLibrary
-        user={userData}
-        organization={userData.organization}
-        onNavigate={navigate}
-        onLogout={handleLogout}
-      />
-    )
-  }
-
-  // Events Calendar page
-  if (currentPage === 'events') {
-    return (
-      <EventsCalendar
-        user={userData}
-        organization={userData.organization}
-        onNavigate={navigate}
-        onLogout={handleLogout}
-      />
-    )
-  }
-
-  // Main Dashboard
-  return (
-    <Dashboard
-      user={userData}
-      organization={userData.organization}
-      usage={usage}
-      teamCount={teamMembers.length}
-      onNavigate={navigate}
-      onDownload={handleDownload}
-      onStartProfessor={handleStartProfessor}
-      onLogout={handleLogout}
-      supabase={supabase}
-    />
-  )
-}
-
-export default App
+export default App;
