@@ -1,54 +1,28 @@
 /**
  * THE NONPROFIT EDGE - Dashboard
- * With Product Tour, Chatbot, and Owner Access
- * Updated with official SVG logo
+ * Final version - Ready for deployment
+ * 
+ * Features:
+ * - Image-based tool cards in 3x2 grid
+ * - Today's Insight with dark navy background
+ * - Getting Started panel (4 steps)
+ * - AI Assistant chatbot (bottom right)
+ * - Avatar selection modal
+ * - Role-based admin access (owner/admin/member)
+ * - No icons in sidebar navigation
+ * 
+ * Roles:
+ *   owner  → Sees: Content Manager + Platform Admin + Owner Dashboard
+ *   admin  → Sees: Content Manager only
+ *   member → Sees: Neither (regular dashboard only)
  */
 
 import React, { useState, useEffect } from 'react';
-import ProductTour from './ProductTour';
-import AIGuideChatbot from './AIGuideChatbot';
-import WelcomeModal from './WelcomeModal';
 
 // Brand colors
-const NAVY = '#0D2C54';
-const TEAL = '#0097A9';
+const NAVY = '#1a365d';
+const TEAL = '#00a0b0';
 const TEAL_LIGHT = '#e6f7f9';
-
-// Owner email - gets full admin access
-const OWNER_EMAIL = 'lyn@thepivotalgroup.com';
-
-// Official Logo Component
-const Logo = ({ width = 140 }: { width?: number }) => (
-  <svg width={width} height={width * 0.35} viewBox="250 270 520 220">
-    <g>
-      <path fill="#0D2C54" d="M438.46,469.14c-18.16,14.03-40.93,22.38-65.64,22.38c-30.79,0-58.55-12.94-78.16-33.69c2.85,0.46,5.7,0.81,8.57,1.06c9.13,0.79,17.9,0.49,26.26-0.63c12.72,7.44,27.53,11.71,43.33,11.71c17.17,0,33.17-5.03,46.59-13.71C422.94,460.11,428.93,465.14,438.46,469.14z"/>
-      <path fill="#0D2C54" d="M294.86,420.29c-8.64,2.53-16.05,3.61-21.74,4.02c-5.05-12.44-7.82-26.05-7.82-40.31c0-59.37,48.14-107.52,107.52-107.52c25.62,0,49.15,8.96,67.62,23.94c-9.33,2.92-16.19,7.85-20.47,11.69c-13.54-8.9-29.74-14.08-47.15-14.08c-47.48,0-85.97,38.49-85.97,85.97C286.85,396.97,289.72,409.27,294.86,420.29z"/>
-      <path fill="#0097A9" d="M258.67,434.74c0,0,61.28,14.58,121.38-60.61l-18.3-13.11l72.86-22.42l0.39,71.06l-18.78-13.01C416.22,396.64,340.29,479.82,258.67,434.74z"/>
-      <g>
-        <path fill="#0D2C54" d="M491.43,298.55v7.98h-9.88v32.91h-9.08v-32.91h-9.88v-7.98H491.43z"/>
-        <path fill="#0D2C54" d="M528.3,298.55v40.89h-9.08V322.6h-14.13v16.83H496v-40.89h9.08v16.02h14.13v-16.02H528.3z"/>
-        <path fill="#0D2C54" d="M543.91,306.53v8.27h12.17v7.69h-12.17v8.97h13.76v7.98h-22.84v-40.89h22.84v7.98H543.91z"/>
-      </g>
-      <g>
-        <path fill="#0097A9" d="M495.94,392.68h-9.08l-15.19-25.22v25.22h-9.08v-40.89h9.08l15.19,25.34v-25.34h9.08V392.68z"/>
-        <path fill="#0097A9" d="M510.53,390.41c-2.92-1.79-5.24-4.28-6.96-7.48c-1.72-3.2-2.58-6.8-2.58-10.8c0-4,0.86-7.59,2.58-10.78c1.72-3.18,4.04-5.67,6.96-7.46c2.92-1.79,6.14-2.68,9.64-2.68c3.51,0,6.72,0.89,9.64,2.68c2.92,1.79,5.22,4.27,6.91,7.46c1.68,3.18,2.52,6.78,2.52,10.78c0,4-0.85,7.6-2.55,10.8c-1.7,3.2-4,5.7-6.91,7.48c-2.9,1.79-6.11,2.68-9.62,2.68C516.66,393.09,513.45,392.19,510.53,390.41z M527.31,380.74c1.79-2.17,2.68-5.05,2.68-8.62c0-3.61-0.89-6.49-2.68-8.65c-1.79-2.15-4.17-3.23-7.15-3.23c-3.01,0-5.41,1.07-7.2,3.2c-1.79,2.14-2.68,5.03-2.68,8.68c0,3.61,0.89,6.49,2.68,8.65c1.79,2.16,4.19,3.23,7.2,3.23C523.14,384,525.52,382.91,527.31,380.74z"/>
-        <path fill="#0097A9" d="M577.65,392.68h-9.08l-15.19-25.22v25.22h-9.08v-40.89h9.08l15.19,25.34v-25.34h9.08V392.68z"/>
-        <path fill="#0097A9" d="M611.17,371.45c-0.99,1.96-2.52,3.54-4.57,4.75c-2.05,1.2-4.6,1.81-7.65,1.81h-5.63v14.68h-9.08v-40.89h14.72c2.98,0,5.49,0.56,7.54,1.69c2.05,1.13,3.59,2.68,4.62,4.66c1.03,1.98,1.54,4.25,1.54,6.81C612.66,367.32,612.16,369.49,611.17,371.45z M602.14,368.74c0.85-0.89,1.27-2.16,1.27-3.79c0-1.63-0.42-2.89-1.27-3.79c-0.85-0.89-2.14-1.34-3.88-1.34h-4.94v10.25h4.94C599.99,370.08,601.29,369.63,602.14,368.74z"/>
-        <path fill="#0097A9" d="M636.4,392.68l-7.76-15.43h-2.18v15.43h-9.08v-40.89h15.25c2.94,0,5.45,0.56,7.52,1.69c2.07,1.13,3.62,2.67,4.65,4.63c1.03,1.96,1.54,4.15,1.54,6.55c0,2.72-0.7,5.15-2.1,7.28c-1.4,2.14-3.46,3.65-6.19,4.54l8.61,16.19H636.4z M626.47,370.2h5.63c1.66,0,2.91-0.45,3.75-1.34c0.83-0.89,1.25-2.16,1.25-3.79c0-1.55-0.42-2.78-1.25-3.67c-0.83-0.89-2.08-1.34-3.75-1.34h-5.63V370.2z"/>
-        <path fill="#0097A9" d="M660.02,390.41c-2.92-1.79-5.24-4.28-6.96-7.48c-1.72-3.2-2.58-6.8-2.58-10.8c0-4,0.86-7.59,2.58-10.78c1.72-3.18,4.04-5.67,6.96-7.46c2.92-1.79,6.14-2.68,9.64-2.68c3.51,0,6.72,0.89,9.64,2.68c2.92,1.79,5.22,4.27,6.91,7.46c1.68,3.18,2.52,6.78,2.52,10.78c0,4-0.85,7.6-2.55,10.8c-1.7,3.2-4,5.7-6.91,7.48c-2.9,1.79-6.11,2.68-9.62,2.68C666.15,393.09,662.94,392.19,660.02,390.41z M676.8,380.74c1.79-2.17,2.68-5.05,2.68-8.62c0-3.61-0.89-6.49-2.68-8.65c-1.79-2.15-4.17-3.23-7.15-3.23c-3.01,0-5.41,1.07-7.2,3.2c-1.79,2.14-2.68,5.03-2.68,8.68c0,3.61,0.89,6.49,2.68,8.65c1.79,2.16,4.19,3.23,7.2,3.23C672.63,384,675.01,382.91,676.8,380.74z"/>
-        <path fill="#0097A9" d="M718.05,351.79v7.98h-15.19v8.62h11.37v7.75h-11.37v16.54h-9.08v-40.89H718.05z"/>
-        <path fill="#0097A9" d="M731.92,351.79v40.89h-9.08v-40.89H731.92z"/>
-        <path fill="#0097A9" d="M765.33,351.79v7.98h-9.88v32.91h-9.08v-32.91h-9.88v-7.98H765.33z"/>
-      </g>
-      <g>
-        <path fill="#0D2C54" d="M476.97,418.87v13.1h19.27v12.18h-19.27v14.21h21.8v12.64h-36.19v-64.78h36.19v12.64H476.97z"/>
-        <path fill="#0D2C54" d="M546.58,410.29c4.66,2.71,8.26,6.51,10.82,11.4c2.55,4.89,3.83,10.54,3.83,16.93c0,6.34-1.28,11.97-3.83,16.89c-2.55,4.92-6.17,8.74-10.86,11.44c-4.69,2.71-10.11,4.06-16.29,4.06h-22.14v-64.78h22.14C536.48,406.23,541.92,407.58,546.58,410.29z M542.03,452.46c3.03-3.26,4.55-7.87,4.55-13.84c0-5.97-1.51-10.61-4.55-13.93c-3.03-3.32-7.27-4.98-12.71-4.98h-6.82v37.65h6.82C534.77,457.35,539,455.72,542.03,452.46z"/>
-        <path fill="#0D2C54" d="M608.53,426.71c-1.07-2.15-2.6-3.8-4.59-4.94c-1.99-1.14-4.33-1.71-7.03-1.71c-4.66,0-8.39,1.68-11.19,5.03c-2.81,3.35-4.21,7.83-4.21,13.43c0,5.97,1.47,10.63,4.42,13.98c2.95,3.35,7,5.03,12.16,5.03c3.54,0,6.52-0.98,8.96-2.95c2.44-1.97,4.22-4.8,5.34-8.49h-18.26v-11.63h31.31v14.67c-1.07,3.94-2.88,7.6-5.43,10.98c-2.55,3.38-5.79,6.12-9.72,8.21c-3.93,2.09-8.36,3.14-13.3,3.14c-5.84,0-11.04-1.4-15.61-4.2c-4.57-2.8-8.14-6.69-10.69-11.67c-2.55-4.98-3.83-10.67-3.83-17.07c0-6.4,1.28-12.1,3.83-17.12c2.55-5.01,6.1-8.92,10.65-11.72c4.55-2.8,9.73-4.2,15.57-4.2c7.07,0,13.03,1.88,17.89,5.63c4.85,3.75,8.07,8.95,9.64,15.6H608.53z"/>
-        <path fill="#0D2C54" d="M647.83,418.87v13.1h19.27v12.18h-19.27v14.21h21.8v12.64h-36.19v-64.78h36.19v12.64H647.83z"/>
-      </g>
-    </g>
-  </svg>
-);
 
 interface DashboardProps {
   user: any;
@@ -62,13 +36,20 @@ interface DashboardProps {
   supabase?: any;
 }
 
+interface AdminAccess {
+  isAdmin: boolean;
+  isOwner: boolean;
+  role: string | null;
+}
+
 interface Tool {
   id: string;
   name: string;
   status: string;
   statusColor: string;
-  icon: string;
+  image: string;
   route: string;
+  isActive?: boolean;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
@@ -82,285 +63,811 @@ const Dashboard: React.FC<DashboardProps> = ({
   onLogout,
   supabase
 }) => {
-  const [showWelcomeBanner, setShowWelcomeBanner] = useState(true);
-  const [showTour, setShowTour] = useState(false);
-  const [tourCompleted, setTourCompleted] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [adminAccess, setAdminAccess] = useState<AdminAccess>({
+    isAdmin: false,
+    isOwner: false,
+    role: null
+  });
+  const [showAIChat, setShowAIChat] = useState(false);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
+  const [aiMessage, setAiMessage] = useState('');
+  const [showOnboarding, setShowOnboarding] = useState(true);
 
-  const isOwner = user?.email?.toLowerCase() === OWNER_EMAIL.toLowerCase();
-
+  // Check admin access on mount
   useEffect(() => {
-    const completed = localStorage.getItem('nonprofit-edge-tour-completed');
-    const dismissed = localStorage.getItem('nonprofit-edge-onboarding-dismissed');
-    const welcomeCompleted = localStorage.getItem('nonprofit-edge-welcome-completed');
-    
-    if (completed) {
-      setTourCompleted(true);
-      setShowWelcomeBanner(false);
-    }
-    if (dismissed) {
-      setOnboardingDismissed(true);
-    }
-    if (!welcomeCompleted && !isProfileComplete()) {
-      setShowWelcomeModal(true);
-    }
-  }, []);
+    const checkAdminAccess = async () => {
+      if (!supabase || !user?.email) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('platform_admins')
+          .select('role')
+          .eq('email', user.email.toLowerCase())
+          .single();
+        
+        if (data && !error) {
+          setAdminAccess({
+            isAdmin: true,
+            isOwner: data.role === 'owner',
+            role: data.role
+          });
+        }
+      } catch (err) {
+        console.log('Admin check:', err);
+      }
+    };
 
-  const isWithin7Days = () => {
-    const createdAt = user?.created_at;
-    if (!createdAt) return true;
-    const signupDate = new Date(createdAt);
-    const now = new Date();
-    const daysSinceSignup = Math.floor((now.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24));
-    return daysSinceSignup <= 7;
-  };
+    checkAdminAccess();
+  }, [supabase, user?.email]);
 
-  const isProfileComplete = () => {
-    const hasAvatar = user?.avatar_url || user?.profile_photo;
-    const hasOrgLogo = organization?.logo_url;
-    return hasAvatar && hasOrgLogo;
-  };
-
-  const shouldShowOnboarding = !onboardingDismissed && (isWithin7Days() || !isProfileComplete());
-
-  const handleDismissOnboarding = () => {
-    setOnboardingDismissed(true);
-    localStorage.setItem('nonprofit-edge-onboarding-dismissed', 'true');
-  };
-
+  // Tool data with professional images
+  // REPLACE these URLs with your own images
   const tools: Tool[] = [
-    { id: 'strategic-plan', name: 'Strategic Plan Check-Up', status: 'Ready', statusColor: TEAL, icon: '📊', route: 'strategic-checkup' },
-    { id: 'ceo-evaluation', name: 'CEO Evaluation', status: 'Ready', statusColor: TEAL, icon: '👤', route: 'ceo-evaluation' },
-    { id: 'board-assessment', name: 'Board Assessment', status: 'Coming Soon', statusColor: '#6b7280', icon: '👥', route: 'board-assessment' },
-    { id: 'grant-review', name: 'Grant & RFP Review', status: 'Ready', statusColor: TEAL, icon: '📝', route: 'grant-review' },
-    { id: 'scenario-planner', name: 'Scenario Planner', status: 'Ready', statusColor: TEAL, icon: '🔮', route: 'scenario-planner' },
-    { id: 'ask-professor', name: 'Ask The Professor', status: 'Ready', statusColor: TEAL, icon: '🎓', route: 'ask-professor' },
-    { id: 'ai-summary', name: 'AI Summary', status: 'Ready', statusColor: TEAL, icon: '✨', route: 'ai-summary' }
+    {
+      id: 'board-assessment',
+      name: 'Board Assessment',
+      status: 'Ready',
+      statusColor: '#6b7280',
+      image: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=1200&h=600&fit=crop',
+      route: 'board-assessment',
+      isActive: true
+    },
+    {
+      id: 'strategic-plan',
+      name: 'Strategic Plan Check-Up',
+      status: 'Ready',
+      statusColor: '#6b7280',
+      image: 'https://images.unsplash.com/photo-1542626991-cbc4e32524cc?w=1200&h=600&fit=crop',
+      route: 'strategic-checkup'
+    },
+    {
+      id: 'ceo-evaluation',
+      name: 'CEO Evaluation',
+      status: 'Ready',
+      statusColor: '#6b7280',
+      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&h=600&fit=crop',
+      route: 'ceo-evaluation'
+    },
+    {
+      id: 'scenario-planner',
+      name: 'Scenario Planner',
+      status: 'Ready',
+      statusColor: '#6b7280',
+      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&h=600&fit=crop',
+      route: 'scenario-planner'
+    },
+    {
+      id: 'grant-review',
+      name: 'Grant Review',
+      status: 'Ready',
+      statusColor: '#6b7280',
+      image: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1200&h=600&fit=crop',
+      route: 'grant-review'
+    },
+    {
+      id: 'template-vault',
+      name: 'Template Vault',
+      status: '147 templates',
+      statusColor: '#6b7280',
+      image: 'https://images.unsplash.com/photo-1568667256549-094345857637?w=1200&h=600&fit=crop',
+      route: 'templates'
+    }
   ];
 
-  const handleTourComplete = () => {
-    setShowTour(false);
-    setTourCompleted(true);
-    setShowWelcomeBanner(false);
-    localStorage.setItem('nonprofit-edge-tour-completed', 'true');
-  };
+  // Recommendations data
+  const recommendations = [
+    {
+      type: 'template',
+      title: 'Board Self-Assessment Survey',
+      desc: 'Annual evaluation tool for board members'
+    },
+    {
+      type: 'book',
+      title: 'Good to Great (Social Sectors)',
+      desc: 'Jim Collins on nonprofit excellence'
+    },
+    {
+      type: 'template',
+      title: 'Strategic Plan Template',
+      desc: '3-year planning framework'
+    },
+    {
+      type: 'book',
+      title: 'The ONE Thing',
+      desc: 'Focus methodology for leaders'
+    }
+  ];
 
-  const getTierInfo = () => {
-    const tier = organization?.tier || 'professional';
-    const tiers: Record<string, { name: string; color: string }> = {
-      essential: { name: 'Essential', color: '#6b7280' },
-      professional: { name: 'Professional', color: TEAL },
-      premium: { name: 'Premium', color: '#8b5cf6' },
-      enterprise: { name: 'Enterprise', color: '#f59e0b' }
-    };
-    return tiers[tier] || tiers.professional;
-  };
+  // Events data
+  const events = [
+    {
+      day: '15',
+      month: 'JAN',
+      title: 'Board Governance Masterclass',
+      meta: 'Virtual • 2:00 PM EST',
+      tag: 'WORKSHOP',
+      tagColor: 'bg-purple-100 text-purple-700'
+    },
+    {
+      day: '22',
+      month: 'JAN',
+      title: 'Strategic Planning Deep Dive',
+      meta: 'Virtual • 1:00 PM EST',
+      tag: 'TRAINING',
+      tagColor: 'bg-blue-100 text-blue-700'
+    },
+    {
+      day: '05',
+      month: 'FEB',
+      title: 'Grant Writing Workshop',
+      meta: 'Virtual • 11:00 AM EST',
+      tag: 'WORKSHOP',
+      tagColor: 'bg-purple-100 text-purple-700'
+    }
+  ];
 
-  const tierInfo = getTierInfo();
-  const firstName = user?.full_name?.split(' ')[0] || 'there';
+  // Recent activity data
+  const recentActivity = [
+    { color: '#00a0b0', text: 'Board Assessment started', time: 'Today' },
+    { color: '#16a34a', text: 'Strategic Plan completed', time: '3 days ago' },
+    { color: '#8b5cf6', text: 'Downloaded Board Self-Assessment', time: '5 days ago' },
+    { color: '#f59e0b', text: 'Coaching session', time: '2 weeks ago' }
+  ];
 
-  const Sidebar = ({ mobile = false }: { mobile?: boolean }) => (
-    <aside className={`${mobile ? 'fixed inset-0 z-50 bg-black/50 lg:hidden' : 'hidden lg:flex w-64 bg-white border-r border-gray-200 fixed h-screen flex-col'}`}>
-      {mobile && <div className="absolute inset-0" onClick={() => setMobileMenuOpen(false)} />}
-      <div className={`${mobile ? 'absolute left-0 top-0 bottom-0 w-72 bg-white flex flex-col' : 'flex flex-col h-full'}`}>
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-          <Logo width={150} />
-          {mobile && <button onClick={() => setMobileMenuOpen(false)} className="text-gray-500 text-xl">✕</button>}
-        </div>
-
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          <a onClick={() => { onNavigate('dashboard'); setMobileMenuOpen(false); }} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer" style={{ backgroundColor: TEAL_LIGHT, color: NAVY }}>
-            <span>🏠</span> Dashboard
-          </a>
-          <a onClick={() => { onNavigate('library'); setMobileMenuOpen(false); }} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer text-gray-600 hover:bg-gray-50">
-            <span>📚</span> Resource Library
-          </a>
-          <a onClick={() => { onNavigate('events'); setMobileMenuOpen(false); }} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer text-gray-600 hover:bg-gray-50">
-            <span>📅</span> Events
-          </a>
-          <a onClick={() => { onNavigate('team'); setMobileMenuOpen(false); }} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer text-gray-600 hover:bg-gray-50">
-            <span>👥</span> Team
-          </a>
-          <a onClick={() => { onNavigate('reports'); setMobileMenuOpen(false); }} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer text-gray-600 hover:bg-gray-50">
-            <span>📄</span> My Reports
-          </a>
-
-          {isOwner && (
-            <>
-              <div className="pt-4 pb-2">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-3">Admin</div>
-              </div>
-              <a onClick={() => { onNavigate('content-manager'); setMobileMenuOpen(false); }} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer text-gray-600 hover:bg-gray-50">
-                <span>📝</span> Content Manager
-              </a>
-              <a onClick={() => { onNavigate('owner-dashboard'); setMobileMenuOpen(false); }} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer text-gray-600 hover:bg-gray-50">
-                <span>⚙️</span> Platform Admin
-              </a>
-              <a onClick={() => { onNavigate('enhanced-owner'); setMobileMenuOpen(false); }} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer text-gray-600 hover:bg-gray-50">
-                <span>📊</span> Owner Dashboard
-              </a>
-              <a onClick={() => { onNavigate('marketing'); setMobileMenuOpen(false); }} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer text-gray-600 hover:bg-gray-50">
-                <span>📢</span> Marketing
-              </a>
-              <a onClick={() => { onNavigate('link-manager'); setMobileMenuOpen(false); }} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer text-gray-600 hover:bg-gray-50">
-                <span>🔗</span> Link Manager
-              </a>
-              <a onClick={() => { onNavigate('team-access'); setMobileMenuOpen(false); }} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer text-gray-600 hover:bg-gray-50">
-                <span>🔐</span> Team Access
-              </a>
-            </>
-          )}
-        </nav>
-
-        <div className="p-4 border-t border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold" style={{ backgroundColor: TEAL }}>
-              {user?.full_name?.charAt(0) || 'U'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold truncate" style={{ color: NAVY }}>{user?.full_name || 'User'}</div>
-              <div className="text-xs text-gray-400">{isOwner ? 'Owner' : tierInfo.name}</div>
-            </div>
-          </div>
-          <button onClick={onLogout} className="mt-3 w-full text-xs text-gray-500 hover:text-gray-700 py-2 rounded-lg hover:bg-gray-50 transition">
-            Sign out
-          </button>
-        </div>
-      </div>
-    </aside>
-  );
+  // Avatar options
+  const avatarColors = ['#1a365d', '#00a0b0', '#8b5cf6', '#f59e0b', '#ef4444', '#10b981'];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {showWelcomeModal && (
-        <WelcomeModal isOpen={showWelcomeModal} user={user} organization={organization} supabase={supabase}
-          onComplete={() => { setShowWelcomeModal(false); if (!tourCompleted) setShowTour(true); }}
-          onSkip={() => setShowWelcomeModal(false)}
-        />
-      )}
+    <div className="flex min-h-screen bg-gray-50" style={{ fontFamily: "'Inter', sans-serif" }}>
+      {/* Left Sidebar */}
+      <aside className="w-56 bg-white border-r-2 border-gray-300 flex flex-col fixed h-screen overflow-y-auto">
+        {/* Logo - REPLACE with your actual logo */}
+        <div className="px-4 py-4 border-b-2 border-gray-300">
+          {/* Replace this div with: <img src="/logo.png" alt="The Nonprofit Edge" className="h-8" /> */}
+          <div className="bg-gray-200 border-2 border-dashed border-gray-400 rounded-lg p-3 text-center">
+            <span className="text-xs text-gray-500 font-medium">YOUR LOGO HERE</span>
+          </div>
+        </div>
 
-      {showTour && <ProductTour isOpen={showTour} onClose={() => setShowTour(false)} onComplete={handleTourComplete} />}
+        {/* Main Navigation */}
+        <div className="py-3 flex-1">
+          <div className="px-3 mb-2">
+            <span className="text-xs font-extrabold tracking-wider text-gray-600 uppercase">Main</span>
+          </div>
+          <nav className="space-y-0.5 px-2">
+            <a 
+              onClick={() => onNavigate('dashboard')}
+              className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-sm font-medium"
+              style={{ background: TEAL_LIGHT, color: TEAL }}
+            >
+              <span>Home</span>
+            </a>
+            <a 
+              onClick={() => onNavigate('library')}
+              className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-gray-600 hover:bg-gray-50 text-sm"
+            >
+              <span>Resource Library</span>
+            </a>
+            <a 
+              onClick={() => onNavigate('events')}
+              className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-gray-600 hover:bg-gray-50 text-sm"
+            >
+              <span>Events Calendar</span>
+            </a>
+          </nav>
 
-      <Sidebar />
-      {mobileMenuOpen && <Sidebar mobile />}
-
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 z-40">
-        <button onClick={() => setMobileMenuOpen(true)} className="text-2xl" style={{ color: NAVY }}>☰</button>
-        <Logo width={120} />
-        <div className="w-8" />
-      </div>
-
-      <div className="lg:ml-64 pt-14 lg:pt-0">
-        <div className="p-4 lg:p-6 flex flex-col lg:flex-row gap-6">
-          <div className="flex-1 space-y-6">
-            {shouldShowOnboarding && showWelcomeBanner && !tourCompleted && (
-              <div className="rounded-2xl p-5 lg:p-6 text-white relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${TEAL}, #007d8a)` }}>
-                <button onClick={() => setShowWelcomeBanner(false)} className="absolute top-3 right-3 text-white/70 hover:text-white text-xl">✕</button>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-2xl">🎉</span>
-                  <h2 className="text-lg lg:text-xl font-bold">Welcome, {firstName}!</h2>
-                </div>
-                <p className="text-white/90 mb-4 text-sm lg:text-base">
-                  You now have access to strategic tools built for nonprofit leaders. Take a quick tour to get started.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <button onClick={() => setShowTour(true)} className="px-4 py-2 bg-white rounded-lg font-semibold text-sm hover:bg-gray-100 transition" style={{ color: NAVY }}>
-                    Take a Quick Tour (30 sec)
-                  </button>
-                  <button onClick={() => setShowWelcomeBanner(false)} className="px-4 py-2 bg-white/20 rounded-lg font-semibold text-sm text-white hover:bg-white/30 transition">
-                    I'll explore on my own
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <div className="rounded-2xl p-4 lg:p-5 text-white" style={{ background: `linear-gradient(135deg, ${NAVY}, #122443)` }}>
-              <div className="text-amber-400 text-xs font-bold uppercase tracking-wider mb-2">TODAY'S INSIGHT</div>
-              <p className="text-sm lg:text-base font-semibold leading-relaxed mb-2">
-                "The board's job isn't to run the organization. It's to make sure the organization is well-run."
-              </p>
-              <p className="text-xs text-gray-400">— "Governance as Leadership" by Chait, Ryan & Taylor</p>
+          {/* Tools Section */}
+          <div className="mt-4 pt-4 border-t-2 border-gray-300">
+            <div className="px-3 mb-2">
+              <span className="text-xs font-extrabold tracking-wider text-gray-600 uppercase">Tools</span>
             </div>
+            <nav className="space-y-0.5 px-2">
+              {tools.map(tool => (
+                <a
+                  key={tool.id}
+                  onClick={() => onNavigate(tool.route)}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-gray-600 hover:bg-gray-50 text-sm"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: tool.isActive ? TEAL : '#d1d5db' }} />
+                  <span>{tool.name}</span>
+                </a>
+              ))}
+            </nav>
+          </div>
 
-            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-              <div className="px-4 py-3 border-b border-gray-200">
-                <h2 className="text-sm font-bold" style={{ color: NAVY }}>Your Tools</h2>
+          {/* Resources Section */}
+          <div className="mt-4 pt-4 border-t-2 border-gray-300">
+            <div className="px-3 mb-2">
+              <span className="text-xs font-extrabold tracking-wider text-gray-600 uppercase">Resources</span>
+            </div>
+            <nav className="space-y-0.5 px-2">
+              <a 
+                onClick={() => onNavigate('templates')}
+                className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-gray-600 hover:bg-gray-50 text-sm"
+              >
+                <span>Templates</span>
+              </a>
+              <a 
+                onClick={() => onNavigate('book-summaries')}
+                className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-gray-600 hover:bg-gray-50 text-sm"
+              >
+                <span>Book Summaries</span>
+              </a>
+              <a 
+                onClick={() => onNavigate('certifications')}
+                className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-gray-600 hover:bg-gray-50 text-sm"
+              >
+                <span>Certifications</span>
+              </a>
+              {/* Ask the Professor - Main Tool */}
+              <a 
+                onClick={onStartProfessor}
+                className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-sm font-medium text-white"
+                style={{ background: NAVY }}
+              >
+                <span>Ask the Professor</span>
+              </a>
+            </nav>
+          </div>
+
+          {/* Admin Section - Only visible to admins */}
+          {adminAccess.isAdmin && (
+            <div className="mt-4 pt-4 border-t-2 border-gray-300">
+              <div className="px-3 mb-2">
+                <span className="text-xs font-extrabold tracking-wider text-gray-600 uppercase">Admin</span>
               </div>
-              <div className="p-4">
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
-                  {tools.map((tool) => (
-                    <div key={tool.id} onClick={() => onNavigate(tool.route)}
-                      className="rounded-xl border-2 border-gray-200 cursor-pointer hover:shadow-lg hover:border-teal-400 transition-all overflow-hidden group bg-white">
-                      <div className="p-4 text-center">
-                        <div className="text-4xl mb-3">{tool.icon}</div>
-                        <div className="font-semibold text-sm mb-1" style={{ color: NAVY }}>{tool.name}</div>
-                        <div className="text-xs font-medium" style={{ color: tool.statusColor }}>{tool.status}</div>
+              <nav className="space-y-0.5 px-2">
+                <a 
+                  onClick={() => onNavigate('content-manager')}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-gray-600 hover:bg-gray-50 text-sm"
+                >
+                  <span>Content Manager</span>
+                </a>
+                {adminAccess.isOwner && (
+                  <>
+                    <a 
+                      onClick={() => onNavigate('platform-admin')}
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-gray-600 hover:bg-gray-50 text-sm"
+                    >
+                      <span>Platform Admin</span>
+                    </a>
+                    <a 
+                      onClick={() => onNavigate('owner-dashboard')}
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-gray-600 hover:bg-gray-50 text-sm"
+                    >
+                      <span>Owner Dashboard</span>
+                    </a>
+                  </>
+                )}
+              </nav>
+            </div>
+          )}
+        </div>
+
+        {/* User Profile at Bottom */}
+        <div className="p-3 border-t-2 border-gray-300">
+          <div 
+            onClick={() => setShowAvatarModal(true)}
+            className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer group"
+          >
+            <div className="relative">
+              <div 
+                className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                style={{ background: NAVY }}
+              >
+                {user?.email?.charAt(0).toUpperCase() || 'U'}
+              </div>
+              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-white rounded-full border border-gray-300 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                <span className="text-[8px]">✏️</span>
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium text-gray-900 truncate">
+                {user?.email || 'User'}
+              </div>
+              <div className="text-xs text-gray-500 truncate">
+                {organization?.name || 'Organization'}
+              </div>
+            </div>
+            {adminAccess.isOwner && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: TEAL_LIGHT, color: TEAL }}>
+                OWNER
+              </span>
+            )}
+            {adminAccess.isAdmin && !adminAccess.isOwner && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-700">
+                ADMIN
+              </span>
+            )}
+          </div>
+          <button
+            onClick={onLogout}
+            className="w-full mt-2 text-xs text-gray-500 hover:text-gray-700 py-1"
+          >
+            Sign Out
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex-1 ml-56">
+        <div className="p-6">
+          <div className="flex gap-6">
+            {/* Center Content */}
+            <div className="flex-1 space-y-5">
+              {/* Welcome Header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-xl font-bold" style={{ color: NAVY }}>
+                    Welcome back{user?.email ? `, ${user.email.split('@')[0]}` : ''}!
+                  </h1>
+                  <p className="text-sm text-gray-500">Here's what's happening with your organization</p>
+                </div>
+                <button
+                  onClick={() => onNavigate('constraint-assessment')}
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-white"
+                  style={{ background: TEAL }}
+                >
+                  Constraint Assessment Report
+                </button>
+              </div>
+
+              {/* Today's Insight - Dark Background */}
+              <div 
+                className="rounded-xl p-5 relative overflow-hidden"
+                style={{ background: 'linear-gradient(135deg, #1a365d 0%, #0f1f38 100%)' }}
+              >
+                <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full" style={{ background: 'rgba(0,160,176,0.1)' }} />
+                <div className="relative">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-xl">💡</span>
+                    <span className="text-xs font-bold uppercase tracking-wider" style={{ color: TEAL }}>Today's Insight</span>
+                  </div>
+                  <p className="text-white text-base leading-relaxed mb-2">
+                    "The job of a board member isn't to run the organization. It's to make sure the organization is well-run."
+                  </p>
+                  <p className="text-sm text-gray-400">— "Governance as Leadership" by Chait, Ryan & Taylor</p>
+                </div>
+              </div>
+
+              {/* Getting Started Panel */}
+              {showOnboarding && (
+                <div className="rounded-xl border-2 border-gray-300 overflow-hidden bg-white">
+                  <div className="px-5 py-3 border-b-2 border-gray-300 flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">👋</span>
+                      <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: NAVY }}>Getting Started</h2>
+                    </div>
+                    <button 
+                      onClick={() => setShowOnboarding(false)}
+                      className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1"
+                    >
+                      ✓ I'm done with onboarding
+                    </button>
+                  </div>
+                  <div className="p-5">
+                    <div className="grid grid-cols-4 gap-4">
+                      {/* Step 1: Complete Profile - HIGHLIGHTED */}
+                      <div 
+                        onClick={() => onNavigate('settings')}
+                        className="rounded-xl border-2 p-4 cursor-pointer hover:shadow-lg transition bg-white group"
+                        style={{ borderColor: TEAL, background: '#f0fafb' }}
+                      >
+                        <div className="text-[10px] font-bold uppercase tracking-wide mb-2 px-2 py-0.5 rounded inline-block text-white" style={{ background: TEAL }}>
+                          FIRST
+                        </div>
+                        <div 
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold mb-3 group-hover:scale-110 transition"
+                          style={{ background: TEAL }}
+                        >
+                          1
+                        </div>
+                        <div className="font-bold text-sm mb-1" style={{ color: NAVY }}>Complete Profile</div>
+                        <div className="text-xs text-gray-500">Add your photo & org details</div>
+                      </div>
+
+                      {/* Step 2: Constraint Assessment */}
+                      <div 
+                        onClick={() => onNavigate('constraint-assessment')}
+                        className="rounded-xl border-2 border-gray-200 p-4 cursor-pointer hover:shadow-lg hover:border-[#00a0b0] transition bg-white group"
+                      >
+                        <div className="text-[10px] font-bold uppercase tracking-wide mb-2 px-2 py-0.5 rounded inline-block bg-blue-100 text-blue-700">
+                          ASSESS
+                        </div>
+                        <div 
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold mb-3 group-hover:scale-110 transition"
+                          style={{ background: NAVY }}
+                        >
+                          2
+                        </div>
+                        <div className="font-bold text-sm mb-1" style={{ color: NAVY }}>Constraint Assessment</div>
+                        <div className="text-xs text-gray-500">Find your organization's ONE Thing</div>
+                      </div>
+
+                      {/* Step 3: Browse Templates */}
+                      <div 
+                        onClick={() => onNavigate('templates')}
+                        className="rounded-xl border-2 border-gray-200 p-4 cursor-pointer hover:shadow-lg hover:border-[#00a0b0] transition bg-white group"
+                      >
+                        <div className="text-[10px] font-bold uppercase tracking-wide mb-2 px-2 py-0.5 rounded inline-block bg-purple-100 text-purple-700">
+                          EXPLORE
+                        </div>
+                        <div 
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold mb-3 group-hover:scale-110 transition"
+                          style={{ background: NAVY }}
+                        >
+                          3
+                        </div>
+                        <div className="font-bold text-sm mb-1" style={{ color: NAVY }}>Browse Templates</div>
+                        <div className="text-xs text-gray-500">147+ ready-to-use resources</div>
+                      </div>
+
+                      {/* Step 4: Strategic Plan Check-Up */}
+                      <div 
+                        onClick={() => onNavigate('strategic-checkup')}
+                        className="rounded-xl border-2 border-gray-200 p-4 cursor-pointer hover:shadow-lg hover:border-[#00a0b0] transition bg-white group"
+                      >
+                        <div className="text-[10px] font-bold uppercase tracking-wide mb-2 px-2 py-0.5 rounded inline-block bg-amber-100 text-amber-700">
+                          TRY THIS
+                        </div>
+                        <div 
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold mb-3 group-hover:scale-110 transition"
+                          style={{ background: NAVY }}
+                        >
+                          4
+                        </div>
+                        <div className="font-bold text-sm mb-1" style={{ color: NAVY }}>Strategic Plan Check-Up</div>
+                        <div className="text-xs text-gray-500">Assess your org's health</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Tools Grid - Image Cards */}
+              <div className="rounded-xl border-2 border-gray-300 overflow-hidden bg-white">
+                <div className="px-5 py-3 border-b-2 border-gray-300">
+                  <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: NAVY }}>Your Tools</h2>
+                </div>
+                <div className="p-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    {tools.map(tool => (
+                      <div
+                        key={tool.id}
+                        onClick={() => onNavigate(tool.route)}
+                        className="relative rounded-lg overflow-hidden cursor-pointer group"
+                        style={{ height: '100px' }}
+                      >
+                        <div 
+                          className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
+                          style={{ backgroundImage: `url(${tool.image})` }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 p-3">
+                          <div className="text-white font-bold text-sm leading-tight">{tool.name}</div>
+                          <div className="text-xs mt-0.5 text-gray-300">{tool.status}</div>
+                        </div>
+                        {tool.isActive && (
+                          <div className="absolute top-2 right-2 w-2 h-2 rounded-full" style={{ background: TEAL }} />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Recommended For You */}
+              <div className="rounded-xl border-2 border-gray-300 overflow-hidden bg-white">
+                <div className="px-5 py-3 border-b-2 border-gray-300 flex justify-between items-center">
+                  <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: NAVY }}>Recommended For You</h2>
+                  <a 
+                    onClick={() => onNavigate('library')}
+                    className="text-xs font-semibold cursor-pointer hover:underline"
+                    style={{ color: TEAL }}
+                  >
+                    See all →
+                  </a>
+                </div>
+                <div className="p-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    {recommendations.map((rec, index) => (
+                      <div
+                        key={index}
+                        onClick={() => onDownload(rec.title)}
+                        className="bg-gray-50 rounded-lg p-3 cursor-pointer hover:bg-gray-100 transition"
+                      >
+                        <span className={`inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded mb-2 ${
+                          rec.type === 'template' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'
+                        }`}>
+                          {rec.type === 'template' ? '📄 TEMPLATE' : '📚 BOOK SUMMARY'}
+                        </span>
+                        <div className="font-bold text-sm mb-0.5" style={{ color: NAVY }}>{rec.title}</div>
+                        <div className="text-xs text-gray-500">{rec.desc}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Upcoming Events */}
+              <div className="rounded-xl border-2 border-gray-300 overflow-hidden bg-white">
+                <div className="px-5 py-3 border-b-2 border-gray-300 flex justify-between items-center">
+                  <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: NAVY }}>Upcoming Events</h2>
+                  <a 
+                    onClick={() => onNavigate('events')}
+                    className="text-xs font-semibold cursor-pointer hover:underline"
+                    style={{ color: TEAL }}
+                  >
+                    View calendar →
+                  </a>
+                </div>
+                <div className="p-4 space-y-3">
+                  {events.map((event, index) => (
+                    <div key={index} className="flex gap-3">
+                      <div 
+                        className="w-12 h-12 rounded-lg flex flex-col items-center justify-center flex-shrink-0"
+                        style={{ background: NAVY }}
+                      >
+                        <div className="text-lg font-bold text-white leading-none">{event.day}</div>
+                        <div className="text-[10px] font-medium text-gray-300">{event.month}</div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-sm" style={{ color: NAVY }}>{event.title}</div>
+                        <div className="text-xs text-gray-500 mb-1">{event.meta}</div>
+                        <span className={`inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded ${event.tagColor}`}>
+                          {event.tag}
+                        </span>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-          </div>
 
-          <div className="w-full lg:w-72 space-y-6">
-            <div className="rounded-2xl p-4 lg:p-5 text-white cursor-pointer hover:shadow-xl transition" style={{ background: `linear-gradient(135deg, ${TEAL}, #007d8a)` }} onClick={onStartProfessor}>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-2xl">🎓</span>
-                <span className="font-bold">Ask the Professor</span>
-              </div>
-              <p className="text-sm text-white/80 mb-3">Get expert guidance on strategy, governance, and leadership.</p>
-              <div className="text-xs bg-white/20 rounded-lg px-3 py-2 text-center">
-                {usage?.professor_sessions_this_month || 0} sessions this month
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-              <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
-                <h3 className="text-sm font-bold" style={{ color: NAVY }}>Upcoming Events</h3>
-                <a onClick={() => onNavigate('events')} className="text-xs font-semibold cursor-pointer hover:underline" style={{ color: TEAL }}>See all →</a>
-              </div>
-              <div className="p-3 space-y-2">
-                {[
-                  { month: 'JAN', day: '15', title: 'Board Engagement Strategies', time: '12:00 PM PT', color: NAVY },
-                  { month: 'JAN', day: '22', title: 'Strategic Planning Workshop', time: '10:00 AM PT', color: TEAL }
-                ].map((event, i) => (
-                  <div key={i} className="flex gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
-                    <div className="w-11 h-11 rounded-lg flex flex-col items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: event.color }}>
-                      <span className="text-[10px]">{event.month}</span>
-                      <span className="text-base">{event.day}</span>
+            {/* Right Sidebar */}
+            <div className="w-64 space-y-4 flex-shrink-0">
+              {/* Quick Actions */}
+              <div className="rounded-xl border-2 border-gray-300 overflow-hidden bg-white">
+                <div className="px-4 py-3 border-b-2 border-gray-300">
+                  <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: NAVY }}>Quick Actions</h2>
+                </div>
+                <div className="p-3 space-y-2">
+                  <button 
+                    onClick={() => onNavigate('getting-started')}
+                    className="w-full text-left px-3 py-2.5 rounded-lg text-sm hover:bg-[#e6f7f9] transition flex items-center gap-3 border border-transparent hover:border-[#00a0b0]"
+                  >
+                    <span className="w-8 h-8 rounded-lg flex items-center justify-center text-white" style={{ background: TEAL }}>🚀</span>
+                    <div>
+                      <div className="font-semibold" style={{ color: NAVY }}>Getting Started</div>
+                      <div className="text-[10px] text-gray-500">Complete your onboarding</div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-semibold truncate" style={{ color: NAVY }}>{event.title}</div>
-                      <div className="text-xs text-gray-500">{event.time}</div>
+                  </button>
+                  <button 
+                    onClick={() => onNavigate('constraint-assessment')}
+                    className="w-full text-left px-3 py-2.5 rounded-lg text-sm hover:bg-[#e6f7f9] transition flex items-center gap-3 border border-transparent hover:border-[#00a0b0]"
+                  >
+                    <span className="w-8 h-8 rounded-lg flex items-center justify-center text-white" style={{ background: '#8b5cf6' }}>📋</span>
+                    <div>
+                      <div className="font-semibold" style={{ color: NAVY }}>Constraint Assessment Report</div>
+                      <div className="text-[10px] text-gray-500">Find your organization's ONE Thing</div>
                     </div>
-                  </div>
-                ))}
+                  </button>
+                  <button 
+                    onClick={() => onNavigate('events')}
+                    className="w-full text-left px-3 py-2.5 rounded-lg text-sm hover:bg-[#e6f7f9] transition flex items-center gap-3 border border-transparent hover:border-[#00a0b0]"
+                  >
+                    <span className="w-8 h-8 rounded-lg flex items-center justify-center text-white" style={{ background: '#f59e0b' }}>📅</span>
+                    <div>
+                      <div className="font-semibold" style={{ color: NAVY }}>Attend a Webinar</div>
+                      <div className="text-[10px] text-gray-500">Join live sessions & workshops</div>
+                    </div>
+                  </button>
+                  <button 
+                    onClick={() => onNavigate('tour')}
+                    className="w-full text-left px-3 py-2.5 rounded-lg text-sm hover:bg-[#e6f7f9] transition flex items-center gap-3 border border-transparent hover:border-[#00a0b0]"
+                  >
+                    <span className="w-8 h-8 rounded-lg flex items-center justify-center text-white" style={{ background: NAVY }}>✨</span>
+                    <div>
+                      <div className="font-semibold" style={{ color: NAVY }}>Get to Know the Edge</div>
+                      <div className="text-[10px] text-gray-500">Tour features & resources</div>
+                    </div>
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <div className="bg-white rounded-2xl border border-gray-200 p-4">
-              <h3 className="text-sm font-bold mb-3" style={{ color: NAVY }}>This Month</h3>
-              <div className="space-y-2">
-                {[
-                  { label: 'Tools Used', value: usage?.tools_used_this_month || 0 },
-                  { label: 'Downloads', value: usage?.downloads_this_month || 0 },
-                  { label: 'Professor Sessions', value: usage?.professor_sessions_this_month || 0 }
-                ].map((stat, i) => (
-                  <div key={i} className="flex justify-between items-center">
-                    <span className="text-xs text-gray-500">{stat.label}</span>
-                    <span className="text-sm font-bold" style={{ color: NAVY }}>{stat.value}</span>
+              {/* Recent Activity */}
+              <div className="rounded-xl border-2 border-gray-300 overflow-hidden bg-white">
+                <div className="px-4 py-3 border-b-2 border-gray-300">
+                  <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: NAVY }}>Recent Activity</h2>
+                </div>
+                <div className="p-3 space-y-3">
+                  {recentActivity.map((activity, index) => (
+                    <div key={index} className="flex items-start gap-2">
+                      <div 
+                        className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
+                        style={{ background: activity.color }}
+                      />
+                      <div>
+                        <div className="text-xs text-gray-700">{activity.text}</div>
+                        <div className="text-[10px] text-gray-400">{activity.time}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Report Downloads Tracker */}
+              <div 
+                className="rounded-xl border-2 overflow-hidden"
+                style={{ background: TEAL_LIGHT, borderColor: TEAL }}
+              >
+                <div className="p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-base">📥</span>
+                    <span className="font-bold text-sm" style={{ color: NAVY }}>Report Downloads</span>
                   </div>
-                ))}
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-gray-600">Remaining</span>
+                    <span className="font-bold" style={{ color: NAVY }}>
+                      {25 - (usage?.downloads_this_month || 7)} of 25
+                    </span>
+                  </div>
+                  <div 
+                    className="h-1.5 rounded-full overflow-hidden"
+                    style={{ background: 'rgba(0,160,176,0.2)' }}
+                  >
+                    <div 
+                      className="h-full rounded-full"
+                      style={{ 
+                        background: TEAL,
+                        width: `${((25 - (usage?.downloads_this_month || 7)) / 25) * 100}%`
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <AIGuideChatbot user={user} organization={organization} onNavigate={onNavigate} />
+      {/* AI Assistant Chatbot - Bottom Right */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <button 
+          onClick={() => setShowAIChat(!showAIChat)}
+          className="w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white hover:scale-105 transition-transform"
+          style={{ background: 'linear-gradient(135deg, #1a365d, #00a0b0)' }}
+        >
+          <span className="text-2xl">💬</span>
+        </button>
+        
+        {showAIChat && (
+          <div className="absolute bottom-16 right-0 w-80 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+            <div 
+              className="px-4 py-3 flex items-center gap-3"
+              style={{ background: 'linear-gradient(135deg, #1a365d, #0f1f38)' }}
+            >
+              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: TEAL }}>
+                <span className="text-xl">💬</span>
+              </div>
+              <div className="flex-1">
+                <div className="font-bold text-white text-sm">AI Assistant</div>
+                <div className="text-xs text-gray-300">Here to help you</div>
+              </div>
+              <button 
+                onClick={() => setShowAIChat(false)} 
+                className="text-gray-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="p-4 h-64 overflow-y-auto bg-gray-50">
+              <div className="flex gap-2 mb-3">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: TEAL }}>
+                  <span className="text-sm">💬</span>
+                </div>
+                <div className="bg-white rounded-xl rounded-tl-none p-3 shadow-sm max-w-[85%]">
+                  <p className="text-sm text-gray-700">
+                    Hi{user?.email ? ` ${user.email.split('@')[0]}` : ''}! 👋 I'm here to help you with The Nonprofit Edge. What would you like to explore today?
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-3 border-t border-gray-200">
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  value={aiMessage}
+                  onChange={(e) => setAiMessage(e.target.value)}
+                  placeholder="Ask me anything..." 
+                  className="flex-1 px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:border-[#00a0b0]"
+                />
+                <button className="w-10 h-10 rounded-lg flex items-center justify-center text-white" style={{ background: TEAL }}>
+                  →
+                </button>
+              </div>
+              <div className="flex gap-1 mt-2 flex-wrap">
+                <button className="text-[10px] px-2 py-1 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">
+                  Where do I start?
+                </button>
+                <button className="text-[10px] px-2 py-1 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">
+                  Show me templates
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Avatar Selection Modal */}
+      {showAvatarModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="font-bold text-lg" style={{ color: NAVY }}>Choose Your Avatar</h3>
+              <p className="text-sm text-gray-500">Select an image or upload your own</p>
+            </div>
+            <div className="p-6">
+              <div className="text-center mb-6">
+                <div 
+                  className="w-20 h-20 rounded-full mx-auto flex items-center justify-center text-white text-2xl font-bold"
+                  style={{ background: NAVY }}
+                >
+                  {user?.email?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">Current</p>
+              </div>
+              
+              <p className="text-sm font-semibold text-gray-700 mb-3">Choose an illustration:</p>
+              <div className="grid grid-cols-6 gap-3 mb-4">
+                {['👤', '👩‍💼', '👨‍💼', '👩‍🏫', '👨‍🏫', '🧑‍💼'].map((emoji, i) => (
+                  <div 
+                    key={i}
+                    className="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg cursor-pointer hover:scale-110 transition"
+                    style={{ background: `linear-gradient(135deg, ${avatarColors[i]}, ${avatarColors[(i+1) % 6]})` }}
+                  >
+                    {emoji}
+                  </div>
+                ))}
+              </div>
+              
+              <p className="text-sm font-semibold text-gray-700 mb-3">Or choose a color for your initials:</p>
+              <div className="flex gap-2 mb-6">
+                {avatarColors.map((color, i) => (
+                  <div 
+                    key={i}
+                    className="w-10 h-10 rounded-full cursor-pointer hover:scale-110 transition"
+                    style={{ background: color }}
+                  />
+                ))}
+              </div>
+              
+              <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-[#00a0b0] transition cursor-pointer">
+                <span className="text-2xl">📷</span>
+                <p className="text-sm text-gray-600 mt-1">Upload your own photo</p>
+                <p className="text-xs text-gray-400">JPG, PNG up to 2MB</p>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+              <button 
+                onClick={() => setShowAvatarModal(false)}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => setShowAvatarModal(false)}
+                className="px-4 py-2 text-sm font-semibold text-white rounded-lg"
+                style={{ background: TEAL }}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
