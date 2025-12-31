@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
+// Import real Dashboard from components
+import RealDashboard from './components/Dashboard';
+
 // Types
 interface User {
   id: string;
@@ -307,7 +310,62 @@ const App: React.FC = () => {
     
     case '/dashboard':
       if (!user) { navigate('/login'); return null; }
-      return <Dashboard />;
+      // Provide all props the real Dashboard expects
+      const mockOrganization = {
+        id: user.organization_id,
+        name: 'Your Organization',
+        tier: 'professional',
+        logo_url: null,
+      };
+      const mockUsage = {
+        tools_started: 0,
+        tools_completed: 0,
+        tools_used_this_month: 0,
+        downloads_this_month: 0,
+        professor_sessions_this_month: 0,
+        report_downloads: 0,
+      };
+      return (
+        <RealDashboard 
+          user={{
+            ...user,
+            full_name: user.name,
+            avatar_url: null,
+            profile_photo: null,
+            created_at: new Date().toISOString(),
+          }}
+          organization={mockOrganization}
+          usage={mockUsage}
+          teamCount={1}
+          onNavigate={(page: string) => {
+            // Map Dashboard's page names to our routes
+            const routeMap: Record<string, string> = {
+              'dashboard': '/dashboard',
+              'library': '/resources',
+              'events': '/events',
+              'team': '/team',
+              'reports': '/reports',
+              'settings': '/settings',
+              'strategic-checkup': '/tools/strategic-plan',
+              'ceo-evaluation': '/tools/ceo-evaluation',
+              'board-assessment': '/tools/board-assessment',
+              'scenario-planner': '/tools/scenario-planner',
+              'grant-review': '/tools/grant-review',
+              'content-manager': '/owner/content',
+              'owner-dashboard': '/owner',
+              'enhanced-owner': '/owner/enhanced',
+              'marketing': '/owner/marketing',
+              'link-manager': '/owner/links',
+              'team-access': '/owner/team',
+              'homepage-editor': '/owner/homepage',
+            };
+            navigate(routeMap[page] || `/${page}`);
+          }}
+          onDownload={(resourceId: string) => console.log('Download:', resourceId)}
+          onStartProfessor={() => navigate('/tools/ask-professor')}
+          onLogout={handleLogout}
+        />
+      );
     
     case '/tools/strategic-plan':
       return <ToolPageWrapper title="Strategic Plan Check-Up"><PlaceholderTool name="Strategic Plan Check-Up" /></ToolPageWrapper>;
