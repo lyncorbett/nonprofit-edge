@@ -1,472 +1,222 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { 
+  ClipboardCheck, 
+  MessageCircle, 
+  UserCheck, 
+  Users, 
+  FileSearch, 
+  GitBranch, 
+  FileText,
+  ArrowLeft,
+  Lock
+} from 'lucide-react';
+
+interface ToolsPageProps {
+  userTier: 'free' | 'professional' | 'enterprise';
+  onNavigate: (route: string) => void;
+}
 
 interface Tool {
   id: string;
   name: string;
   description: string;
-  icon: string;
-  status: 'available' | 'coming_soon' | 'locked';
-  category: 'assessment' | 'planning' | 'coaching';
+  icon: React.ReactNode;
   route: string;
-  estimatedTime?: string;
-  isPremium?: boolean;
+  tier: 'free' | 'professional' | 'enterprise';
+  comingSoon?: boolean;
 }
 
-interface ToolsPageProps {
-  userTier?: 'essential' | 'professional' | 'premium';
-  onNavigate?: (route: string) => void;
-}
-
-const ToolsPage: React.FC<ToolsPageProps> = ({ 
-  userTier = 'professional',
-  onNavigate 
-}) => {
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-
+const ToolsPage: React.FC<ToolsPageProps> = ({ userTier, onNavigate }) => {
   const tools: Tool[] = [
     {
       id: 'strategic-plan',
       name: 'Strategic Plan Check-Up',
-      description: 'Evaluate your strategic plan against the PIVOT framework and receive actionable recommendations to strengthen your strategy.',
-      icon: '📊',
-      status: 'available',
-      category: 'assessment',
+      description: 'Evaluate the health and effectiveness of your strategic plan with AI-powered analysis.',
+      icon: <ClipboardCheck className="w-8 h-8" />,
       route: '/tools/strategic-plan',
-      estimatedTime: '10-15 min',
+      tier: 'free',
     },
     {
       id: 'ask-professor',
       name: 'Ask The Professor',
-      description: 'Get instant AI-powered advice on any nonprofit challenge. Upload documents for analysis or just ask questions.',
-      icon: '🎓',
-      status: 'available',
-      category: 'coaching',
+      description: 'Get expert guidance on nonprofit leadership, governance, and strategy questions.',
+      icon: <MessageCircle className="w-8 h-8" />,
       route: '/tools/ask-professor',
-      estimatedTime: 'Instant',
+      tier: 'free',
     },
     {
       id: 'ceo-evaluation',
-      name: 'CEO Evaluation',
-      description: 'Comprehensive CEO performance evaluation. CEOs complete self-assessment while board members provide feedback.',
-      icon: '👤',
-      status: 'available',
-      category: 'assessment',
+      name: 'CEO Performance Evaluation',
+      description: 'Comprehensive evaluation framework for nonprofit executive performance.',
+      icon: <UserCheck className="w-8 h-8" />,
       route: '/tools/ceo-evaluation',
-      estimatedTime: '15-20 min',
+      tier: 'professional',
     },
     {
       id: 'board-assessment',
       name: 'Board Assessment',
-      description: 'Evaluate your board\'s effectiveness across governance, engagement, and strategic contribution dimensions.',
-      icon: '👥',
-      status: 'coming_soon',
-      category: 'assessment',
+      description: 'Evaluate board effectiveness, engagement, and governance practices.',
+      icon: <Users className="w-8 h-8" />,
       route: '/tools/board-assessment',
-      estimatedTime: '15-20 min',
+      tier: 'professional',
+      comingSoon: true,
     },
     {
       id: 'grant-review',
       name: 'Grant Proposal Review',
-      description: 'Upload your grant proposal and receive detailed feedback on narrative strength, budget alignment, and funder fit.',
-      icon: '📝',
-      status: 'available',
-      category: 'assessment',
+      description: 'Get AI feedback on your grant proposals before submission.',
+      icon: <FileSearch className="w-8 h-8" />,
       route: '/tools/grant-review',
-      estimatedTime: '5-10 min',
+      tier: 'professional',
     },
     {
       id: 'scenario-planner',
       name: 'Scenario Planner',
-      description: 'Explore best-case, worst-case, and most-likely scenarios for your organization\'s strategic decisions.',
-      icon: '🔮',
-      status: 'available',
-      category: 'planning',
+      description: 'Model different strategic scenarios and their potential outcomes.',
+      icon: <GitBranch className="w-8 h-8" />,
       route: '/tools/scenario-planner',
-      estimatedTime: '15-20 min',
+      tier: 'enterprise',
     },
     {
       id: 'ai-summary',
       name: 'AI Document Summary',
-      description: 'Upload any document and get an AI-powered summary with key points, conclusions, and actionable insights.',
-      icon: '✨',
-      status: 'available',
-      category: 'coaching',
+      description: 'Upload any document and get an instant AI-generated summary.',
+      icon: <FileText className="w-8 h-8" />,
       route: '/tools/ai-summary',
-      estimatedTime: 'Instant',
-    },
-    {
-      id: 'financial-health',
-      name: 'Financial Health Check',
-      description: 'Analyze your nonprofit\'s financial sustainability using key ratios and industry benchmarks.',
-      icon: '💰',
-      status: 'coming_soon',
-      category: 'assessment',
-      route: '/tools/financial-health',
-      estimatedTime: '10 min',
+      tier: 'free',
     },
   ];
 
-  const categories = [
-    { id: 'all', name: 'All Tools', count: tools.length },
-    { id: 'assessment', name: 'Assessments', count: tools.filter(t => t.category === 'assessment').length },
-    { id: 'planning', name: 'Planning', count: tools.filter(t => t.category === 'planning').length },
-    { id: 'coaching', name: 'Coaching', count: tools.filter(t => t.category === 'coaching').length },
-  ];
-
-  const filteredTools = tools.filter(tool => {
-    const matchesCategory = selectedCategory === 'all' || tool.category === selectedCategory;
-    const matchesSearch = tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          tool.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
-
-  const canAccessTool = (tool: Tool): boolean => {
-    if (tool.status !== 'available') return false;
-    if (tool.isPremium && userTier === 'essential') return false;
-    return true;
-  };
-
-  const handleToolClick = (tool: Tool) => {
-    if (!canAccessTool(tool)) return;
-    if (onNavigate) {
-      onNavigate(tool.route);
-    } else {
-      window.location.href = tool.route;
+  const getTierLevel = (tier: string): number => {
+    switch (tier) {
+      case 'free': return 0;
+      case 'professional': return 1;
+      case 'enterprise': return 2;
+      default: return 0;
     }
   };
 
-  const getStatusBadge = (tool: Tool) => {
-    if (tool.status === 'coming_soon') {
-      return (
-        <span style={{
-          padding: '4px 10px',
-          background: '#fef3c7',
-          color: '#92400e',
-          borderRadius: '12px',
-          fontSize: '0.75rem',
-          fontWeight: 600,
-        }}>
-          Coming Soon
-        </span>
-      );
+  const canAccess = (toolTier: string): boolean => {
+    return getTierLevel(userTier) >= getTierLevel(toolTier);
+  };
+
+  const getTierBadgeColor = (tier: string): string => {
+    switch (tier) {
+      case 'free': return 'bg-green-100 text-green-700';
+      case 'professional': return 'bg-blue-100 text-blue-700';
+      case 'enterprise': return 'bg-purple-100 text-purple-700';
+      default: return 'bg-gray-100 text-gray-700';
     }
-    if (tool.isPremium && userTier === 'essential') {
-      return (
-        <span style={{
-          padding: '4px 10px',
-          background: '#f3e8ff',
-          color: '#7c3aed',
-          borderRadius: '12px',
-          fontSize: '0.75rem',
-          fontWeight: 600,
-        }}>
-          Premium
-        </span>
-      );
-    }
-    if (tool.status === 'available') {
-      return (
-        <span style={{
-          padding: '4px 10px',
-          background: '#d1fae5',
-          color: '#065f46',
-          borderRadius: '12px',
-          fontSize: '0.75rem',
-          fontWeight: 600,
-        }}>
-          Available
-        </span>
-      );
-    }
-    return null;
   };
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      background: '#f8fafc',
-      fontFamily: 'Source Sans Pro, -apple-system, sans-serif'
-    }}>
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div style={{
-        background: '#0D2C54',
-        color: 'white',
-        padding: '32px',
-      }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <h1 style={{ 
-            margin: '0 0 8px 0', 
-            fontSize: '2rem',
-            fontFamily: 'Merriweather, serif',
-            fontWeight: 700
-          }}>
-            Tools & Assessments
-          </h1>
-          <p style={{ margin: 0, opacity: 0.8, fontSize: '1.125rem' }}>
-            AI-powered tools to strengthen your nonprofit strategy
-          </p>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px' }}>
-        {/* Search and Filters */}
-        <div style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '16px',
-          marginBottom: '32px',
-          alignItems: 'center'
-        }}>
-          {/* Search */}
-          <div style={{
-            flex: '1 1 300px',
-            position: 'relative'
-          }}>
-            <span style={{
-              position: 'absolute',
-              left: '16px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: '#94a3b8'
-            }}>
-              🔍
+      <header className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => onNavigate('/dashboard')}
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Back to Dashboard
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500">Your Plan:</span>
+            <span className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${getTierBadgeColor(userTier)}`}>
+              {userTier}
             </span>
-            <input
-              type="text"
-              placeholder="Search tools..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '12px 16px 12px 44px',
-                border: '2px solid #e2e8f0',
-                borderRadius: '10px',
-                fontSize: '1rem',
-                outline: 'none',
-                transition: 'border-color 0.2s'
-              }}
-              onFocus={(e) => e.target.style.borderColor = '#0097A9'}
-              onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-            />
           </div>
+        </div>
+      </header>
 
-          {/* Category Pills */}
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                style={{
-                  padding: '8px 16px',
-                  background: selectedCategory === category.id ? '#0D2C54' : 'white',
-                  color: selectedCategory === category.id ? 'white' : '#475569',
-                  border: selectedCategory === category.id ? 'none' : '2px solid #e2e8f0',
-                  borderRadius: '20px',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
-              >
-                {category.name}
-                <span style={{
-                  background: selectedCategory === category.id ? 'rgba(255,255,255,0.2)' : '#f1f5f9',
-                  padding: '2px 8px',
-                  borderRadius: '10px',
-                  fontSize: '0.75rem'
-                }}>
-                  {category.count}
-                </span>
-              </button>
-            ))}
-          </div>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">AI-Powered Tools</h1>
+          <p className="text-gray-600">
+            Leverage cutting-edge AI to strengthen your nonprofit's strategy, governance, and operations.
+          </p>
         </div>
 
         {/* Tools Grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
-          gap: '24px'
-        }}>
-          {filteredTools.map((tool) => {
-            const accessible = canAccessTool(tool);
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {tools.map((tool) => {
+            const hasAccess = canAccess(tool.tier);
+            const isDisabled = !hasAccess || tool.comingSoon;
+
             return (
               <div
                 key={tool.id}
-                onClick={() => handleToolClick(tool)}
-                style={{
-                  background: 'white',
-                  borderRadius: '16px',
-                  padding: '24px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                  border: '2px solid transparent',
-                  cursor: accessible ? 'pointer' : 'default',
-                  opacity: tool.status === 'coming_soon' ? 0.7 : 1,
-                  transition: 'all 0.2s',
-                }}
-                onMouseOver={(e) => {
-                  if (accessible) {
-                    e.currentTarget.style.borderColor = '#0097A9';
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.1)';
-                  }
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.borderColor = 'transparent';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
-                }}
+                className={`bg-white rounded-xl border ${
+                  isDisabled ? 'border-gray-200 opacity-75' : 'border-gray-200 hover:border-teal-300 hover:shadow-lg'
+                } transition-all duration-200 overflow-hidden`}
               >
-                {/* Header */}
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  marginBottom: '16px'
-                }}>
-                  <div style={{
-                    width: '56px',
-                    height: '56px',
-                    background: '#f0fdfa',
-                    borderRadius: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '28px'
-                  }}>
-                    {tool.icon}
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`p-3 rounded-xl ${
+                      isDisabled ? 'bg-gray-100 text-gray-400' : 'bg-teal-50 text-teal-600'
+                    }`}>
+                      {tool.icon}
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium capitalize ${getTierBadgeColor(tool.tier)}`}>
+                        {tool.tier}
+                      </span>
+                      {tool.comingSoon && (
+                        <span className="px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">
+                          Coming Soon
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  {getStatusBadge(tool)}
-                </div>
 
-                {/* Content */}
-                <h3 style={{
-                  margin: '0 0 8px 0',
-                  fontSize: '1.25rem',
-                  fontFamily: 'Merriweather, serif',
-                  fontWeight: 700,
-                  color: '#0D2C54'
-                }}>
-                  {tool.name}
-                </h3>
-                <p style={{
-                  margin: '0 0 16px 0',
-                  color: '#64748b',
-                  fontSize: '0.9375rem',
-                  lineHeight: 1.6
-                }}>
-                  {tool.description}
-                </p>
+                  <h3 className={`text-lg font-semibold mb-2 ${isDisabled ? 'text-gray-400' : 'text-gray-900'}`}>
+                    {tool.name}
+                  </h3>
+                  <p className={`text-sm mb-4 ${isDisabled ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {tool.description}
+                  </p>
 
-                {/* Footer */}
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  paddingTop: '16px',
-                  borderTop: '1px solid #f1f5f9'
-                }}>
-                  {tool.estimatedTime && (
-                    <span style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      color: '#94a3b8',
-                      fontSize: '0.875rem'
-                    }}>
-                      ⏱️ {tool.estimatedTime}
-                    </span>
-                  )}
-                  {accessible && (
-                    <span style={{
-                      color: '#0097A9',
-                      fontWeight: 600,
-                      fontSize: '0.875rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }}>
-                      Start →
-                    </span>
-                  )}
-                  {!accessible && tool.isPremium && (
-                    <span style={{
-                      color: '#7c3aed',
-                      fontWeight: 600,
-                      fontSize: '0.875rem'
-                    }}>
-                      Upgrade to access
-                    </span>
-                  )}
+                  <button
+                    onClick={() => !isDisabled && onNavigate(tool.route)}
+                    disabled={isDisabled}
+                    className={`w-full py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+                      isDisabled
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-teal-600 hover:bg-teal-700 text-white'
+                    }`}
+                  >
+                    {!hasAccess && <Lock className="w-4 h-4" />}
+                    {tool.comingSoon ? 'Coming Soon' : !hasAccess ? 'Upgrade to Access' : 'Launch Tool'}
+                  </button>
                 </div>
               </div>
             );
           })}
         </div>
 
-        {/* Empty State */}
-        {filteredTools.length === 0 && (
-          <div style={{
-            textAlign: 'center',
-            padding: '60px 20px',
-            color: '#64748b'
-          }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
-            <h3 style={{ margin: '0 0 8px 0', color: '#1e293b' }}>No tools found</h3>
-            <p>Try adjusting your search or filter criteria</p>
+        {/* Upgrade CTA */}
+        {userTier === 'free' && (
+          <div className="mt-12 bg-gradient-to-r from-teal-600 to-cyan-600 rounded-2xl p-8 text-white">
+            <div className="max-w-2xl">
+              <h2 className="text-2xl font-bold mb-2">Unlock All Tools</h2>
+              <p className="text-teal-100 mb-6">
+                Upgrade to Professional or Enterprise to access CEO evaluations, grant reviews, 
+                scenario planning, and more advanced features.
+              </p>
+              <button
+                onClick={() => onNavigate('/pricing')}
+                className="px-6 py-3 bg-white text-teal-600 rounded-lg font-semibold hover:bg-teal-50 transition-colors"
+              >
+                View Pricing Plans
+              </button>
+            </div>
           </div>
         )}
-
-        {/* Help Section */}
-        <div style={{
-          marginTop: '48px',
-          padding: '32px',
-          background: 'linear-gradient(135deg, #0D2C54 0%, #1a4175 100%)',
-          borderRadius: '16px',
-          color: 'white',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '24px',
-          flexWrap: 'wrap'
-        }}>
-          <div style={{ flex: '1 1 300px' }}>
-            <h3 style={{
-              margin: '0 0 8px 0',
-              fontFamily: 'Merriweather, serif',
-              fontSize: '1.375rem'
-            }}>
-              Not sure where to start?
-            </h3>
-            <p style={{ margin: 0, opacity: 0.9 }}>
-              Ask The Professor can help you identify which tools will have the biggest impact on your organization right now.
-            </p>
-          </div>
-          <button
-            onClick={() => handleToolClick(tools.find(t => t.id === 'ask-professor')!)}
-            style={{
-              padding: '12px 24px',
-              background: '#0097A9',
-              color: 'white',
-              border: 'none',
-              borderRadius: '10px',
-              fontSize: '1rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              whiteSpace: 'nowrap'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.background = '#00b4c9'}
-            onMouseOut={(e) => e.currentTarget.style.background = '#0097A9'}
-          >
-            Talk to The Professor →
-          </button>
-        </div>
-      </div>
+      </main>
     </div>
   );
 };
