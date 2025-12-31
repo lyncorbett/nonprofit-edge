@@ -1,247 +1,230 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
+import { ArrowLeft, Upload, FileText, CheckCircle, Loader2 } from 'lucide-react';
 
-const GrantReview: React.FC = () => {
-  const [currentStep, setCurrentStep] = useState(1);
+interface GrantReviewProps {
+  onBack: () => void;
+}
+
+const GrantReview: React.FC<GrantReviewProps> = ({ onBack }) => {
+  const [file, setFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [dragActive, setDragActive] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState({
-    orgName: '',
-    yourName: '',
-    yourEmail: '',
-    grantName: '',
-    funderName: '',
-    requestAmount: '',
-    focusAreas: [] as string[],
-    specificFeedback: '',
-  });
-
-  const updateField = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+      setError(null);
+    }
   };
 
-  const toggleFocusArea = (area: string) => {
-    setFormData(prev => ({
-      ...prev,
-      focusAreas: prev.focusAreas.includes(area)
-        ? prev.focusAreas.filter(a => a !== area)
-        : [...prev.focusAreas, area]
-    }));
-  };
-
-  const handleDrag = (e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    e.stopPropagation();
-    setDragActive(e.type === 'dragenter' || e.type === 'dragover');
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      setFile(e.dataTransfer.files[0]);
+      setError(null);
+    }
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    if (e.dataTransfer.files?.[0]) setUploadedFile(e.dataTransfer.files[0]);
   };
 
-  const toBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve((reader.result as string).split(',')[1]);
-      reader.onerror = reject;
-    });
-  };
-
-  const handleSubmit = async () => {
-    if (!uploadedFile) return;
-    setIsSubmitting(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
+    if (!file) {
+      setError('Please upload a grant proposal document');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
     try {
-      const fileBase64 = await toBase64(uploadedFile);
-      
-      // Create FormData to match n8n multipart expectation
       const formDataToSend = new FormData();
-      formDataToSend.append('organization', formData.orgName);
-      formDataToSend.append('email', formData.yourEmail);
-      formDataToSend.append('feedback', formData.specificFeedback || formData.focusAreas.join(', '));
-      formDataToSend.append('stage', 'Final Submission');
-      formDataToSend.append('urgency', 'Within a week');
-      formDataToSend.append('proposal', uploadedFile);
-      
-      await fetch('https://thenonprofitedge.app.n8n.cloud/webhook/rfp', {
+      formDataToSend.append('file', file);
+
+      const response = await fetch('https://thenonprofitedge.app.n8n.cloud/webhook/rfp', {
         method: 'POST',
-        body: formDataToSend, // Send as FormData, not JSON
-        }),
+        body: formDataToSend,
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit for review');
+      }
+
+      const result = await response.json();
+      setAnalysisResult(result.analysis || result.output || JSON.stringify(result));
       setIsSubmitted(true);
-    } catch (error) {
-      console.error('Error:', error);
-      setIsSubmitted(true);
+    } catch (err) {
+      setError('Failed to submit. Please try again.');
+      console.error('Submission error:', err);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const focusAreas = [
-    'Narrative Strength', 'Budget Alignment', 'Logic Model',
-    'Evaluation Plan', 'Organizational Capacity', 'Funder Alignment', 'Competitiveness'
-  ];
+  const handleReset = () => {
+    setFile(null);
+    setIsSubmitted(false);
+    setAnalysisResult(null);
+    setError(null);
+  };
 
   if (isSubmitted) {
     return (
-      <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ background: 'white', borderRadius: '16px', padding: '48px', textAlign: 'center', maxWidth: '500px' }}>
-          <div style={{ width: '80px', height: '80px', background: '#d1fae5', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', fontSize: '40px' }}>✓</div>
-          <h2 style={{ fontFamily: 'Merriweather, serif', color: '#0D2C54' }}>Proposal Submitted!</h2>
-          <p style={{ color: '#64748b', margin: '16px 0 24px' }}>Your grant review will be sent to <strong>{formData.yourEmail}</strong> within 24 hours.</p>
-          <button onClick={() => window.location.href = '/tools'} style={{ padding: '12px 32px', background: '#0097A9', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: 600, cursor: 'pointer' }}>Back to Tools</button>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+        <div className="max-w-4xl mx-auto">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-2 text-teal-400 hover:text-teal-300 mb-8 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Back to Tools
+          </button>
+
+          <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-8 border border-slate-700">
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-green-400" />
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-2">Analysis Complete!</h2>
+              <p className="text-slate-400">Here's our review of your grant proposal</p>
+            </div>
+
+            <div className="bg-slate-900/50 rounded-xl p-6 mb-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Grant Proposal Review</h3>
+              <div 
+                className="text-slate-300 prose prose-invert max-w-none"
+                dangerouslySetInnerHTML={{ __html: analysisResult || '' }}
+              />
+            </div>
+
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={handleReset}
+                className="px-6 py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-lg transition-colors"
+              >
+                Review Another Proposal
+              </button>
+              <button
+                onClick={onBack}
+                className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+              >
+                Back to Tools
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: 'Source Sans Pro, sans-serif' }}>
-      {/* Header */}
-      <div style={{ background: '#0D2C54', color: 'white', padding: '24px 32px' }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <h1 style={{ margin: '0 0 8px 0', fontSize: '1.75rem', fontFamily: 'Merriweather, serif' }}>Grant Proposal Review</h1>
-          <p style={{ margin: 0, opacity: 0.8 }}>Get AI-powered feedback on your grant proposal before you submit</p>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+      <div className="max-w-2xl mx-auto">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-teal-400 hover:text-teal-300 mb-8 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          Back to Tools
+        </button>
 
-      {/* Progress */}
-      <div style={{ background: 'white', borderBottom: '1px solid #e2e8f0', padding: '16px 32px' }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {[1, 2, 3].map((step) => (
-              <div key={step} style={{ flex: 1, height: '4px', borderRadius: '2px', background: currentStep >= step ? '#0097A9' : '#e2e8f0' }} />
-            ))}
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '0.75rem', color: '#64748b' }}>
-            <span>Grant Info</span>
-            <span>Upload Proposal</span>
-            <span>Submit</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '32px' }}>
-        <div style={{ background: 'white', borderRadius: '16px', padding: '32px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-          
-          {currentStep === 1 && (
-            <div>
-              <h2 style={{ fontFamily: 'Merriweather, serif', color: '#0D2C54', marginBottom: '24px' }}>About This Grant</h2>
-              <div style={{ display: 'grid', gap: '20px' }}>
-                <div>
-                  <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>Organization Name *</label>
-                  <input type="text" value={formData.orgName} onChange={(e) => updateField('orgName', e.target.value)} style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem' }} />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>Your Name *</label>
-                    <input type="text" value={formData.yourName} onChange={(e) => updateField('yourName', e.target.value)} style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>Your Email *</label>
-                    <input type="email" value={formData.yourEmail} onChange={(e) => updateField('yourEmail', e.target.value)} style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem' }} />
-                  </div>
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>Grant/RFP Name</label>
-                  <input type="text" value={formData.grantName} onChange={(e) => updateField('grantName', e.target.value)} placeholder="e.g., Community Impact Grant 2025" style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem' }} />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>Funder Name</label>
-                    <input type="text" value={formData.funderName} onChange={(e) => updateField('funderName', e.target.value)} style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>Request Amount</label>
-                    <input type="text" value={formData.requestAmount} onChange={(e) => updateField('requestAmount', e.target.value)} placeholder="$50,000" style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem' }} />
-                  </div>
-                </div>
-              </div>
+        <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-8 border border-slate-700">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-teal-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FileText className="w-8 h-8 text-teal-400" />
             </div>
-          )}
+            <h1 className="text-3xl font-bold text-white mb-2">Grant Proposal Review</h1>
+            <p className="text-slate-400">
+              Upload your grant proposal and get AI-powered feedback to strengthen your application
+            </p>
+          </div>
 
-          {currentStep === 2 && (
-            <div>
-              <h2 style={{ fontFamily: 'Merriweather, serif', color: '#0D2C54', marginBottom: '8px' }}>Upload Your Proposal</h2>
-              <p style={{ color: '#64748b', marginBottom: '24px' }}>Upload your draft or final grant proposal</p>
-              
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop}
-                style={{ border: `2px dashed ${dragActive ? '#0097A9' : uploadedFile ? '#10b981' : '#cbd5e1'}`, borderRadius: '12px', padding: '48px', textAlign: 'center', cursor: 'pointer', background: uploadedFile ? '#f0fdf4' : '#f8fafc', marginBottom: '24px' }}
-              >
-                <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx" onChange={(e) => e.target.files?.[0] && setUploadedFile(e.target.files[0])} style={{ display: 'none' }} />
-                {uploadedFile ? (
-                  <>
-                    <div style={{ fontSize: '48px', marginBottom: '12px' }}>✓</div>
-                    <p style={{ fontWeight: 600, color: '#059669' }}>{uploadedFile.name}</p>
-                    <p style={{ color: '#64748b', fontSize: '0.875rem' }}>Click to replace</p>
-                  </>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
+                file
+                  ? 'border-teal-500 bg-teal-500/10'
+                  : 'border-slate-600 hover:border-slate-500'
+              }`}
+            >
+              <input
+                type="file"
+                id="file-upload"
+                onChange={handleFileChange}
+                accept=".pdf,.doc,.docx,.txt"
+                className="hidden"
+              />
+              <label htmlFor="file-upload" className="cursor-pointer">
+                {file ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <FileText className="w-12 h-12 text-teal-400" />
+                    <span className="text-white font-medium">{file.name}</span>
+                    <span className="text-slate-400 text-sm">Click to change file</span>
+                  </div>
                 ) : (
-                  <>
-                    <div style={{ fontSize: '48px', marginBottom: '12px' }}>📄</div>
-                    <p style={{ fontWeight: 600 }}>Drag & drop your proposal here</p>
-                    <p style={{ color: '#64748b', fontSize: '0.875rem' }}>PDF or Word document</p>
-                  </>
+                  <div className="flex flex-col items-center gap-2">
+                    <Upload className="w-12 h-12 text-slate-500" />
+                    <span className="text-white font-medium">Drop your proposal here</span>
+                    <span className="text-slate-400 text-sm">or click to browse</span>
+                    <span className="text-slate-500 text-xs mt-2">PDF, Word, or TXT files accepted</span>
+                  </div>
                 )}
-              </div>
-
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: '12px' }}>Focus areas for feedback:</label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {focusAreas.map((area) => (
-                  <button key={area} type="button" onClick={() => toggleFocusArea(area)} style={{ padding: '8px 16px', background: formData.focusAreas.includes(area) ? '#0097A9' : 'white', color: formData.focusAreas.includes(area) ? 'white' : '#475569', border: `2px solid ${formData.focusAreas.includes(area) ? '#0097A9' : '#e2e8f0'}`, borderRadius: '20px', fontSize: '0.875rem', cursor: 'pointer' }}>
-                    {area}
-                  </button>
-                ))}
-              </div>
+              </label>
             </div>
-          )}
 
-          {currentStep === 3 && (
-            <div>
-              <h2 style={{ fontFamily: 'Merriweather, serif', color: '#0D2C54', marginBottom: '24px' }}>Review & Submit</h2>
-              
-              <div style={{ marginBottom: '24px' }}>
-                <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>Any specific concerns? (Optional)</label>
-                <textarea value={formData.specificFeedback} onChange={(e) => updateField('specificFeedback', e.target.value)} rows={4} placeholder="Is there anything specific you'd like us to pay attention to?" style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', resize: 'vertical' }} />
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 text-center">
+                {error}
               </div>
-
-              <div style={{ background: '#f0fdfa', border: '2px solid #0097A9', borderRadius: '12px', padding: '24px' }}>
-                <h3 style={{ margin: '0 0 12px 0', color: '#0D2C54' }}>Summary</h3>
-                <div style={{ display: 'grid', gap: '8px', color: '#475569', fontSize: '0.9375rem' }}>
-                  <p><strong>Organization:</strong> {formData.orgName}</p>
-                  <p><strong>Grant:</strong> {formData.grantName || 'Not specified'}</p>
-                  <p><strong>Funder:</strong> {formData.funderName || 'Not specified'}</p>
-                  <p><strong>Amount:</strong> {formData.requestAmount || 'Not specified'}</p>
-                  <p><strong>Document:</strong> {uploadedFile?.name}</p>
-                  <p><strong>Report will be sent to:</strong> {formData.yourEmail}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Navigation */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '32px', paddingTop: '24px', borderTop: '1px solid #e2e8f0' }}>
-            <button onClick={() => setCurrentStep(prev => prev - 1)} disabled={currentStep === 1} style={{ padding: '12px 24px', background: currentStep === 1 ? '#f1f5f9' : 'white', color: currentStep === 1 ? '#94a3b8' : '#475569', border: '2px solid #e2e8f0', borderRadius: '8px', fontWeight: 600, cursor: currentStep === 1 ? 'not-allowed' : 'pointer' }}>
-              ← Back
-            </button>
-            {currentStep < 3 ? (
-              <button onClick={() => setCurrentStep(prev => prev + 1)} disabled={currentStep === 2 && !uploadedFile} style={{ padding: '12px 32px', background: (currentStep === 2 && !uploadedFile) ? '#94a3b8' : '#0097A9', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: (currentStep === 2 && !uploadedFile) ? 'not-allowed' : 'pointer' }}>
-                Continue →
-              </button>
-            ) : (
-              <button onClick={handleSubmit} disabled={isSubmitting} style={{ padding: '12px 32px', background: isSubmitting ? '#94a3b8' : '#0D2C54', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}>
-                {isSubmitting ? 'Submitting...' : 'Submit for Review'}
-              </button>
             )}
+
+            <button
+              type="submit"
+              disabled={isSubmitting || !file}
+              className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
+                isSubmitting || !file
+                  ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 text-white shadow-lg shadow-teal-500/25'
+              }`}
+            >
+              {isSubmitting ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Analyzing Proposal...
+                </span>
+              ) : (
+                'Get AI Review'
+              )}
+            </button>
+          </form>
+
+          <div className="mt-8 pt-6 border-t border-slate-700">
+            <h3 className="text-white font-semibold mb-3">What You'll Get:</h3>
+            <ul className="space-y-2 text-slate-400 text-sm">
+              <li className="flex items-start gap-2">
+                <CheckCircle className="w-4 h-4 text-teal-400 mt-0.5 flex-shrink-0" />
+                Strengths and weaknesses analysis
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle className="w-4 h-4 text-teal-400 mt-0.5 flex-shrink-0" />
+                Alignment with funder priorities
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle className="w-4 h-4 text-teal-400 mt-0.5 flex-shrink-0" />
+                Budget and timeline feedback
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle className="w-4 h-4 text-teal-400 mt-0.5 flex-shrink-0" />
+                Specific recommendations for improvement
+              </li>
+            </ul>
           </div>
         </div>
       </div>
