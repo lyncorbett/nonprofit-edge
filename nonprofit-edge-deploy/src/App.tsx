@@ -1,35 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 
-// Core Pages - from components folder
-import Homepage from './components/Homepage';
-import Dashboard from './components/Dashboard';
-import SignUp from './components/SignUp';
-import SignUpSuccess from './components/SignUpSuccess';
-
-// Tool Pages - some in components, some in src root
+// Tool Pages - These are the new files you just uploaded
 import ToolsPage from './ToolsPage';
-import StrategicPlanCheckup from './components/StrategicPlanCheckup';
 import AskTheProfessor from './AskTheProfessor';
 import CEOEvaluation from './CEOEvaluation';
 import BoardAssessment from './BoardAssessment';
 import GrantReview from './GrantReview';
 import ScenarioPlanner from './ScenarioPlanner';
 import AISummary from './AISummary';
-
-// Resource Pages
-import ResourceLibrary from './components/ResourceLibrary';
-import EventsCalendar from './components/EventsCalendar';
-
-// Owner/Admin Pages
-import EnhancedOwnerDashboard from './components/EnhancedOwnerDashboard';
-import MarketingDashboard from './components/MarketingDashboard';
-import LinkManager from './components/LinkManager';
-import TeamAccessManager from './components/TeamAccessManager';
-
-// Components
-import WelcomeModal from './components/WelcomeModal';
-import ProductTour from './components/ProductTour';
-import AIGuideChatbot from './components/AIGuideChatbot';
 
 // Types
 interface User {
@@ -38,16 +16,10 @@ interface User {
   name: string;
   role: 'owner' | 'admin' | 'member';
   organization_id: string;
-  avatar_url?: string;
-  is_new_user?: boolean;
-  onboarding_completed?: boolean;
 }
 
 type Route = 
   | '/' 
-  | '/signup' 
-  | '/signup/success'
-  | '/dashboard' 
   | '/tools'
   | '/tools/strategic-plan'
   | '/tools/ask-professor'
@@ -55,26 +27,14 @@ type Route =
   | '/tools/board-assessment'
   | '/tools/grant-review'
   | '/tools/scenario-planner'
-  | '/tools/ai-summary'
-  | '/resources'
-  | '/events'
-  | '/owner'
-  | '/owner/marketing'
-  | '/owner/links'
-  | '/owner/team';
+  | '/tools/ai-summary';
 
 const App: React.FC = () => {
   const [currentRoute, setCurrentRoute] = useState<Route>('/');
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
-  const [showProductTour, setShowProductTour] = useState(false);
-  const [showChatbot, setShowChatbot] = useState(false);
-  
-  // Prevent multiple auth checks
-  const authChecked = useRef(false);
 
-  // Handle browser back/forward buttons
+  // Handle browser back/forward buttons and initial route
   useEffect(() => {
     const handlePopState = () => {
       const path = window.location.pathname as Route;
@@ -85,124 +45,39 @@ const App: React.FC = () => {
     
     // Set initial route from URL
     const initialPath = window.location.pathname as Route;
-    if (initialPath && initialPath !== '/') {
-      setCurrentRoute(initialPath);
+    setCurrentRoute(initialPath || '/');
+
+    // Simple auth check
+    const savedUser = localStorage.getItem('nonprofit_edge_user');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        console.error('Error parsing user:', e);
+      }
     }
+    
+    setIsLoading(false);
 
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
-
-  // Check authentication on mount - ONLY ONCE
-  useEffect(() => {
-    if (!authChecked.current) {
-      authChecked.current = true;
-      checkAuth();
-    }
-  }, []);
-
-  const checkAuth = async () => {
-    setIsLoading(true);
-    try {
-      const savedUser = localStorage.getItem('nonprofit_edge_user');
-      if (savedUser) {
-        const userData = JSON.parse(savedUser);
-        setUser(userData);
-        
-        // Only show welcome modal if explicitly new and not completed
-        if (userData.is_new_user === true && userData.onboarding_completed === false) {
-          setShowWelcomeModal(true);
-        }
-      }
-    } catch (error) {
-      console.error('Auth check error:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const navigate = (route: Route) => {
     setCurrentRoute(route);
     window.history.pushState({}, '', route);
   };
 
-  const handleLogin = async (email: string, password: string) => {
+  const handleLogin = (email: string) => {
     const demoUser: User = {
       id: '1',
       email: email,
       name: email.split('@')[0],
-      role: email.includes('owner') ? 'owner' : 'member',
+      role: 'member',
       organization_id: 'org_1',
-      is_new_user: false,
-      onboarding_completed: true,
     };
-    
     setUser(demoUser);
     localStorage.setItem('nonprofit_edge_user', JSON.stringify(demoUser));
-    navigate('/dashboard');
-  };
-
-  const handleSignUp = async (userData: any) => {
-    const newUser: User = {
-      id: Date.now().toString(),
-      email: userData.email,
-      name: userData.name,
-      role: 'member',
-      organization_id: 'org_' + Date.now(),
-      is_new_user: true,
-      onboarding_completed: false,
-    };
-    
-    setUser(newUser);
-    localStorage.setItem('nonprofit_edge_user', JSON.stringify(newUser));
-    navigate('/signup/success');
-  };
-
-  const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem('nonprofit_edge_user');
-    authChecked.current = false; // Allow re-check on next login
-    navigate('/');
-  };
-
-  const handleWelcomeComplete = (selectedAvatar?: string) => {
-    if (user) {
-      const updatedUser = {
-        ...user,
-        avatar_url: selectedAvatar,
-        is_new_user: false,
-        onboarding_completed: true,
-      };
-      setUser(updatedUser);
-      localStorage.setItem('nonprofit_edge_user', JSON.stringify(updatedUser));
-    }
-    setShowWelcomeModal(false);
-    setShowProductTour(true);
-  };
-
-  const handleWelcomeSkip = () => {
-    if (user) {
-      const updatedUser = {
-        ...user,
-        is_new_user: false,
-        onboarding_completed: true,
-      };
-      setUser(updatedUser);
-      localStorage.setItem('nonprofit_edge_user', JSON.stringify(updatedUser));
-    }
-    setShowWelcomeModal(false);
-    // Don't navigate - just close the modal
-  };
-
-  const handleTourComplete = () => {
-    if (user) {
-      const updatedUser = {
-        ...user,
-        onboarding_completed: true,
-      };
-      setUser(updatedUser);
-      localStorage.setItem('nonprofit_edge_user', JSON.stringify(updatedUser));
-    }
-    setShowProductTour(false);
+    navigate('/tools');
   };
 
   // Loading state
@@ -214,6 +89,7 @@ const App: React.FC = () => {
         alignItems: 'center',
         justifyContent: 'center',
         background: '#f8fafc',
+        fontFamily: 'Source Sans Pro, sans-serif',
       }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{
@@ -236,55 +112,69 @@ const App: React.FC = () => {
     );
   }
 
+  // Simple Homepage
+  const Homepage = () => (
+    <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: 'Source Sans Pro, sans-serif' }}>
+      {/* Header */}
+      <header style={{ background: '#0D2C54', color: 'white', padding: '16px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1 style={{ margin: 0, fontSize: '1.5rem', fontFamily: 'Merriweather, serif' }}>The Nonprofit Edge</h1>
+        <button 
+          onClick={() => navigate('/tools')}
+          style={{ padding: '10px 24px', background: '#0097A9', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}
+        >
+          Enter Platform
+        </button>
+      </header>
+
+      {/* Hero */}
+      <div style={{ background: 'linear-gradient(135deg, #0D2C54 0%, #164e63 100%)', color: 'white', padding: '80px 32px', textAlign: 'center' }}>
+        <h2 style={{ fontSize: '2.5rem', fontFamily: 'Merriweather, serif', marginBottom: '16px' }}>
+          AI-Powered Tools for Nonprofit Leaders
+        </h2>
+        <p style={{ fontSize: '1.25rem', opacity: 0.9, maxWidth: '600px', margin: '0 auto 32px' }}>
+          Strategic assessments, coaching, and planning tools designed specifically for nonprofits.
+        </p>
+        <button 
+          onClick={() => navigate('/tools')}
+          style={{ padding: '16px 48px', background: '#0097A9', color: 'white', border: 'none', borderRadius: '10px', fontSize: '1.125rem', fontWeight: 600, cursor: 'pointer' }}
+        >
+          Explore Tools →
+        </button>
+      </div>
+
+      {/* Tools Preview */}
+      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '64px 32px' }}>
+        <h3 style={{ textAlign: 'center', fontFamily: 'Merriweather, serif', color: '#0D2C54', marginBottom: '40px' }}>
+          Available Tools
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
+          {[
+            { icon: '🎓', name: 'Ask The Professor', desc: 'AI coaching for any nonprofit challenge' },
+            { icon: '👤', name: 'CEO Evaluation', desc: 'Comprehensive leadership assessment' },
+            { icon: '📝', name: 'Grant Review', desc: 'AI feedback on your proposals' },
+            { icon: '🔮', name: 'Scenario Planner', desc: 'Plan for best/worst case futures' },
+            { icon: '✨', name: 'AI Summary', desc: 'Instant document summaries' },
+            { icon: '📊', name: 'Strategic Plan Check-Up', desc: 'Evaluate your strategy' },
+          ].map((tool, i) => (
+            <div key={i} style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+              <div style={{ fontSize: '32px', marginBottom: '12px' }}>{tool.icon}</div>
+              <h4 style={{ margin: '0 0 8px 0', color: '#0D2C54' }}>{tool.name}</h4>
+              <p style={{ margin: 0, color: '#64748b', fontSize: '0.9375rem' }}>{tool.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
   // Route rendering
   const renderRoute = () => {
-    // Public routes (no auth required)
     switch (currentRoute) {
       case '/':
-        return (
-          <Homepage 
-            onNavigate={navigate}
-            onLogin={handleLogin}
-            isLoggedIn={!!user}
-          />
-        );
-      
-      case '/signup':
-        return <SignUp onNavigate={navigate} onSignUp={handleSignUp} />;
-      
-      case '/signup/success':
-        return <SignUpSuccess onNavigate={navigate} userEmail={user?.email} />;
-    }
+        return <Homepage />;
 
-    // Protected routes (require auth)
-    if (!user) {
-      navigate('/');
-      return null;
-    }
-
-    switch (currentRoute) {
-      // Main Dashboard
-      case '/dashboard':
-        return (
-          <Dashboard 
-            user={user}
-            onNavigate={navigate}
-            onLogout={handleLogout}
-            onStartTour={() => setShowProductTour(true)}
-          />
-        );
-
-      // Tools
       case '/tools':
-        return (
-          <ToolsPage 
-            userTier="professional"
-            onNavigate={navigate}
-          />
-        );
-      
-      case '/tools/strategic-plan':
-        return <StrategicPlanCheckup />;
+        return <ToolsPage userTier="professional" onNavigate={navigate} />;
       
       case '/tools/ask-professor':
         return <AskTheProfessor />;
@@ -304,154 +194,16 @@ const App: React.FC = () => {
       case '/tools/ai-summary':
         return <AISummary />;
 
-      // Resources
-      case '/resources':
-        return (
-          <ResourceLibrary 
-            userRole={user.role}
-            onNavigate={navigate}
-          />
-        );
-      
-      case '/events':
-        return (
-          <EventsCalendar 
-            userRole={user.role}
-            onNavigate={navigate}
-          />
-        );
-
-      // Owner/Admin pages
-      case '/owner':
-        if (user.role !== 'owner' && user.role !== 'admin') {
-          navigate('/dashboard');
-          return null;
-        }
-        return (
-          <EnhancedOwnerDashboard 
-            onNavigate={navigate}
-          />
-        );
-      
-      case '/owner/marketing':
-        if (user.role !== 'owner' && user.role !== 'admin') {
-          navigate('/dashboard');
-          return null;
-        }
-        return <MarketingDashboard />;
-      
-      case '/owner/links':
-        if (user.role !== 'owner' && user.role !== 'admin') {
-          navigate('/dashboard');
-          return null;
-        }
-        return <LinkManager />;
-      
-      case '/owner/team':
-        if (user.role !== 'owner' && user.role !== 'admin') {
-          navigate('/dashboard');
-          return null;
-        }
-        return <TeamAccessManager />;
-
       default:
-        return (
-          <div style={{
-            minHeight: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: '#f8fafc',
-          }}>
-            <div style={{ textAlign: 'center' }}>
-              <h1 style={{ fontSize: '4rem', color: '#0D2C54', margin: '0 0 16px 0' }}>404</h1>
-              <p style={{ color: '#64748b', marginBottom: '24px' }}>Page not found</p>
-              <button
-                onClick={() => navigate('/dashboard')}
-                style={{
-                  padding: '12px 24px',
-                  background: '#0097A9',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Go to Dashboard
-              </button>
-            </div>
-          </div>
-        );
+        // Handle any /tools/* routes that don't match
+        if (currentRoute.startsWith('/tools')) {
+          return <ToolsPage userTier="professional" onNavigate={navigate} />;
+        }
+        return <Homepage />;
     }
   };
 
-  return (
-    <>
-      {renderRoute()}
-
-      {/* Welcome Modal for new users - only show if state is true */}
-      {showWelcomeModal && user && (
-        <WelcomeModal
-          userName={user.name}
-          onComplete={handleWelcomeComplete}
-          onSkip={handleWelcomeSkip}
-        />
-      )}
-
-      {/* Product Tour */}
-      {showProductTour && (
-        <ProductTour
-          onComplete={handleTourComplete}
-          onSkip={handleTourComplete}
-        />
-      )}
-
-      {/* AI Chatbot (floating button) */}
-      {user && currentRoute !== '/tools/ask-professor' && (
-        <>
-          <button
-            onClick={() => setShowChatbot(!showChatbot)}
-            style={{
-              position: 'fixed',
-              bottom: '24px',
-              right: '24px',
-              width: '56px',
-              height: '56px',
-              borderRadius: '50%',
-              background: '#0D2C54',
-              color: 'white',
-              border: 'none',
-              cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '24px',
-              zIndex: 1000,
-            }}
-            title="Ask AI Assistant"
-          >
-            {showChatbot ? '✕' : '💬'}
-          </button>
-
-          {showChatbot && (
-            <div style={{
-              position: 'fixed',
-              bottom: '96px',
-              right: '24px',
-              width: '380px',
-              height: '500px',
-              zIndex: 999,
-            }}>
-              <AIGuideChatbot onClose={() => setShowChatbot(false)} />
-            </div>
-          )}
-        </>
-      )}
-    </>
-  );
+  return renderRoute();
 };
 
 export default App;
