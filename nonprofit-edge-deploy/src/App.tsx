@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 // Core Pages - from components folder
 import Homepage from './components/Homepage';
@@ -70,6 +70,9 @@ const App: React.FC = () => {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [showProductTour, setShowProductTour] = useState(false);
   const [showChatbot, setShowChatbot] = useState(false);
+  
+  // Prevent multiple auth checks
+  const authChecked = useRef(false);
 
   // Handle browser back/forward buttons
   useEffect(() => {
@@ -89,23 +92,24 @@ const App: React.FC = () => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Check authentication on mount
+  // Check authentication on mount - ONLY ONCE
   useEffect(() => {
-    checkAuth();
+    if (!authChecked.current) {
+      authChecked.current = true;
+      checkAuth();
+    }
   }, []);
 
   const checkAuth = async () => {
     setIsLoading(true);
     try {
-      // In production, check Supabase session
-      // For now, check localStorage for demo
       const savedUser = localStorage.getItem('nonprofit_edge_user');
       if (savedUser) {
         const userData = JSON.parse(savedUser);
         setUser(userData);
         
-        // Check if new user needs onboarding
-        if (userData.is_new_user && !userData.onboarding_completed) {
+        // Only show welcome modal if explicitly new and not completed
+        if (userData.is_new_user === true && userData.onboarding_completed === false) {
           setShowWelcomeModal(true);
         }
       }
@@ -122,8 +126,6 @@ const App: React.FC = () => {
   };
 
   const handleLogin = async (email: string, password: string) => {
-    // In production, use Supabase auth
-    // Demo login for testing
     const demoUser: User = {
       id: '1',
       email: email,
@@ -158,6 +160,7 @@ const App: React.FC = () => {
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('nonprofit_edge_user');
+    authChecked.current = false; // Allow re-check on next login
     navigate('/');
   };
 
@@ -167,12 +170,27 @@ const App: React.FC = () => {
         ...user,
         avatar_url: selectedAvatar,
         is_new_user: false,
+        onboarding_completed: true,
       };
       setUser(updatedUser);
       localStorage.setItem('nonprofit_edge_user', JSON.stringify(updatedUser));
     }
     setShowWelcomeModal(false);
     setShowProductTour(true);
+  };
+
+  const handleWelcomeSkip = () => {
+    if (user) {
+      const updatedUser = {
+        ...user,
+        is_new_user: false,
+        onboarding_completed: true,
+      };
+      setUser(updatedUser);
+      localStorage.setItem('nonprofit_edge_user', JSON.stringify(updatedUser));
+    }
+    setShowWelcomeModal(false);
+    // Don't navigate - just close the modal
   };
 
   const handleTourComplete = () => {
@@ -373,15 +391,12 @@ const App: React.FC = () => {
     <>
       {renderRoute()}
 
-      {/* Welcome Modal for new users */}
+      {/* Welcome Modal for new users - only show if state is true */}
       {showWelcomeModal && user && (
         <WelcomeModal
           userName={user.name}
           onComplete={handleWelcomeComplete}
-          onSkip={() => {
-            setShowWelcomeModal(false);
-            navigate('/dashboard');
-          }}
+          onSkip={handleWelcomeSkip}
         />
       )}
 
