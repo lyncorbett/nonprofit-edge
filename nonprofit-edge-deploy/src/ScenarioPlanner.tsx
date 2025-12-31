@@ -1,228 +1,450 @@
 import React, { useState } from 'react';
+import { ArrowLeft, GitBranch, CheckCircle, Loader2, Plus, Trash2 } from 'lucide-react';
 
-const ScenarioPlanner: React.FC = () => {
-  const [currentStep, setCurrentStep] = useState(1);
+interface ScenarioPlannerProps {
+  onBack?: () => void;
+}
+
+interface Scenario {
+  id: string;
+  name: string;
+  description: string;
+  assumptions: string[];
+  likelihood: 'low' | 'medium' | 'high';
+}
+
+const ScenarioPlanner: React.FC<ScenarioPlannerProps> = ({ onBack }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState({
-    orgName: '',
-    yourName: '',
-    yourEmail: '',
-    scenarioTopic: '',
-    timeframe: '',
-    currentSituation: '',
-    keyVariables: '',
-    bestCase: '',
-    worstCase: '',
-    constraints: '',
-    additionalContext: '',
+  const [organizationContext, setOrganizationContext] = useState({
+    name: '',
+    mission: '',
+    currentChallenges: '',
+    strategicGoals: '',
+    timeHorizon: '3-years',
   });
 
-  const updateField = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const [scenarios, setScenarios] = useState<Scenario[]>([
+    {
+      id: '1',
+      name: 'Best Case',
+      description: '',
+      assumptions: [''],
+      likelihood: 'medium',
+    },
+    {
+      id: '2',
+      name: 'Worst Case',
+      description: '',
+      assumptions: [''],
+      likelihood: 'medium',
+    },
+    {
+      id: '3',
+      name: 'Most Likely',
+      description: '',
+      assumptions: [''],
+      likelihood: 'high',
+    },
+  ]);
+
+  const handleContextChange = (field: string, value: string) => {
+    setOrganizationContext(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleScenarioChange = (id: string, field: string, value: any) => {
+    setScenarios(prev =>
+      prev.map(s => (s.id === id ? { ...s, [field]: value } : s))
+    );
+  };
+
+  const handleAssumptionChange = (scenarioId: string, index: number, value: string) => {
+    setScenarios(prev =>
+      prev.map(s => {
+        if (s.id === scenarioId) {
+          const newAssumptions = [...s.assumptions];
+          newAssumptions[index] = value;
+          return { ...s, assumptions: newAssumptions };
+        }
+        return s;
+      })
+    );
+  };
+
+  const addAssumption = (scenarioId: string) => {
+    setScenarios(prev =>
+      prev.map(s => {
+        if (s.id === scenarioId) {
+          return { ...s, assumptions: [...s.assumptions, ''] };
+        }
+        return s;
+      })
+    );
+  };
+
+  const removeAssumption = (scenarioId: string, index: number) => {
+    setScenarios(prev =>
+      prev.map(s => {
+        if (s.id === scenarioId && s.assumptions.length > 1) {
+          const newAssumptions = s.assumptions.filter((_, i) => i !== index);
+          return { ...s, assumptions: newAssumptions };
+        }
+        return s;
+      })
+    );
+  };
+
+  const addScenario = () => {
+    const newScenario: Scenario = {
+      id: Date.now().toString(),
+      name: `Scenario ${scenarios.length + 1}`,
+      description: '',
+      assumptions: [''],
+      likelihood: 'medium',
+    };
+    setScenarios(prev => [...prev, newScenario]);
+  };
+
+  const removeScenario = (id: string) => {
+    if (scenarios.length > 1) {
+      setScenarios(prev => prev.filter(s => s.id !== id));
+    }
   };
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
+    setError(null);
+
     try {
-      await fetch('https://thenonprofitedge.app.n8n.cloud/webhook/scenario-planner', {
+      const payload = {
+        organization: organizationContext,
+        scenarios: scenarios,
+      };
+
+      const response = await fetch('https://thenonprofitedge.app.n8n.cloud/webhook/scenario-planner', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to analyze scenarios');
+      }
+
+      const result = await response.json();
+      setAnalysisResult(result.analysis || result.output || JSON.stringify(result));
       setIsSubmitted(true);
-    } catch (error) {
-      console.error('Error:', error);
-      setIsSubmitted(true);
+    } catch (err) {
+      setError('Failed to submit scenarios. Please try again.');
+      console.error('Submission error:', err);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const scenarioTopics = [
-    { value: 'funding', label: 'Funding Change', desc: 'Major funder increase/decrease' },
-    { value: 'expansion', label: 'Program Expansion', desc: 'Adding new services or locations' },
-    { value: 'leadership', label: 'Leadership Transition', desc: 'CEO or key staff changes' },
-    { value: 'merger', label: 'Merger/Partnership', desc: 'Combining with another org' },
-    { value: 'economic', label: 'Economic Shifts', desc: 'Recession, policy changes' },
-    { value: 'other', label: 'Other', desc: 'Custom scenario' },
-  ];
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else {
+      window.history.back();
+    }
+  };
+
+  const handleReset = () => {
+    setIsSubmitted(false);
+    setAnalysisResult(null);
+  };
 
   if (isSubmitted) {
     return (
-      <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ background: 'white', borderRadius: '16px', padding: '48px', textAlign: 'center', maxWidth: '500px' }}>
-          <div style={{ width: '80px', height: '80px', background: '#d1fae5', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', fontSize: '40px' }}>🔮</div>
-          <h2 style={{ fontFamily: 'Merriweather, serif', color: '#0D2C54' }}>Scenarios Being Generated!</h2>
-          <p style={{ color: '#64748b', margin: '16px 0 24px' }}>Your scenario analysis will be sent to <strong>{formData.yourEmail}</strong> within 24 hours.</p>
-          <button onClick={() => window.location.href = '/tools'} style={{ padding: '12px 32px', background: '#0097A9', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: 600, cursor: 'pointer' }}>Back to Tools</button>
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-4xl mx-auto">
+          <button
+            onClick={handleBack}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Back to Tools
+          </button>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-green-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Scenario Analysis Complete!</h2>
+              <p className="text-gray-600">Here's your strategic scenario analysis</p>
+            </div>
+
+            <div className="bg-gray-50 rounded-xl p-6 mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Analysis Results</h3>
+              <div 
+                className="prose max-w-none text-gray-700"
+                dangerouslySetInnerHTML={{ __html: analysisResult || '' }}
+              />
+            </div>
+
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={handleReset}
+                className="px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors"
+              >
+                Plan Another Scenario
+              </button>
+              <button
+                onClick={handleBack}
+                className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition-colors"
+              >
+                Back to Tools
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: 'Source Sans Pro, sans-serif' }}>
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div style={{ background: '#0D2C54', color: 'white', padding: '24px 32px' }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <h1 style={{ margin: '0 0 8px 0', fontSize: '1.75rem', fontFamily: 'Merriweather, serif' }}>Scenario Planner</h1>
-          <p style={{ margin: 0, opacity: 0.8 }}>Explore best-case, worst-case, and most-likely scenarios for strategic decisions</p>
-        </div>
-      </div>
-
-      {/* Progress */}
-      <div style={{ background: 'white', borderBottom: '1px solid #e2e8f0', padding: '16px 32px' }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {[1, 2, 3].map((step) => (
-              <div key={step} style={{ flex: 1, height: '4px', borderRadius: '2px', background: currentStep >= step ? '#0097A9' : '#e2e8f0' }} />
-            ))}
+      <header className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="max-w-4xl mx-auto flex items-center gap-4">
+          <button
+            onClick={handleBack}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Back
+          </button>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-purple-50 rounded-lg">
+              <GitBranch className="w-5 h-5 text-purple-600" />
+            </div>
+            <div>
+              <h1 className="text-xl font-semibold text-gray-900">Scenario Planner</h1>
+              <p className="text-sm text-gray-500">Model different strategic futures</p>
+            </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Content */}
-      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '32px' }}>
-        <div style={{ background: 'white', borderRadius: '16px', padding: '32px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+      <main className="max-w-4xl mx-auto px-6 py-8">
+        {/* Organization Context */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Organization Context</h2>
           
-          {currentStep === 1 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <h2 style={{ fontFamily: 'Merriweather, serif', color: '#0D2C54', marginBottom: '24px' }}>Your Organization</h2>
-              
-              <div style={{ display: 'grid', gap: '20px' }}>
-                <div>
-                  <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>Organization Name *</label>
-                  <input type="text" value={formData.orgName} onChange={(e) => updateField('orgName', e.target.value)} style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem' }} />
-                </div>
-                
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>Your Name *</label>
-                    <input type="text" value={formData.yourName} onChange={(e) => updateField('yourName', e.target.value)} style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>Your Email *</label>
-                    <input type="email" value={formData.yourEmail} onChange={(e) => updateField('yourEmail', e.target.value)} style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem' }} />
-                  </div>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontWeight: 600, marginBottom: '12px' }}>What type of scenario are you planning for?</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    {scenarioTopics.map((topic) => (
-                      <label
-                        key={topic.value}
-                        style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          padding: '16px',
-                          background: formData.scenarioTopic === topic.value ? '#f0fdfa' : '#f8fafc',
-                          border: `2px solid ${formData.scenarioTopic === topic.value ? '#0097A9' : '#e2e8f0'}`,
-                          borderRadius: '8px',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <input
-                            type="radio"
-                            name="scenarioTopic"
-                            value={topic.value}
-                            checked={formData.scenarioTopic === topic.value}
-                            onChange={(e) => updateField('scenarioTopic', e.target.value)}
-                          />
-                          <span style={{ fontWeight: 600 }}>{topic.label}</span>
-                        </div>
-                        <span style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '4px', marginLeft: '24px' }}>{topic.desc}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Organization Name
+              </label>
+              <input
+                type="text"
+                value={organizationContext.name}
+                onChange={(e) => handleContextChange('name', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="Your organization name"
+              />
             </div>
-          )}
-
-          {currentStep === 2 && (
             <div>
-              <h2 style={{ fontFamily: 'Merriweather, serif', color: '#0D2C54', marginBottom: '24px' }}>Scenario Details</h2>
-              
-              <div style={{ display: 'grid', gap: '20px' }}>
-                <div>
-                  <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>Planning Timeframe</label>
-                  <select value={formData.timeframe} onChange={(e) => updateField('timeframe', e.target.value)} style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', background: 'white' }}>
-                    <option value="">Select timeframe</option>
-                    <option value="6months">6 months</option>
-                    <option value="1year">1 year</option>
-                    <option value="2years">2 years</option>
-                    <option value="3-5years">3-5 years</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>Describe your current situation</label>
-                  <textarea value={formData.currentSituation} onChange={(e) => updateField('currentSituation', e.target.value)} rows={3} placeholder="What's your current state regarding this scenario? Revenue, staffing, programs, etc." style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', resize: 'vertical' }} />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>Key variables/uncertainties</label>
-                  <textarea value={formData.keyVariables} onChange={(e) => updateField('keyVariables', e.target.value)} rows={3} placeholder="What factors could significantly impact the outcome? (e.g., funder decisions, policy changes, leadership)" style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', resize: 'vertical' }} />
-                </div>
-              </div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Planning Horizon
+              </label>
+              <select
+                value={organizationContext.timeHorizon}
+                onChange={(e) => handleContextChange('timeHorizon', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="1-year">1 Year</option>
+                <option value="3-years">3 Years</option>
+                <option value="5-years">5 Years</option>
+                <option value="10-years">10 Years</option>
+              </select>
             </div>
-          )}
+          </div>
 
-          {currentStep === 3 && (
-            <div>
-              <h2 style={{ fontFamily: 'Merriweather, serif', color: '#0D2C54', marginBottom: '24px' }}>Your Perspective</h2>
-              
-              <div style={{ display: 'grid', gap: '20px' }}>
-                <div>
-                  <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>What does "best case" look like to you?</label>
-                  <textarea value={formData.bestCase} onChange={(e) => updateField('bestCase', e.target.value)} rows={3} placeholder="If everything goes well, what's the ideal outcome?" style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', resize: 'vertical' }} />
-                </div>
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Mission Statement
+            </label>
+            <textarea
+              value={organizationContext.mission}
+              onChange={(e) => handleContextChange('mission', e.target.value)}
+              rows={2}
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="What is your organization's mission?"
+            />
+          </div>
 
-                <div>
-                  <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>What does "worst case" look like?</label>
-                  <textarea value={formData.worstCase} onChange={(e) => updateField('worstCase', e.target.value)} rows={3} placeholder="What's the downside scenario you're trying to prepare for?" style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', resize: 'vertical' }} />
-                </div>
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Current Challenges
+            </label>
+            <textarea
+              value={organizationContext.currentChallenges}
+              onChange={(e) => handleContextChange('currentChallenges', e.target.value)}
+              rows={2}
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="What challenges are you currently facing?"
+            />
+          </div>
 
-                <div>
-                  <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>Known constraints</label>
-                  <textarea value={formData.constraints} onChange={(e) => updateField('constraints', e.target.value)} rows={2} placeholder="Budget limits, board restrictions, timeline requirements, etc." style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', resize: 'vertical' }} />
-                </div>
-
-                <div style={{ background: '#f0fdfa', border: '2px solid #0097A9', borderRadius: '12px', padding: '24px' }}>
-                  <h3 style={{ margin: '0 0 12px 0', color: '#0D2C54' }}>What you'll receive:</h3>
-                  <ul style={{ margin: 0, paddingLeft: '20px', color: '#475569' }}>
-                    <li>Best-case scenario with strategic actions</li>
-                    <li>Worst-case scenario with contingency plans</li>
-                    <li>Most-likely scenario with probabilities</li>
-                    <li>Key decision triggers and milestones</li>
-                    <li>Recommended preparation steps</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Navigation */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '32px', paddingTop: '24px', borderTop: '1px solid #e2e8f0' }}>
-            <button onClick={() => setCurrentStep(prev => prev - 1)} disabled={currentStep === 1} style={{ padding: '12px 24px', background: currentStep === 1 ? '#f1f5f9' : 'white', color: currentStep === 1 ? '#94a3b8' : '#475569', border: '2px solid #e2e8f0', borderRadius: '8px', fontWeight: 600, cursor: currentStep === 1 ? 'not-allowed' : 'pointer' }}>
-              ← Back
-            </button>
-            {currentStep < 3 ? (
-              <button onClick={() => setCurrentStep(prev => prev + 1)} style={{ padding: '12px 32px', background: '#0097A9', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>
-                Continue →
-              </button>
-            ) : (
-              <button onClick={handleSubmit} disabled={isSubmitting} style={{ padding: '12px 32px', background: isSubmitting ? '#94a3b8' : '#0D2C54', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}>
-                {isSubmitting ? 'Generating...' : 'Generate Scenarios'}
-              </button>
-            )}
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Strategic Goals
+            </label>
+            <textarea
+              value={organizationContext.strategicGoals}
+              onChange={(e) => handleContextChange('strategicGoals', e.target.value)}
+              rows={2}
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="What are your key strategic goals?"
+            />
           </div>
         </div>
-      </div>
+
+        {/* Scenarios */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900">Scenarios</h2>
+            <button
+              onClick={addScenario}
+              className="flex items-center gap-2 px-4 py-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add Scenario
+            </button>
+          </div>
+
+          {scenarios.map((scenario, index) => (
+            <div
+              key={scenario.id}
+              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <input
+                  type="text"
+                  value={scenario.name}
+                  onChange={(e) => handleScenarioChange(scenario.id, 'name', e.target.value)}
+                  className="text-lg font-semibold text-gray-900 bg-transparent border-none focus:ring-0 p-0"
+                  placeholder="Scenario Name"
+                />
+                {scenarios.length > 1 && (
+                  <button
+                    onClick={() => removeScenario(scenario.id)}
+                    className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description
+                </label>
+                <textarea
+                  value={scenario.description}
+                  onChange={(e) => handleScenarioChange(scenario.id, 'description', e.target.value)}
+                  rows={2}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Describe this scenario..."
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Likelihood
+                </label>
+                <div className="flex gap-2">
+                  {(['low', 'medium', 'high'] as const).map((level) => (
+                    <button
+                      key={level}
+                      type="button"
+                      onClick={() => handleScenarioChange(scenario.id, 'likelihood', level)}
+                      className={`px-4 py-2 rounded-lg capitalize text-sm font-medium transition-colors ${
+                        scenario.likelihood === level
+                          ? level === 'low'
+                            ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
+                            : level === 'medium'
+                            ? 'bg-yellow-100 text-yellow-700 border-2 border-yellow-300'
+                            : 'bg-green-100 text-green-700 border-2 border-green-300'
+                          : 'bg-gray-100 text-gray-600 border-2 border-transparent'
+                      }`}
+                    >
+                      {level}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Key Assumptions
+                </label>
+                {scenario.assumptions.map((assumption, aIndex) => (
+                  <div key={aIndex} className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={assumption}
+                      onChange={(e) => handleAssumptionChange(scenario.id, aIndex, e.target.value)}
+                      className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Enter an assumption..."
+                    />
+                    {scenario.assumptions.length > 1 && (
+                      <button
+                        onClick={() => removeAssumption(scenario.id, aIndex)}
+                        className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  onClick={() => addAssumption(scenario.id)}
+                  className="text-sm text-purple-600 hover:text-purple-700 flex items-center gap-1 mt-1"
+                >
+                  <Plus className="w-3 h-3" />
+                  Add Assumption
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {error && (
+          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            {error}
+          </div>
+        )}
+
+        {/* Submit Button */}
+        <div className="mt-8 flex justify-center">
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Analyzing Scenarios...
+              </>
+            ) : (
+              <>
+                <GitBranch className="w-5 h-5" />
+                Analyze Scenarios
+              </>
+            )}
+          </button>
+        </div>
+      </main>
     </div>
   );
 };
