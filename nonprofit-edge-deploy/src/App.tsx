@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 
-// Core Pages
-import Homepage from './Homepage';
-import Dashboard from './Dashboard';
-import SignUp from './SignUp';
-import SignUpSuccess from './SignUpSuccess';
+// Core Pages - from components folder
+import Homepage from './components/Homepage';
+import Dashboard from './components/Dashboard';
+import SignUp from './components/SignUp';
+import SignUpSuccess from './components/SignUpSuccess';
 
-// Tool Pages
+// Tool Pages - some in components, some in src root
 import ToolsPage from './ToolsPage';
-import StrategicPlanCheckup from './StrategicPlanCheckup';
+import StrategicPlanCheckup from './components/StrategicPlanCheckup';
 import AskTheProfessor from './AskTheProfessor';
 import CEOEvaluation from './CEOEvaluation';
 import BoardAssessment from './BoardAssessment';
@@ -17,19 +17,19 @@ import ScenarioPlanner from './ScenarioPlanner';
 import AISummary from './AISummary';
 
 // Resource Pages
-import ResourceLibrary from './ResourceLibrary';
-import EventsCalendar from './EventsCalendar';
+import ResourceLibrary from './components/ResourceLibrary';
+import EventsCalendar from './components/EventsCalendar';
 
 // Owner/Admin Pages
-import EnhancedOwnerDashboard from './EnhancedOwnerDashboard';
-import MarketingDashboard from './MarketingDashboard';
-import LinkManager from './LinkManager';
-import TeamAccessManager from './TeamAccessManager';
+import EnhancedOwnerDashboard from './components/EnhancedOwnerDashboard';
+import MarketingDashboard from './components/MarketingDashboard';
+import LinkManager from './components/LinkManager';
+import TeamAccessManager from './components/TeamAccessManager';
 
 // Components
-import WelcomeModal from './WelcomeModal';
-import ProductTour from './ProductTour';
-import AIGuideChatbot from './AIGuideChatbot';
+import WelcomeModal from './components/WelcomeModal';
+import ProductTour from './components/ProductTour';
+import AIGuideChatbot from './components/AIGuideChatbot';
 
 // Types
 interface User {
