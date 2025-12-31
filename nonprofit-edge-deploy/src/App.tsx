@@ -1,7 +1,22 @@
 import React, { useState, useEffect } from 'react';
 
-// Import real Dashboard from components
+// Import real components from components folder
 import RealDashboard from './components/Dashboard';
+import ResourceLibrary from './components/ResourceLibrary';
+import EventsCalendar from './components/EventsCalendar';
+import EnhancedOwnerDashboard from './components/EnhancedOwnerDashboard';
+import MarketingDashboard from './components/MarketingDashboard';
+import LinkManager from './components/LinkManager';
+import TeamAccessManager from './components/TeamAccessManager';
+
+// Import real tool components from src folder
+import StrategicPlanCheckup from './StrategicPlanCheckup';
+import CEOEvaluation from './CEOEvaluation';
+import BoardAssessment from './BoardAssessment';
+import GrantReview from './GrantReview';
+import ScenarioPlanner from './ScenarioPlanner';
+import AskTheProfessor from './AskTheProfessor';
+import AISummary from './AISummary';
 
 // Types
 interface User {
@@ -368,25 +383,66 @@ const App: React.FC = () => {
       );
     
     case '/tools/strategic-plan':
-      return <ToolPageWrapper title="Strategic Plan Check-Up"><PlaceholderTool name="Strategic Plan Check-Up" /></ToolPageWrapper>;
+      return <ToolPageWrapper title="Strategic Plan Check-Up"><StrategicPlanCheckup /></ToolPageWrapper>;
     
     case '/tools/ceo-evaluation':
-      return <ToolPageWrapper title="CEO Evaluation"><PlaceholderTool name="CEO Evaluation" /></ToolPageWrapper>;
+      return <ToolPageWrapper title="CEO Evaluation"><CEOEvaluation /></ToolPageWrapper>;
     
     case '/tools/board-assessment':
-      return <ToolPageWrapper title="Board Assessment"><PlaceholderTool name="Board Assessment" /></ToolPageWrapper>;
+      return <ToolPageWrapper title="Board Assessment"><BoardAssessment /></ToolPageWrapper>;
     
     case '/tools/grant-review':
-      return <ToolPageWrapper title="Grant Review"><PlaceholderTool name="Grant Review" /></ToolPageWrapper>;
+      return <ToolPageWrapper title="Grant Review"><GrantReview /></ToolPageWrapper>;
     
     case '/tools/scenario-planner':
-      return <ToolPageWrapper title="Scenario Planner"><PlaceholderTool name="Scenario Planner" /></ToolPageWrapper>;
+      return <ToolPageWrapper title="Scenario Planner"><ScenarioPlanner /></ToolPageWrapper>;
     
     case '/tools/ask-professor':
-      return <ToolPageWrapper title="Ask The Professor"><PlaceholderTool name="Ask The Professor" /></ToolPageWrapper>;
+      return <ToolPageWrapper title="Ask The Professor"><AskTheProfessor /></ToolPageWrapper>;
     
     case '/tools/ai-summary':
-      return <ToolPageWrapper title="AI Summary"><PlaceholderTool name="AI Summary" /></ToolPageWrapper>;
+      return <ToolPageWrapper title="AI Summary"><AISummary /></ToolPageWrapper>;
+    
+    // Resources & Events
+    case '/resources':
+      if (!user) { navigate('/login'); return null; }
+      return (
+        <ResourceLibrary 
+          user={{ ...user, full_name: user.name }}
+          organization={{ id: user.organization_id, name: 'Your Organization', tier: 'professional' }}
+          onNavigate={(page: string) => navigate(page === 'dashboard' ? '/dashboard' : `/${page}`)}
+          onLogout={handleLogout}
+        />
+      );
+    
+    case '/events':
+      if (!user) { navigate('/login'); return null; }
+      return (
+        <EventsCalendar 
+          user={{ ...user, full_name: user.name }}
+          organization={{ id: user.organization_id, name: 'Your Organization', tier: 'professional' }}
+          onNavigate={(page: string) => navigate(page === 'dashboard' ? '/dashboard' : `/${page}`)}
+          onLogout={handleLogout}
+        />
+      );
+    
+    // Owner/Admin Pages
+    case '/owner':
+    case '/owner/enhanced':
+      if (!user) { navigate('/login'); return null; }
+      return <EnhancedOwnerDashboard onNavigate={(page: string) => navigate(`/${page}`)} />;
+    
+    case '/owner/marketing':
+      if (!user) { navigate('/login'); return null; }
+      return <MarketingDashboard />;
+    
+    case '/owner/links':
+      if (!user) { navigate('/login'); return null; }
+      return <LinkManager />;
+    
+    case '/owner/team':
+      if (!user) { navigate('/login'); return null; }
+      return <TeamAccessManager />;
     
     default:
       return <Homepage />;
