@@ -18,6 +18,9 @@ import ScenarioPlanner from './ScenarioPlanner';
 import AskTheProfessor from './AskTheProfessor';
 import AISummary from './AISummary';
 
+// Import landing pages from components folder
+import ScenarioPlannerLanding from './components/ScenarioPlannerLanding';
+
 // Types
 interface User {
   id: string;
@@ -154,14 +157,20 @@ const App: React.FC = () => {
         <h2 style={{ textAlign: 'center', color: '#0D2C54', marginBottom: '40px' }}>Our Tools</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
           {[
-            { icon: '📊', name: 'Strategic Plan Check-Up', desc: 'Evaluate your strategy with PIVOT framework' },
-            { icon: '👤', name: 'CEO Evaluation', desc: 'Comprehensive leadership assessment' },
-            { icon: '👥', name: 'Board Assessment', desc: 'Evaluate board effectiveness' },
-            { icon: '📝', name: 'Grant Review', desc: 'AI feedback on proposals' },
-            { icon: '🔮', name: 'Scenario Planner', desc: 'Plan for multiple futures' },
-            { icon: '🎓', name: 'Ask The Professor', desc: 'AI coaching on demand' },
+            { icon: '📊', name: 'Strategic Plan Check-Up', desc: 'Evaluate your strategy with PIVOT framework', route: '/tools/strategic-plan/info' },
+            { icon: '👤', name: 'CEO Evaluation', desc: 'Comprehensive leadership assessment', route: '/tools/ceo-evaluation/info' },
+            { icon: '👥', name: 'Board Assessment', desc: 'Evaluate board effectiveness', route: '/tools/board-assessment/info' },
+            { icon: '📝', name: 'Grant Review', desc: 'AI feedback on proposals', route: '/tools/grant-review/info' },
+            { icon: '🔮', name: 'Scenario Planner', desc: 'Plan for multiple futures', route: '/tools/scenario-planner/info' },
+            { icon: '🎓', name: 'Ask The Professor', desc: 'AI coaching on demand', route: '/tools/ask-professor/info' },
           ].map((tool, i) => (
-            <div key={i} style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+            <div 
+              key={i} 
+              onClick={() => navigate(tool.route)}
+              style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', cursor: 'pointer', transition: 'transform 0.2s' }}
+              onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+              onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+            >
               <div style={{ fontSize: '32px', marginBottom: '12px' }}>{tool.icon}</div>
               <h3 style={{ margin: '0 0 8px 0', color: '#0D2C54' }}>{tool.name}</h3>
               <p style={{ margin: 0, color: '#64748b', fontSize: '0.9375rem' }}>{tool.desc}</p>
@@ -382,6 +391,21 @@ const App: React.FC = () => {
         />
       );
     
+    // ============================================
+    // TOOL LANDING PAGES (Public - no login required)
+    // ============================================
+    case '/tools/scenario-planner/info':
+      return <ScenarioPlannerLanding />;
+    
+    // Future landing pages can be added here:
+    // case '/tools/strategic-plan/info':
+    //   return <StrategicPlanLanding />;
+    // case '/tools/board-assessment/info':
+    //   return <BoardAssessmentLanding />;
+    
+    // ============================================
+    // TOOL PAGES (Requires login)
+    // ============================================
     case '/tools/strategic-plan':
       return <ToolPageWrapper title="Strategic Plan Check-Up"><StrategicPlanCheckup /></ToolPageWrapper>;
     
