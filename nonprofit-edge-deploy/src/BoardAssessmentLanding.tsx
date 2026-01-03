@@ -94,7 +94,7 @@ const BoardAssessmentLanding: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               {[
-                { title: 'Skills Matrix Mapping', desc: 'Visual heat map showing exactly which skills you have and what's missing.' },
+                { title: 'Skills Matrix Mapping', desc: "Visual heat map showing exactly which skills you have and what's missing." },
                 { title: 'Engagement Analytics', desc: 'Track attendance, participation, giving, and committee work at a glance.' },
                 { title: 'Gap Analysis', desc: 'Instant identification of missing expertise, connections, and diversity.' },
                 { title: 'Recruitment Profiles', desc: 'Get exact job descriptions for the board members you need.' },
