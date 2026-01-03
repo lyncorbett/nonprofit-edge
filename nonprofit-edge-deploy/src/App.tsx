@@ -265,12 +265,13 @@ const App: React.FC = () => {
   // ==========================================
 
   /**
-   * Called when a user starts a tool - creates session and updates counters
+   * Called when a user opens a tool - creates session only (NO counter increment)
+   * Counter only increments on COMPLETION
    */
   const handleToolStart = async (toolId: string, toolName: string): Promise<string | null> => {
     if (!user || !organization) return null;
 
-    // Create session
+    // Create session (for tracking purposes only - no counter update)
     const sessionId = `session_${Date.now()}`;
     const session: ToolSession = {
       id: sessionId,
@@ -279,29 +280,26 @@ const App: React.FC = () => {
     };
     setCurrentSession(session);
 
-    // Update usage counters
-    setUsage(prev => ({
-      ...prev,
-      tools_started: prev.tools_started + 1,
-      tools_used_this_month: prev.tools_used_this_month + 1,
-    }));
-
-    // If using Supabase, call tracking function
+    // NOTE: We do NOT increment counters here - only on completion
+    // If using Supabase, you might still want to log the start for analytics
     // await trackToolStart(organization.id, user.id, toolId, toolName, { email: user.email });
 
-    console.log(`Tool started: ${toolName} (Session: ${sessionId})`);
+    console.log(`Tool opened: ${toolName} (Session: ${sessionId})`);
     return sessionId;
   };
 
   /**
-   * Called when a user completes a tool - updates completion counter
+   * Called when a user COMPLETES a tool - THIS is when counters increment
    */
   const handleToolComplete = async (sessionId: string, toolName: string, score?: number) => {
     if (!user || !organization) return;
 
+    // Update ALL usage counters on completion
     setUsage(prev => ({
       ...prev,
-      tools_completed: prev.tools_completed + 1,
+      tools_started: prev.tools_started + 1,      // Count as "used"
+      tools_completed: prev.tools_completed + 1,   // Count as "completed"
+      tools_used_this_month: prev.tools_used_this_month + 1,
     }));
 
     setCurrentSession(null);
@@ -309,7 +307,7 @@ const App: React.FC = () => {
     // If using Supabase
     // await trackToolComplete(organization.id, user.id, sessionId, toolName, score);
 
-    console.log(`Tool completed: ${toolName} (Score: ${score || 'N/A'})`);
+    console.log(`Tool COMPLETED: ${toolName} (Score: ${score || 'N/A'}) - Counters updated!`);
   };
 
   /**
