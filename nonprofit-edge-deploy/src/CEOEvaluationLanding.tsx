@@ -57,9 +57,9 @@ const CEOEvaluationLanding: React.FC = () => {
           <p className="text-lg text-gray-600 text-center max-w-2xl mx-auto mb-12">Good intentions, poor execution.</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { img: '/images/ceo-no-criteria.jpg', title: 'No Clear Criteria', desc: "Evaluation based on vibes, not goals. The CEO doesn't know what "success" looks like." },
+              { img: '/images/ceo-no-criteria.jpg', title: 'No Clear Criteria', desc: "Evaluation based on vibes, not goals. The CEO doesn't know what 'success' looks like." },
               { img: '/images/ceo-surprise.jpg', title: 'Surprise Feedback', desc: 'Issues raised in annual review that were never discussed during the year.' },
-              { img: '/images/ceo-skipped.jpg', title: 'Skipped Entirely', desc: '"Things are going fine" — but often aren't. Boards avoid the conversation altogether.' },
+              { img: '/images/ceo-skipped.jpg', title: 'Skipped Entirely', desc: "Things are going fine — but often they aren't. Boards avoid the conversation altogether." },
             ].map((card, i) => (
               <div key={i} className="relative rounded-xl overflow-hidden min-h-[320px] flex flex-col justify-end">
                 <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${card.img})` }} />
