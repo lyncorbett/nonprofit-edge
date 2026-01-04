@@ -1,6 +1,6 @@
 /**
  * Homepage - The Nonprofit Edge
- * Updated: larger hero, larger logos, tighter professor section
+ * Updated: Better spacing for Ask the Professor section
  */
 
 import React from 'react'
@@ -14,31 +14,31 @@ const Homepage: React.FC = () => {
       image: '/tool-strategic.jpg',
       title: 'Strategic Plan Analysis', 
       desc: 'Diagnose your current plan in minutes with scores & specific fixes.',
-      link: '/tools/strategic-plan-analysis'
+      link: '/strategic-plan-checkup'
     },
     { 
       image: '/tool-grant.jpg',
       title: 'Grant Review', 
       desc: 'Win more grants with expert scoring, comments, and funder-ready polish.',
-      link: '/tools/grant-review'
+      link: '/grant-rfp-review'
     },
     { 
       image: '/tool-scenario.jpg',
       title: 'Strategy & Scenario Planning', 
       desc: 'Stress-test strategy with clear "what-if" scenarios before risks hit.',
-      link: '/tools/scenario-planning'
+      link: '/scenario-planner'
     },
     { 
       image: '/tool-ceo.jpg',
       title: 'CEO Evaluation', 
       desc: 'Build stronger leadership with fair, confidential performance reviews.',
-      link: '/tools/ceo-evaluation'
+      link: '/ceo-evaluation'
     },
     { 
       image: '/board-hero.jpg',
       title: 'Board Assessment', 
       desc: 'Strengthen governance with measurable board practices & next steps.',
-      link: '/tools/board-assessment'
+      link: '/board-assessment'
     },
     { 
       image: '/tool-resources.jpg',
@@ -152,7 +152,7 @@ const Homepage: React.FC = () => {
                   </h3>
                   <p className="text-sm text-gray-500 mb-3">{tool.desc}</p>
                   <span className="text-sm font-semibold" style={{ color: TEAL }}>
-                    Launch Tool →
+                    Find out more →
                   </span>
                 </div>
               </a>
@@ -161,15 +161,15 @@ const Homepage: React.FC = () => {
         </div>
       </section>
 
-      {/* Ask the Professor Section - TIGHTER LAYOUT */}
+      {/* Ask the Professor Section - BALANCED SPACING */}
       <section className="py-16 px-6 bg-white" id="professor">
-        <div className="max-w-4xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-6 items-center">
-            {/* Left: Image - CLOSER */}
-            <div className="relative flex justify-center md:justify-end">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-10 items-center">
+            {/* Left: Image */}
+            <div className="relative flex justify-center">
               <div 
                 className="rounded-2xl overflow-hidden bg-gray-100"
-                style={{ maxWidth: '280px' }}
+                style={{ maxWidth: '300px' }}
               >
                 <img 
                   src="/dr-corbett.jpg"
@@ -179,14 +179,14 @@ const Homepage: React.FC = () => {
               </div>
               {/* Badge */}
               <div 
-                className="absolute bottom-4 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-0 rounded-xl py-3 px-4 text-center text-white text-sm font-semibold"
-                style={{ backgroundColor: NAVY, maxWidth: '260px' }}
+                className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-xl py-3 px-4 text-center text-white text-sm font-semibold"
+                style={{ backgroundColor: NAVY, maxWidth: '280px' }}
               >
                 Over 25 Years of Nonprofit Experience
               </div>
             </div>
             
-            {/* Right: Content - CLOSER */}
+            {/* Right: Content */}
             <div>
               <h2 className="text-3xl font-extrabold mb-2" style={{ color: NAVY }}>
                 Ask the Professor
