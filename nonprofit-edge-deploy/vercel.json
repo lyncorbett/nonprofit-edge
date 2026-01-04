@@ -1,5 +1,12 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
+    {
+      "source": "/landing-pages/:path*",
+      "destination": "/landing-pages/:path*"
+    },
+    {
+      "source": "/((?!landing-pages|images|assets).*)",
+      "destination": "/index.html"
+    }
   ]
 }
