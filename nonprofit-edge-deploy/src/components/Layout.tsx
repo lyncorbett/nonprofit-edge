@@ -4,16 +4,17 @@ import Footer from './Footer';
 
 interface LayoutProps {
   children: React.ReactNode;
+  onNavigate?: (route: string) => void;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const Layout: React.FC<LayoutProps> = ({ children, onNavigate }) => {
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      <Header onNavigate={onNavigate} />
       <main className="flex-grow">
         {children}
       </main>
-      <Footer />
+      <Footer onNavigate={onNavigate} />
     </div>
   );
 };
