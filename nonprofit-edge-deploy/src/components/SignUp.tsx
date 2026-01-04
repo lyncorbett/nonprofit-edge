@@ -1,6 +1,7 @@
 /**
  * THE NONPROFIT EDGE - SignUp Page
  * Multi-step registration with Stripe integration ready
+ * Updated: Uses regular anchor tags for navigation
  */
 
 import React, { useState } from 'react';
@@ -10,12 +11,12 @@ const TEAL = '#0097a7';
 const TEAL_LIGHT = '#e0f7fa';
 
 interface SignUpProps {
-  onNavigate: (page: string) => void;
+  onNavigate?: (page: string) => void;
   supabase: any;
   selectedPlan?: string;
 }
 
-const SignUp: React.FC<SignUpProps> = ({ onNavigate, supabase, selectedPlan = 'professional' }) => {
+const SignUp: React.FC<SignUpProps> = ({ supabase, selectedPlan = 'professional' }) => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,7 +94,7 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate, supabase, selectedPlan = 'p
     if (step > 1) {
       setStep(prev => prev - 1);
     } else {
-      onNavigate('home');
+      window.location.href = '/';
     }
   };
 
@@ -149,12 +150,8 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate, supabase, selectedPlan = 'p
 
       if (userError) throw userError;
 
-      // 4. Redirect to Stripe checkout (placeholder)
-      // In production, this would create a Stripe checkout session
-      // window.location.href = stripeCheckoutUrl;
-      
-      // For now, go to success/dashboard
-      onNavigate('signup-success');
+      // 4. Redirect to dashboard
+      window.location.href = '/dashboard';
 
     } catch (err: any) {
       console.error('Signup error:', err);
@@ -176,15 +173,13 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate, supabase, selectedPlan = 'p
       }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <a 
-            href="#" 
-            onClick={(e) => { e.preventDefault(); onNavigate('home'); }}
+            href="/"
             style={{ fontSize: '1.25rem', fontWeight: 800, color: NAVY, textDecoration: 'none' }}
           >
             The Nonprofit <span style={{ color: TEAL }}>Edge</span>
           </a>
           <a
-            href="#"
-            onClick={(e) => { e.preventDefault(); onNavigate('signin'); }}
+            href="/signin"
             style={{ color: TEAL, textDecoration: 'none', fontWeight: 500 }}
           >
             Already have an account? Sign in
@@ -280,7 +275,8 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate, supabase, selectedPlan = 'p
                     border: '1px solid #e2e8f0',
                     borderRadius: 8,
                     fontSize: '1rem',
-                    outline: 'none'
+                    outline: 'none',
+                    boxSizing: 'border-box'
                   }}
                 />
               </div>
@@ -299,7 +295,8 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate, supabase, selectedPlan = 'p
                     border: '1px solid #e2e8f0',
                     borderRadius: 8,
                     fontSize: '1rem',
-                    outline: 'none'
+                    outline: 'none',
+                    boxSizing: 'border-box'
                   }}
                 />
               </div>
@@ -318,7 +315,8 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate, supabase, selectedPlan = 'p
                     border: '1px solid #e2e8f0',
                     borderRadius: 8,
                     fontSize: '1rem',
-                    outline: 'none'
+                    outline: 'none',
+                    boxSizing: 'border-box'
                   }}
                 />
               </div>
@@ -343,7 +341,8 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate, supabase, selectedPlan = 'p
                     border: '1px solid #e2e8f0',
                     borderRadius: 8,
                     fontSize: '1rem',
-                    outline: 'none'
+                    outline: 'none',
+                    boxSizing: 'border-box'
                   }}
                 />
               </div>
@@ -362,7 +361,8 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate, supabase, selectedPlan = 'p
                     border: '1px solid #e2e8f0',
                     borderRadius: 8,
                     fontSize: '1rem',
-                    outline: 'none'
+                    outline: 'none',
+                    boxSizing: 'border-box'
                   }}
                 />
               </div>
@@ -381,7 +381,8 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate, supabase, selectedPlan = 'p
                     border: '1px solid #e2e8f0',
                     borderRadius: 8,
                     fontSize: '1rem',
-                    outline: 'none'
+                    outline: 'none',
+                    boxSizing: 'border-box'
                   }}
                 />
               </div>
@@ -406,7 +407,8 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate, supabase, selectedPlan = 'p
                     border: '1px solid #e2e8f0',
                     borderRadius: 8,
                     fontSize: '1rem',
-                    outline: 'none'
+                    outline: 'none',
+                    boxSizing: 'border-box'
                   }}
                 />
               </div>
@@ -424,7 +426,8 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate, supabase, selectedPlan = 'p
                     borderRadius: 8,
                     fontSize: '1rem',
                     outline: 'none',
-                    background: 'white'
+                    background: 'white',
+                    boxSizing: 'border-box'
                   }}
                 >
                   <option value="">Select type...</option>
@@ -450,7 +453,8 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate, supabase, selectedPlan = 'p
                     borderRadius: 8,
                     fontSize: '1rem',
                     outline: 'none',
-                    background: 'white'
+                    background: 'white',
+                    boxSizing: 'border-box'
                   }}
                 >
                   <option value="">Select size...</option>
@@ -476,7 +480,8 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate, supabase, selectedPlan = 'p
                     border: '1px solid #e2e8f0',
                     borderRadius: 8,
                     fontSize: '1rem',
-                    outline: 'none'
+                    outline: 'none',
+                    boxSizing: 'border-box'
                   }}
                 />
               </div>
