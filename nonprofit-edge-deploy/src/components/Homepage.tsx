@@ -1,6 +1,6 @@
 /**
  * Homepage - The Nonprofit Edge
- * Uses regular anchor tags for navigation
+ * Updated: larger hero, larger logos, tighter professor section
  */
 
 import React from 'react'
@@ -53,7 +53,7 @@ const Homepage: React.FC = () => {
       {/* Hero Section */}
       <section className="py-16 md:py-20 px-6" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #e6f7f9 100%)' }}>
         <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
             {/* Left: Text */}
             <div>
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-6 leading-tight" style={{ color: NAVY }}>
@@ -82,19 +82,19 @@ const Homepage: React.FC = () => {
               </div>
             </div>
             
-            {/* Right: Hero Image */}
-            <div className="flex justify-center md:justify-end">
+            {/* Right: Hero Image - BIGGER and moved LEFT */}
+            <div className="flex justify-center md:justify-start md:-ml-8">
               <div 
                 className="overflow-hidden"
                 style={{ 
                   width: '100%',
-                  maxWidth: '450px',
+                  maxWidth: '550px',
                 }}
               >
                 <img 
                   src="/hero-image.png"
                   alt="Nonprofit leader"
-                  className="w-full h-auto object-contain"
+                  className="w-full h-auto object-contain scale-110"
                 />
               </div>
             </div>
@@ -102,17 +102,17 @@ const Homepage: React.FC = () => {
         </div>
       </section>
 
-      {/* Trust Bar */}
-      <section className="py-8 px-6 bg-white border-b border-gray-100">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-4">
+      {/* Trust Bar - LARGER LOGOS */}
+      <section className="py-10 px-6 bg-white border-b border-gray-100">
+        <div className="max-w-5xl mx-auto text-center">
+          <div className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-6">
             Trusted By
           </div>
           <div className="flex justify-center">
             <img 
               src="/trusted-logos.png" 
               alt="Trusted by Salvation Army, YMCA, American Red Cross, San Diego Zoo"
-              className="h-12 md:h-16 object-contain"
+              className="h-16 md:h-20 lg:h-24 object-contain"
             />
           </div>
         </div>
@@ -161,15 +161,15 @@ const Homepage: React.FC = () => {
         </div>
       </section>
 
-      {/* Ask the Professor Section */}
+      {/* Ask the Professor Section - TIGHTER LAYOUT */}
       <section className="py-16 px-6 bg-white" id="professor">
-        <div className="max-w-5xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            {/* Left: Image */}
-            <div className="relative">
+        <div className="max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-6 items-center">
+            {/* Left: Image - CLOSER */}
+            <div className="relative flex justify-center md:justify-end">
               <div 
                 className="rounded-2xl overflow-hidden bg-gray-100"
-                style={{ maxWidth: '320px' }}
+                style={{ maxWidth: '280px' }}
               >
                 <img 
                   src="/dr-corbett.jpg"
@@ -179,14 +179,14 @@ const Homepage: React.FC = () => {
               </div>
               {/* Badge */}
               <div 
-                className="absolute bottom-4 left-4 right-4 rounded-xl py-3 px-4 text-center text-white text-sm font-semibold"
-                style={{ backgroundColor: NAVY, maxWidth: '280px' }}
+                className="absolute bottom-4 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-0 rounded-xl py-3 px-4 text-center text-white text-sm font-semibold"
+                style={{ backgroundColor: NAVY, maxWidth: '260px' }}
               >
                 Over 25 Years of Nonprofit Experience
               </div>
             </div>
             
-            {/* Right: Content */}
+            {/* Right: Content - CLOSER */}
             <div>
               <h2 className="text-3xl font-extrabold mb-2" style={{ color: NAVY }}>
                 Ask the Professor
@@ -194,11 +194,11 @@ const Homepage: React.FC = () => {
               <p className="text-lg mb-4" style={{ color: TEAL }}>
                 Strategic guidance built on 25+ years of real-world experience
               </p>
-              <p className="text-gray-600 mb-6 leading-relaxed">
+              <p className="text-gray-600 mb-5 leading-relaxed">
                 It's like having an expert consultant in your back pocket. Get expert-level strategic advice, available 24/7. Trained on Dr. Lyn Corbett's decades of nonprofit consulting — not generic AI.
               </p>
               
-              <div className="mb-6">
+              <div className="mb-5">
                 <div className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
                   Questions Leaders Are Asking:
                 </div>
