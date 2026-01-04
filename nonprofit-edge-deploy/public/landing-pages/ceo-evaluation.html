@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CEO Evaluation Tool | The Nonprofit Edge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; color: #1f2937; line-height: 1.6; }
+    
+    /* Colors */
+    :root {
+      --navy: #0D2C54;
+      --teal: #0097A9;
+      --light-gray: #f9fafb;
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 80px 24px;
+      background: white;
+    }
+    .hero-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: #e0f2f1;
+      color: var(--teal);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .hero h1 {
+      font-size: 48px;
+      font-weight: 800;
+      color: var(--navy);
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+    .hero h1 span { color: var(--teal); }
+    .hero p {
+      font-size: 18px;
+      color: #4b5563;
+      margin-bottom: 32px;
+      line-height: 1.7;
+    }
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      background: var(--navy);
+      color: white;
+      padding: 14px 28px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .btn-primary:hover { background: #0a2040; }
+    .btn-secondary {
+      background: white;
+      color: var(--navy);
+      padding: 14px 28px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      border: 2px solid var(--navy);
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover { background: var(--navy); color: white; }
+    .hero-image {
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+    }
+    .hero-image img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* Stats Section */
+    .stats {
+      background: var(--navy);
+      padding: 64px 24px;
+    }
+    .stats-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      text-align: center;
+      color: white;
+    }
+    .stat-number {
+      font-size: 48px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .stat-label {
+      opacity: 0.85;
+      font-size: 16px;
+    }
+
+    /* Problem Section */
+    .problem {
+      padding: 80px 24px;
+      background: var(--light-gray);
+    }
+    .section-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .section-header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .section-header h2 {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 12px;
+    }
+    .section-header p {
+      font-size: 18px;
+      color: #6b7280;
+    }
+    .problem-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .problem-card {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      min-height: 320px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+    .problem-card-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+    }
+    .problem-card-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.1) 100%);
+    }
+    .problem-card-content {
+      position: relative;
+      z-index: 10;
+      padding: 32px;
+      color: white;
+    }
+    .problem-card h3 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .problem-card p {
+      font-size: 14px;
+      opacity: 0.9;
+      line-height: 1.6;
+    }
+
+    /* How It Works */
+    .how-it-works {
+      padding: 80px 24px;
+      background: white;
+    }
+    .steps-container {
+      max-width: 800px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+    }
+    .step {
+      text-align: center;
+      position: relative;
+    }
+    .step-number {
+      width: 48px;
+      height: 48px;
+      background: var(--navy);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0 auto 16px;
+    }
+    .step h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 8px;
+    }
+    .step p {
+      font-size: 14px;
+      color: #6b7280;
+    }
+    .step-arrow {
+      position: absolute;
+      right: -16px;
+      top: 24px;
+      font-size: 24px;
+      color: #d1d5db;
+    }
+
+    /* What You Get + Animated Mockup */
+    .features {
+      padding: 80px 24px;
+      background: var(--navy);
+      color: white;
+    }
+    .features-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .features-header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .features-header h2 {
+      font-size: 36px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .features-header p {
+      font-size: 18px;
+      opacity: 0.85;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+    .feature-list {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .feature-item {
+      display: flex;
+      gap: 16px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+    }
+    .feature-item:last-child { border-bottom: none; }
+    .feature-check {
+      width: 24px;
+      height: 24px;
+      background: var(--teal);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .feature-item h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .feature-item p {
+      font-size: 14px;
+      opacity: 0.8;
+      line-height: 1.5;
+    }
+
+    /* Animated Mockup */
+    .mockup-container {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+    }
+    .mockup-header {
+      background: #f3f4f6;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .mockup-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #d1d5db;
+    }
+    .mockup-url {
+      flex: 1;
+      margin-left: 12px;
+      background: white;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #6b7280;
+    }
+    .mockup-content {
+      height: 340px;
+      position: relative;
+      background: #f9fafb;
+      padding: 20px;
+      overflow: hidden;
+    }
+    .mockup-screen {
+      position: absolute;
+      inset: 20px;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    .mockup-screen.active { opacity: 1; }
+    .mockup-screen h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--navy);
+      margin-bottom: 16px;
+    }
+    .mockup-card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .goal-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .goal-item:last-child { border-bottom: none; }
+    .goal-number {
+      width: 24px;
+      height: 24px;
+      background: var(--navy);
+      color: white;
+      border-radius: 50%;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+    .goal-text {
+      font-size: 12px;
+      color: #374151;
+    }
+    .feedback-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .feedback-card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+    .feedback-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--navy);
+      margin-bottom: 4px;
+    }
+    .feedback-count {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 8px;
+    }
+    .feedback-status {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .status-complete { background: #dcfce7; color: #166534; }
+    .status-pending { background: #fef9c3; color: #854d0e; }
+    .score-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .score-row:last-child { margin-bottom: 0; }
+    .score-label {
+      width: 100px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--navy);
+    }
+    .score-bar {
+      flex: 1;
+      height: 8px;
+      background: #f3f4f6;
+      border-radius: 4px;
+      margin: 0 12px;
+      overflow: hidden;
+    }
+    .score-fill {
+      height: 100%;
+      background: var(--navy);
+      border-radius: 4px;
+    }
+    .score-value {
+      width: 40px;
+      text-align: right;
+      font-size: 12px;
+      font-weight: 600;
+      color: #6b7280;
+    }
+    .dev-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .dev-item:last-child { border-bottom: none; }
+    .dev-check {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      border: 2px solid #d1d5db;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .dev-check.checked {
+      background: var(--teal);
+      border-color: var(--teal);
+      color: white;
+      font-size: 12px;
+    }
+    .dev-text {
+      font-size: 12px;
+      color: #374151;
+    }
+    .mockup-footer {
+      background: #f3f4f6;
+      padding: 12px;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      border-top: 1px solid #e5e7eb;
+    }
+    .mockup-dot-nav {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #d1d5db;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .mockup-dot-nav.active {
+      background: var(--navy);
+      transform: scale(1.25);
+    }
+
+    /* Comparison Table */
+    .comparison {
+      padding: 80px 24px;
+      background: var(--light-gray);
+    }
+    .comparison-table {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    .comparison-header {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr;
+      background: var(--navy);
+      color: white;
+    }
+    .comparison-header div {
+      padding: 20px;
+      font-weight: 600;
+    }
+    .comparison-header div:not(:first-child) { text-align: center; }
+    .comparison-row {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .comparison-row:last-child { border-bottom: none; }
+    .comparison-row div {
+      padding: 16px 20px;
+      font-size: 14px;
+    }
+    .comparison-row div:first-child {
+      font-weight: 500;
+      color: var(--navy);
+    }
+    .comparison-row div:not(:first-child) { text-align: center; }
+    .comparison-row div:last-child { background: rgba(0,151,169,0.1); }
+    .check-yes { color: var(--teal); font-size: 18px; }
+    .check-no { color: #d1d5db; font-size: 18px; }
+    .highlight-text {
+      font-weight: 600;
+      color: var(--navy);
+    }
+
+    /* Final CTA */
+    .cta {
+      padding: 80px 24px;
+      text-align: center;
+      background: white;
+    }
+    .cta h2 {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 16px;
+    }
+    .cta p {
+      font-size: 18px;
+      color: #6b7280;
+      margin-bottom: 32px;
+    }
+    .cta-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .cta-note {
+      font-size: 14px;
+      color: #9ca3af;
+    }
+
+    /* Responsive */
+    @media (max-width: 968px) {
+      .hero-container,
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero-image { order: -1; }
+      .problem-cards,
+      .stats-container,
+      .steps-container {
+        grid-template-columns: 1fr;
+      }
+      .step-arrow { display: none; }
+      .hero h1 { font-size: 36px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-container">
+      <div>
+        <span class="hero-badge">CEO Evaluation</span>
+        <h1>Make the Annual Review <span>Actually Useful</span></h1>
+        <p>A structured, fair, and growth-focused evaluation process that strengthens the board-CEO relationship.</p>
+        <div class="hero-buttons">
+          <a href="/signup" class="btn-primary">Start Your Free Trial</a>
+          <a href="/samples/ceo-evaluation-report.pdf" class="btn-secondary">View Sample Report</a>
+        </div>
+      </div>
+      <div class="hero-image">
+        <img src="/images/ceo-hero.jpg" alt="Celebrating leadership success">
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section class="stats">
+    <div class="stats-container">
+      <div>
+        <div class="stat-number">45%</div>
+        <div class="stat-label">of boards don't do formal CEO evaluations</div>
+      </div>
+      <div>
+        <div class="stat-number">70%</div>
+        <div class="stat-label">of EDs say their evaluation process is "unclear"</div>
+      </div>
+      <div>
+        <div class="stat-number">2.5x</div>
+        <div class="stat-label">longer tenure with regular structured reviews</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Problem Section -->
+  <section class="problem">
+    <div class="section-container">
+      <div class="section-header">
+        <h2>Why CEO Evaluations Go Wrong</h2>
+        <p>Good intentions, poor execution.</p>
+      </div>
+      <div class="problem-cards">
+        <div class="problem-card">
+          <div class="problem-card-bg" style="background-image: url('/images/ceo-no-criteria.jpg')"></div>
+          <div class="problem-card-overlay"></div>
+          <div class="problem-card-content">
+            <h3>No Clear Criteria</h3>
+            <p>Evaluation based on vibes, not goals. The CEO doesn't know what 'success' looks like.</p>
+          </div>
+        </div>
+        <div class="problem-card">
+          <div class="problem-card-bg" style="background-image: url('/images/ceo-surprise.jpg')"></div>
+          <div class="problem-card-overlay"></div>
+          <div class="problem-card-content">
+            <h3>Surprise Feedback</h3>
+            <p>Issues raised in annual review that were never discussed during the year.</p>
+          </div>
+        </div>
+        <div class="problem-card">
+          <div class="problem-card-bg" style="background-image: url('/images/ceo-skipped.jpg')"></div>
+          <div class="problem-card-overlay"></div>
+          <div class="problem-card-content">
+            <h3>Skipped Entirely</h3>
+            <p>Things are going fine — but often they aren't. Boards avoid the conversation altogether.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="how-it-works">
+    <div class="section-container">
+      <div class="section-header">
+        <h2>A Better Evaluation Process</h2>
+      </div>
+      <div class="steps-container">
+        <div class="step">
+          <div class="step-number">1</div>
+          <h3>Set Goals Together</h3>
+          <p>Align on success criteria at the start of the year.</p>
+          <span class="step-arrow">→</span>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <h3>Gather Feedback</h3>
+          <p>360° input from board, staff, and self-assessment.</p>
+          <span class="step-arrow">→</span>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <h3>Create Growth Plan</h3>
+          <p>Actionable development goals — not a report card.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- What You Get + Animated Mockup -->
+  <section class="features">
+    <div class="features-container">
+      <div class="features-header">
+        <h2>Your Complete Evaluation Package</h2>
+        <p>Everything you need for a fair, growth-focused CEO review.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-check">✓</div>
+            <div>
+              <h3>Goal Framework</h3>
+              <p>Template for setting measurable annual objectives together.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-check">✓</div>
+            <div>
+              <h3>Survey Tools</h3>
+              <p>Anonymous 360° feedback surveys ready to send.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-check">✓</div>
+            <div>
+              <h3>Analysis Report</h3>
+              <p>Synthesized feedback with themes and patterns.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-check">✓</div>
+            <div>
+              <h3>Development Plan</h3>
+              <p>Structured growth goals for the year ahead.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Animated Mockup -->
+        <div class="mockup-container">
+          <div class="mockup-header">
+            <div class="mockup-dot"></div>
+            <div class="mockup-dot"></div>
+            <div class="mockup-dot"></div>
+            <div class="mockup-url">thenonprofitedge.com/tools/ceo-evaluation</div>
+          </div>
+          <div class="mockup-content">
+            <!-- Screen 1: Goals -->
+            <div class="mockup-screen active" id="screen1">
+              <h4>Annual Goals Framework</h4>
+              <div class="mockup-card">
+                <div class="goal-item">
+                  <div class="goal-number">1</div>
+                  <div class="goal-text">Increase donor base by 25%</div>
+                </div>
+                <div class="goal-item">
+                  <div class="goal-number">2</div>
+                  <div class="goal-text">Launch new program serving 500 youth</div>
+                </div>
+                <div class="goal-item">
+                  <div class="goal-number">3</div>
+                  <div class="goal-text">Achieve 90% staff retention</div>
+                </div>
+                <div class="goal-item">
+                  <div class="goal-number">4</div>
+                  <div class="goal-text">Build 6-month operating reserve</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Screen 2: Feedback Collection -->
+            <div class="mockup-screen" id="screen2">
+              <h4>360° Feedback Collection</h4>
+              <div class="feedback-grid">
+                <div class="feedback-card">
+                  <div class="feedback-label">Board Members</div>
+                  <div class="feedback-count">7/9</div>
+                  <span class="feedback-status status-complete">Complete</span>
+                </div>
+                <div class="feedback-card">
+                  <div class="feedback-label">Direct Reports</div>
+                  <div class="feedback-count">5/5</div>
+                  <span class="feedback-status status-complete">Complete</span>
+                </div>
+                <div class="feedback-card">
+                  <div class="feedback-label">Key Partners</div>
+                  <div class="feedback-count">2/4</div>
+                  <span class="feedback-status status-pending">Pending</span>
+                </div>
+                <div class="feedback-card">
+                  <div class="feedback-label">Self-Assessment</div>
+                  <div class="feedback-count">1/1</div>
+                  <span class="feedback-status status-complete">Complete</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Screen 3: Analysis -->
+            <div class="mockup-screen" id="screen3">
+              <h4>Synthesized Analysis</h4>
+              <div class="mockup-card">
+                <div class="score-row">
+                  <div class="score-label">Strategic Vision</div>
+                  <div class="score-bar"><div class="score-fill" style="width: 90%"></div></div>
+                  <div class="score-value">4.5/5</div>
+                </div>
+                <div class="score-row">
+                  <div class="score-label">Communication</div>
+                  <div class="score-bar"><div class="score-fill" style="width: 76%"></div></div>
+                  <div class="score-value">3.8/5</div>
+                </div>
+                <div class="score-row">
+                  <div class="score-label">Staff Leadership</div>
+                  <div class="score-bar"><div class="score-fill" style="width: 84%"></div></div>
+                  <div class="score-value">4.2/5</div>
+                </div>
+                <div class="score-row">
+                  <div class="score-label">Financial Mgmt</div>
+                  <div class="score-bar"><div class="score-fill" style="width: 88%"></div></div>
+                  <div class="score-value">4.4/5</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Screen 4: Development Plan -->
+            <div class="mockup-screen" id="screen4">
+              <h4>Development Plan</h4>
+              <div class="mockup-card">
+                <div class="dev-item">
+                  <div class="dev-check checked">✓</div>
+                  <div class="dev-text">Executive coaching — monthly sessions</div>
+                </div>
+                <div class="dev-item">
+                  <div class="dev-check"></div>
+                  <div class="dev-text">Board communication — weekly brief updates</div>
+                </div>
+                <div class="dev-item">
+                  <div class="dev-check"></div>
+                  <div class="dev-text">Peer network — join CEO learning cohort</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mockup-footer">
+            <div class="mockup-dot-nav active" data-screen="1"></div>
+            <div class="mockup-dot-nav" data-screen="2"></div>
+            <div class="mockup-dot-nav" data-screen="3"></div>
+            <div class="mockup-dot-nav" data-screen="4"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparison Table -->
+  <section class="comparison">
+    <div class="section-container">
+      <div class="section-header">
+        <h2>How This Compares to Hiring a Consultant</h2>
+      </div>
+      <div class="comparison-table">
+        <div class="comparison-header">
+          <div>What You Get</div>
+          <div>Traditional Consultant</div>
+          <div>The Nonprofit Edge</div>
+        </div>
+        <div class="comparison-row">
+          <div>Goal-setting framework</div>
+          <div><span class="check-yes">✓</span></div>
+          <div><span class="check-yes">✓</span></div>
+        </div>
+        <div class="comparison-row">
+          <div>360° feedback surveys</div>
+          <div><span class="check-yes">✓</span></div>
+          <div><span class="check-yes">✓</span></div>
+        </div>
+        <div class="comparison-row">
+          <div>Synthesized analysis</div>
+          <div><span class="check-yes">✓</span></div>
+          <div><span class="check-yes">✓</span></div>
+        </div>
+        <div class="comparison-row">
+          <div>Development plan template</div>
+          <div><span class="check-no">✗</span></div>
+          <div><span class="check-yes">✓</span></div>
+        </div>
+        <div class="comparison-row">
+          <div>Repeat annually at no extra cost</div>
+          <div><span class="check-no">✗</span></div>
+          <div><span class="check-yes">✓</span></div>
+        </div>
+        <div class="comparison-row">
+          <div>Typical cost</div>
+          <div>$3,000 – $8,000</div>
+          <div><span class="highlight-text">Included in membership</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="cta">
+    <h2>Ready for Better Conversations?</h2>
+    <p>Build a CEO evaluation process that actually strengthens leadership.</p>
+    <div class="cta-buttons">
+      <a href="/signup" class="btn-primary">Start Your Free Trial</a>
+      <a href="/samples/ceo-evaluation-report.pdf" class="btn-secondary">View Sample Report</a>
+    </div>
+    <p class="cta-note">Starting at $97/month for teams · Cancel anytime</p>
+  </section>
+
+  <script>
+    // Animated mockup screen transitions
+    let currentScreen = 1;
+    const totalScreens = 4;
+    
+    function showScreen(num) {
+      document.querySelectorAll('.mockup-screen').forEach((screen, i) => {
+        screen.classList.toggle('active', i === num - 1);
+      });
+      document.querySelectorAll('.mockup-dot-nav').forEach((dot, i) => {
+        dot.classList.toggle('active', i === num - 1);
+      });
+      currentScreen = num;
+    }
+    
+    // Auto-rotate screens
+    setInterval(() => {
+      const next = currentScreen >= totalScreens ? 1 : currentScreen + 1;
+      showScreen(next);
+    }, 4000);
+    
+    // Click handlers for dots
+    document.querySelectorAll('.mockup-dot-nav').forEach(dot => {
+      dot.addEventListener('click', () => {
+        showScreen(parseInt(dot.dataset.screen));
+      });
+    });
+  </script>
+
+</body>
+</html>
