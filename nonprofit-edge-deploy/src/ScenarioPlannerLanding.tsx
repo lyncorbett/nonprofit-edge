@@ -1,349 +1,311 @@
 import React, { useState, useEffect } from 'react';
 
-const ScenarioPlannerLanding: React.FC = () => {
-  const [currentScreen, setCurrentScreen] = useState(0);
-  const screens = ['screen1', 'screen2', 'screen3', 'screen4'];
+/**
+ * PIVOT Scenario Planner Landing Page
+ * The Nonprofit Edge
+ */
 
+const NAVY = '#0D2C54';
+const TEAL = '#0097A9';
+
+export default function ScenarioPlannerLanding() {
+  const [currentScreen, setCurrentScreen] = useState(0);
+
+  // Animation cycle through 3 screens
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentScreen((prev) => (prev + 1) % screens.length);
-    }, 4000);
+      setCurrentScreen(prev => (prev + 1) % 3);
+    }, 3000);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="min-h-screen bg-white font-sans">
+    <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", color: '#374151', lineHeight: 1.6 }}>
+      
       {/* Hero Section */}
-      <section className="py-16 px-6">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="max-w-xl">
-            <h1 className="text-4xl lg:text-5xl font-extrabold text-[#0D2C54] leading-tight mb-5">
-              Prepare Today — <span className="text-[#e11d48]">So Your Mission Survives Tomorrow</span>
+      <section style={{ padding: '80px 0 100px' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px', alignItems: 'center' }}>
+          <div style={{ maxWidth: '540px' }}>
+            <h1 style={{ fontSize: '46px', fontWeight: 800, lineHeight: 1.1, marginBottom: '20px' }}>
+              <span style={{ color: NAVY }}>What If Your Biggest</span><br/>
+              <span style={{ color: TEAL }}>Funder Disappeared?</span>
             </h1>
-            <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-              Most nonprofits don't fail because of bad strategy. They struggle because something unexpected happens — and they weren't ready. This tool helps you think through possible futures before they arrive.
+            <p style={{ fontSize: '19px', color: '#4b5563', marginBottom: '12px', lineHeight: 1.6 }}>
+              Explore "what if" scenarios before they become crises. Our PIVOT framework helps you stress-test your organization and build contingency plans that actually work.
             </p>
-            <div className="flex flex-wrap gap-4">
-              <a href="/signup" className="inline-flex items-center justify-center px-6 py-3 bg-[#e11d48] text-white font-semibold rounded-lg hover:bg-[#be123c] transition-all">
-                Start Your Free Trial
+            <p style={{ fontSize: '15px', color: TEAL, fontWeight: 500, marginBottom: '32px', fontStyle: 'italic' }}>
+              For executive directors and board members who refuse to be caught off guard.
+            </p>
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <a href="/trial" style={{
+                display: 'inline-flex', alignItems: 'center', padding: '14px 28px',
+                background: NAVY, color: 'white', borderRadius: '8px', fontWeight: 600,
+                fontSize: '16px', textDecoration: 'none'
+              }}>
+                Start Your Free 3-Day Trial →
               </a>
-              <a href="/samples/scenario-planner-report.pdf" className="inline-flex items-center justify-center px-6 py-3 border-2 border-[#0D2C54] text-[#0D2C54] font-semibold rounded-lg hover:bg-[#0D2C54] hover:text-white transition-all">
-                View Sample Report
+              <a href="#features" style={{
+                display: 'inline-flex', alignItems: 'center', padding: '14px 28px',
+                background: 'white', color: NAVY, borderRadius: '8px', fontWeight: 600,
+                fontSize: '16px', textDecoration: 'none', border: `2px solid ${NAVY}`
+              }}>
+                See What You Get
               </a>
             </div>
           </div>
-
-          {/* Hero Image */}
-          <div className="rounded-xl overflow-hidden shadow-2xl">
+          
+          <div style={{ borderRadius: '16px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
             <img 
-              src="/images/scenario-hero-image.jpg" 
-              alt="Leadership team planning together"
-              className="w-full h-auto"
+              src="/images/scenario-planner-hero.jpg" 
+              alt="Leadership team planning for the future"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
             />
           </div>
         </div>
       </section>
 
-      {/* Problem Section */}
-      <section className="py-20 px-6 bg-gray-50">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl lg:text-4xl font-bold text-[#0D2C54] text-center mb-4">
-            When Uncertainty Hits, Will You Be Ready?
-          </h2>
-          <p className="text-lg text-gray-600 text-center max-w-2xl mx-auto mb-12">
-            The organizations that thrive through disruption aren't the ones who predicted what would happen. They're the ones who thought it through before it did.
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Leadership Card */}
-            <div className="relative rounded-xl overflow-hidden min-h-[320px] flex flex-col justify-end">
-              <div 
-                className="absolute inset-0 bg-cover bg-center"
-                style={{ backgroundImage: 'url(/images/scenario-leadership.jpg)' }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
-              <div className="relative z-10 p-8 text-white">
-                <h3 className="text-xl font-bold mb-3">Leadership Transitions</h3>
-                <p className="text-sm opacity-90 leading-relaxed">
-                  Your founding ED is retiring. They hold most of the donor relationships. The board hasn't led a search in 15 years. What's your plan?
-                </p>
-              </div>
-            </div>
-
-            {/* Funding Card */}
-            <div className="relative rounded-xl overflow-hidden min-h-[320px] flex flex-col justify-end">
-              <div 
-                className="absolute inset-0 bg-cover bg-center"
-                style={{ backgroundImage: 'url(/images/scenario-funding.jpg)' }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
-              <div className="relative z-10 p-8 text-white">
-                <h3 className="text-xl font-bold mb-3">Funding Shifts</h3>
-                <p className="text-sm opacity-90 leading-relaxed">
-                  Your largest funder is signaling changes. You've heard "budget cuts" mentioned. How would you absorb a 20% reduction? 40%?
-                </p>
-              </div>
-            </div>
-
-            {/* Disruption Card */}
-            <div className="relative rounded-xl overflow-hidden min-h-[320px] flex flex-col justify-end">
-              <div 
-                className="absolute inset-0 bg-cover bg-center"
-                style={{ backgroundImage: 'url(/images/scenario-disruption.jpg)' }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
-              <div className="relative z-10 p-8 text-white">
-                <h3 className="text-xl font-bold mb-3">External Disruption</h3>
-                <p className="text-sm opacity-90 leading-relaxed">
-                  Economic downturn. Policy changes. Public health crisis. The question isn't if something will happen — it's whether you'll be ready.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl lg:text-4xl font-bold text-[#0D2C54] text-center mb-12">
-            How It Works
-          </h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+      {/* Stats */}
+      <section style={{ padding: '60px 0', background: NAVY }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '40px' }}>
             {[
-              { num: 1, title: 'Choose a Scenario', desc: 'Select the situation that feels most important to explore right now' },
-              { num: 2, title: 'Describe Futures', desc: 'Walk through best-case, most-likely, and worst-case for each scenario' },
-              { num: 3, title: 'Assess Readiness', desc: 'Rate your confidence across four key dimensions' },
-              { num: 4, title: 'Get Your Report', desc: 'Receive a board-ready document with patterns, questions, and playbook' },
-            ].map((step, i) => (
-              <div key={i} className="text-center relative">
-                <div className="w-12 h-12 bg-[#0D2C54] text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">
-                  {step.num}
-                </div>
-                <h3 className="text-lg font-bold text-[#0D2C54] mb-2">{step.title}</h3>
-                <p className="text-sm text-gray-600">{step.desc}</p>
-                {i < 3 && (
-                  <span className="hidden lg:block absolute right-0 top-6 text-2xl text-gray-300">→</span>
-                )}
+              { number: '73%', label: 'of nonprofits have no contingency plan' },
+              { number: '6mo', label: 'average warning time before a crisis' },
+              { number: '40%', label: 'of organizations fail within 2 years of major disruption' },
+            ].map((stat, i) => (
+              <div key={i} style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px', fontWeight: 800, color: 'white', marginBottom: '8px' }}>{stat.number}</div>
+                <div style={{ fontSize: '15px', color: 'rgba(255,255,255,0.8)' }}>{stat.label}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* What You Get + Animated Mockup */}
-      <section className="py-20 px-6 bg-[#0D2C54] text-white">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl lg:text-4xl font-bold text-center mb-4">What You Get</h2>
-          <p className="text-lg text-center opacity-85 max-w-xl mx-auto mb-12">
-            A 5-7 page board-ready report that reflects your thinking and surfaces what you might have missed.
-          </p>
+      {/* What You Get */}
+      <section id="features" style={{ padding: '80px 0 40px' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <h2 style={{ fontSize: '36px', fontWeight: 700, color: NAVY, marginBottom: '12px' }}>What You Get</h2>
+            <p style={{ fontSize: '18px', color: '#6b7280' }}>Scenario planning tools built for nonprofit realities.</p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', maxWidth: '1100px', margin: '0 auto' }}>
+            {[
+              { title: 'Leadership Changes', desc: 'Plan for executive transitions, board turnover, and key staff departures.', img: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=600&h=400&fit=crop' },
+              { title: 'Funding Shifts', desc: 'Model what happens if a major funder cuts back, delays, or disappears entirely.', img: 'https://images.unsplash.com/photo-1501466044931-62695aada8e9?w=600&h=400&fit=crop' },
+              { title: 'External Disruptions', desc: 'Prepare for policy changes, economic downturns, and competitive threats.', img: 'https://images.unsplash.com/photo-1534088568595-a066f410bcda?w=600&h=400&fit=crop' },
+            ].map((card, i) => (
+              <div key={i} style={{ position: 'relative', height: '320px', borderRadius: '16px', overflow: 'hidden', cursor: 'pointer' }}>
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                  backgroundImage: `url('${card.img}')`, backgroundSize: 'cover', backgroundPosition: 'center'
+                }} />
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                  background: 'linear-gradient(180deg, rgba(13,44,84,0) 0%, rgba(13,44,84,0.85) 60%, rgba(13,44,84,0.95) 100%)'
+                }} />
+                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '28px', color: 'white' }}>
+                  <h3 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '8px' }}>{card.title}</h3>
+                  <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.85)', lineHeight: 1.5 }}>{card.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Deliverables List */}
-            <div className="space-y-6">
+      {/* Before/After */}
+      <section style={{ padding: '40px 0 80px', background: 'white' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <h2 style={{ fontSize: '36px', fontWeight: 700, color: NAVY, marginBottom: '12px' }}>See the Difference</h2>
+            <p style={{ fontSize: '18px', color: '#6b7280' }}>The same scenario. Two very different responses.</p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', maxWidth: '1000px', margin: '0 auto' }}>
+            <div style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', border: '1px solid #e5e7eb' }}>
+              <div style={{ padding: '12px 24px', background: '#374151', color: 'white', fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>Before</div>
+              <div style={{ padding: '24px' }}>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: '#6b7280', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>When Major Funder Cuts 50%</div>
+                <div style={{ fontSize: '16px', lineHeight: 1.7, color: '#374151', fontStyle: 'italic', marginBottom: '20px', padding: '16px', background: '#f9fafb', borderRadius: '8px', borderLeft: '3px solid #d1d5db' }}>
+                  "We'll figure it out. Maybe we can do a fundraiser or something. Let's wait and see what happens."
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', fontWeight: 500, color: '#6b7280' }}>
+                  <span style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>⚠</span>
+                  <span>Reactive • Unprepared • High Risk</span>
+                </div>
+              </div>
+            </div>
+            <div style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', border: '1px solid #e5e7eb' }}>
+              <div style={{ padding: '12px 24px', background: TEAL, color: 'white', fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>After</div>
+              <div style={{ padding: '24px' }}>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: '#6b7280', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>When Major Funder Cuts 50%</div>
+                <div style={{ fontSize: '16px', lineHeight: 1.7, color: '#374151', fontStyle: 'italic', marginBottom: '20px', padding: '16px', background: 'rgba(0,151,169,0.05)', borderRadius: '8px', borderLeft: `3px solid ${TEAL}` }}>
+                  "We activate Plan B: Reduce contractor hours, accelerate individual giving campaign, and notify board of bridge loan option. Timeline: 30 days."
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', fontWeight: 500, color: TEAL }}>
+                  <span style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(0,151,169,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✓</span>
+                  <span>Proactive • Prepared • Resilient</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Quote Section */}
+      <section style={{ padding: '60px 0', background: NAVY }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto', padding: '0 24px' }}>
+          <blockquote style={{ textAlign: 'center' }}>
+            <span style={{ display: 'inline-block', background: TEAL, color: 'white', padding: '8px 20px', borderRadius: '20px', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '24px' }}>
+              Strategic Foresight
+            </span>
+            <p style={{ fontSize: '32px', lineHeight: 1.5, color: 'white', fontStyle: 'italic', marginBottom: '32px', fontWeight: 400 }}>
+              "In preparing for battle I have always found that plans are useless, but planning is indispensable."
+            </p>
+            <cite style={{ display: 'flex', flexDirection: 'column', gap: '6px', textAlign: 'center' }}>
+              <span style={{ fontSize: '22px', fontWeight: 600, color: 'white', fontStyle: 'normal' }}>Dwight D. Eisenhower</span>
+              <span style={{ fontSize: '17px', color: 'rgba(255,255,255,0.7)', fontStyle: 'normal' }}>34th President of the United States</span>
+            </cite>
+          </blockquote>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section style={{ padding: '100px 0', background: 'linear-gradient(180deg, #f9fafb 0%, white 100%)' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <h2 style={{ fontSize: '36px', fontWeight: 700, color: NAVY }}>How It Works</h2>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
               {[
-                { title: 'Readiness Scorecard', desc: 'Your self-assessed scores across four dimensions with interpretation of what your pattern suggests.' },
-                { title: 'Three Futures Analysis', desc: 'Your scenarios organized with insights about opportunities, strain points, and trigger points you identified.' },
-                { title: 'Contingency Playbook', desc: 'Your first decisions, 30-day response plan, and stakeholder message — ready to share with your board.' },
-                { title: 'Patterns Worth Discussing', desc: 'Cross-cutting themes from your responses — framed as board conversation starters, not problems to solve.' },
-              ].map((item, i) => (
-                <div key={i} className="flex items-start gap-4 py-4 border-b border-white/15 last:border-0">
-                  <div className="w-6 h-6 bg-[#0097A7] rounded flex items-center justify-center text-sm flex-shrink-0 mt-1">✓</div>
+                { num: '1', title: 'Choose Your Scenario', desc: 'Select from leadership, funding, or disruption scenarios that matter most' },
+                { num: '2', title: 'Explore Three Futures', desc: 'We guide you through best case, most likely, and worst case possibilities' },
+                { num: '3', title: 'Build Your Playbook', desc: 'Get a concrete action plan with triggers, owners, and timelines' },
+              ].map((step, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
+                  <div style={{
+                    width: '56px', height: '56px', minWidth: '56px',
+                    background: 'white', border: `3px solid ${NAVY}`, color: NAVY,
+                    borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '22px', fontWeight: 800, boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+                  }}>
+                    {step.num}
+                  </div>
                   <div>
-                    <h3 className="text-lg font-semibold mb-1">{item.title}</h3>
-                    <p className="text-sm opacity-80 leading-relaxed">{item.desc}</p>
+                    <h3 style={{ fontSize: '20px', fontWeight: 700, color: NAVY, marginBottom: '6px' }}>{step.title}</h3>
+                    <p style={{ fontSize: '15px', color: '#6b7280', margin: 0 }}>{step.desc}</p>
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Animated Mockup */}
-            <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
-              <div className="bg-gray-100 px-4 py-3 flex items-center gap-2 border-b border-gray-200">
-                <div className="w-3 h-3 rounded-full bg-gray-300" />
-                <div className="w-3 h-3 rounded-full bg-gray-300" />
-                <div className="w-3 h-3 rounded-full bg-gray-300" />
-                <div className="flex-1 ml-3 bg-white rounded px-3 py-1 text-xs text-gray-500">
-                  thenonprofitedge.com/tools/scenario-planner
+            <div style={{ background: 'white', borderRadius: '12px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', overflow: 'hidden' }}>
+              <div style={{ background: '#f3f4f6', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #e5e7eb' }}>
+                <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#ef4444' }} />
+                <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#eab308' }} />
+                <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#22c55e' }} />
+                <div style={{ flex: 1, marginLeft: '12px', background: 'white', borderRadius: '6px', padding: '6px 12px', fontSize: '12px', color: '#6b7280' }}>
+                  thenonprofitedge.org
                 </div>
               </div>
-
-              <div className="h-[340px] relative bg-gray-50 p-5">
-                {/* Screen 1: Scenario Selection */}
-                <div className={`absolute inset-0 p-5 transition-opacity duration-500 ${currentScreen === 0 ? 'opacity-100' : 'opacity-0'}`}>
-                  <h3 className="text-sm font-semibold text-[#0D2C54] mb-4">What scenario are you preparing for?</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {['Leadership Transition', 'Funding Shift', 'Demand Increase', 'Workforce Strain', 'Technology Event', 'Regulatory Changes'].map((s, i) => (
-                      <div key={i} className={`px-3 py-2 rounded text-xs border ${i === 0 ? 'bg-[#0D2C54] text-white border-[#0D2C54]' : 'bg-white text-gray-600 border-gray-200'}`}>
-                        {s}
-                      </div>
-                    ))}
-                  </div>
+              
+              <div style={{ height: '300px', position: 'relative', overflow: 'hidden' }}>
+                {/* Screen 1: Select Scenario */}
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', padding: '24px',
+                  opacity: currentScreen === 0 ? 1 : 0, transition: 'opacity 0.5s ease'
+                }}>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: NAVY, marginBottom: '12px' }}>Select a scenario to explore:</div>
+                  {[
+                    { icon: '👤', label: 'Executive Director Departure', selected: true },
+                    { icon: '💰', label: 'Major Funder Reduction (50%+)', selected: false },
+                    { icon: '📋', label: 'Government Contract Loss', selected: false },
+                    { icon: '⚡', label: 'Economic Recession Impact', selected: false },
+                  ].map((opt, i) => (
+                    <div key={i} style={{
+                      display: 'flex', alignItems: 'center', gap: '12px', padding: '12px',
+                      background: opt.selected ? 'rgba(0,151,169,0.05)' : '#f9fafb',
+                      border: opt.selected ? `2px solid ${TEAL}` : '2px solid transparent',
+                      borderRadius: '8px', marginBottom: '8px', transition: 'all 0.3s ease'
+                    }}>
+                      <span style={{ fontSize: '20px' }}>{opt.icon}</span>
+                      <span style={{ fontSize: '13px', color: '#374151' }}>{opt.label}</span>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Screen 2: Three Futures */}
-                <div className={`absolute inset-0 p-5 transition-opacity duration-500 ${currentScreen === 1 ? 'opacity-100' : 'opacity-0'}`}>
-                  <h3 className="text-sm font-semibold text-[#0D2C54] mb-4">Describe Your Three Futures</h3>
-                  <div className="space-y-2">
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', padding: '24px',
+                  opacity: currentScreen === 1 ? 1 : 0, transition: 'opacity 0.5s ease'
+                }}>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: NAVY, marginBottom: '16px' }}>ED Departure: Three Futures</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
                     {[
-                      { label: 'Best Case', text: 'Smooth transition with 3-month overlap. Contract expands...' },
-                      { label: 'Most Likely', text: 'Transition takes longer than expected. Contract renewed at 10-15% reduction.' },
-                      { label: 'Worst Case', text: 'ED search fails. Contract cut 30%+. Key staff departures.' },
-                    ].map((f, i) => (
-                      <div key={i} className="bg-white p-3 rounded border border-gray-200">
-                        <h4 className="text-xs font-semibold text-[#0D2C54] uppercase tracking-wide mb-1">{f.label}</h4>
-                        <p className="text-xs text-gray-600">{f.text}</p>
+                      { title: 'Best Case', desc: 'Smooth transition with internal candidate ready.', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.3)', color: '#16a34a' },
+                      { title: 'Most Likely', desc: '6-month search with interim leadership.', bg: 'rgba(234,179,8,0.1)', border: 'rgba(234,179,8,0.3)', color: '#ca8a04' },
+                      { title: 'Worst Case', desc: 'Extended vacancy, staff turnover, funder concerns.', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.3)', color: '#dc2626' },
+                    ].map((future, i) => (
+                      <div key={i} style={{ padding: '12px', borderRadius: '8px', textAlign: 'center', background: future.bg, border: `1px solid ${future.border}` }}>
+                        <div style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', marginBottom: '8px', color: future.color }}>{future.title}</div>
+                        <div style={{ fontSize: '11px', color: '#4b5563', lineHeight: 1.4 }}>{future.desc}</div>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Screen 3: Readiness Scores */}
-                <div className={`absolute inset-0 p-5 transition-opacity duration-500 ${currentScreen === 2 ? 'opacity-100' : 'opacity-0'}`}>
-                  <h3 className="text-sm font-semibold text-[#0D2C54] mb-4">Your Readiness Self-Assessment</h3>
-                  <div className="bg-white p-4 rounded border border-gray-200">
-                    {[
-                      { label: 'Operations', value: 3, width: '60%' },
-                      { label: 'Finances', value: 2, width: '40%' },
-                      { label: 'People', value: 3, width: '60%' },
-                      { label: 'Reputation', value: 4, width: '80%' },
-                    ].map((s, i) => (
-                      <div key={i} className="flex items-center mb-3 last:mb-0">
-                        <span className="w-20 text-xs font-semibold text-[#0D2C54]">{s.label}</span>
-                        <div className="flex-1 h-2 bg-gray-100 rounded mx-3 overflow-hidden">
-                          <div className="h-full bg-[#0D2C54] rounded" style={{ width: s.width }} />
-                        </div>
-                        <span className="w-8 text-right text-xs font-semibold text-gray-600">{s.value}/5</span>
+                {/* Screen 3: Readiness */}
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', padding: '24px',
+                  opacity: currentScreen === 2 ? 1 : 0, transition: 'opacity 0.5s ease'
+                }}>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: NAVY, marginBottom: '16px' }}>Your Readiness Score</div>
+                  {[
+                    { label: 'Succession', score: 25, color: '#ef4444' },
+                    { label: 'Documentation', score: 60, color: '#eab308' },
+                    { label: 'Board Ready', score: 45, color: '#eab308' },
+                    { label: 'Cash Reserve', score: 80, color: '#22c55e' },
+                  ].map((item, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                      <span style={{ width: '80px', fontSize: '12px', color: '#4b5563' }}>{item.label}</span>
+                      <div style={{ flex: 1, height: '8px', background: '#e5e7eb', borderRadius: '4px', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', background: item.color, width: `${item.score}%`, borderRadius: '4px', transition: 'width 1s ease' }} />
                       </div>
-                    ))}
-                    <div className="text-center pt-3 mt-3 border-t border-gray-200">
-                      <div className="text-xl font-bold text-[#0D2C54]">3.0 / 5</div>
-                      <div className="text-xs font-semibold text-gray-500 uppercase">Mixed Readiness</div>
+                      <span style={{ width: '40px', fontSize: '12px', fontWeight: 600, textAlign: 'right' }}>{item.score}%</span>
                     </div>
-                  </div>
+                  ))}
                 </div>
-
-                {/* Screen 4: Report Preview */}
-                <div className={`absolute inset-0 p-5 transition-opacity duration-500 ${currentScreen === 3 ? 'opacity-100' : 'opacity-0'}`}>
-                  <h3 className="text-sm font-semibold text-[#0D2C54] mb-4">Your Scenario Readiness Report</h3>
-                  <div className="bg-white p-4 rounded border border-gray-200">
-                    <div className="flex justify-between items-start mb-3 pb-3 border-b border-gray-200">
-                      <div>
-                        <div className="text-xs font-bold text-[#0D2C54]">Scenario Readiness Report</div>
-                        <div className="text-xs text-gray-500">Harbor Community Services</div>
-                      </div>
-                      <div className="bg-gray-100 text-[#0D2C54] px-2 py-1 rounded text-xs font-semibold">3.0 / 5</div>
-                    </div>
-                    <div className="mb-3">
-                      <h4 className="text-xs uppercase tracking-wide text-gray-500 font-semibold mb-2">Patterns Worth Discussing</h4>
-                      <div className="flex gap-1">
-                        <span className="bg-gray-100 text-[#0D2C54] px-2 py-1 rounded text-xs font-semibold border border-gray-200">Concentration of Capacity</span>
-                        <span className="bg-gray-100 text-[#0D2C54] px-2 py-1 rounded text-xs font-semibold border border-gray-200">Single Vulnerability</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Progress Dots */}
-              <div className="bg-gray-100 px-4 py-3 flex justify-center gap-2 border-t border-gray-200">
-                {screens.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentScreen(i)}
-                    className={`w-2 h-2 rounded-full transition-all ${currentScreen === i ? 'bg-[#0D2C54] scale-125' : 'bg-gray-300'}`}
-                  />
-                ))}
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Comparison Section */}
-      <section className="py-20 px-6 bg-gray-50">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl lg:text-4xl font-bold text-[#0D2C54] text-center mb-12">
-            How This Compares to Hiring a Consultant
-          </h2>
-
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-            <div className="grid grid-cols-3 bg-[#0D2C54] text-white">
-              <div className="p-5 text-left font-semibold">What You Get</div>
-              <div className="p-5 text-center font-semibold">Traditional Consultant</div>
-              <div className="p-5 text-center font-semibold">The Nonprofit Edge</div>
-            </div>
-
-            {[
-              { item: 'Scenario planning framework', consultant: true, edge: true },
-              { item: 'Three futures analysis', consultant: true, edge: true },
-              { item: 'Readiness assessment', consultant: true, edge: true },
-              { item: 'Board-ready report', consultant: true, edge: true },
-              { item: 'Available on your schedule', consultant: false, edge: true },
-              { item: 'Results in under an hour', consultant: false, edge: true },
-              { item: 'Repeat as often as needed', consultant: false, edge: true },
-              { item: 'Typical cost', consultant: '$3,000 – $10,000+', edge: 'Included in membership' },
-            ].map((row, i) => (
-              <div key={i} className="grid grid-cols-3 border-b border-gray-200 last:border-0">
-                <div className="p-4 text-sm font-medium text-[#0D2C54]">{row.item}</div>
-                <div className="p-4 text-center text-sm text-gray-600">
-                  {typeof row.consultant === 'boolean' ? (
-                    row.consultant ? <span className="text-[#0097A7] text-lg">✓</span> : <span className="text-gray-400 text-lg">✗</span>
-                  ) : row.consultant}
-                </div>
-                <div className="p-4 text-center text-sm bg-[#0097A7]/5">
-                  {typeof row.edge === 'boolean' ? (
-                    row.edge ? <span className="text-[#0097A7] text-lg">✓</span> : <span className="text-gray-400 text-lg">✗</span>
-                  ) : <span className="font-medium text-[#0D2C54]">{row.edge}</span>}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <p className="text-center mt-6 text-sm text-gray-500">
-            This tool doesn't replace deep consulting engagements — it gives you a strong foundation to work from.
-          </p>
-        </div>
-      </section>
-
-      {/* Philosophy Quote */}
-      <section className="py-24 px-6 relative">
-        <div 
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: 'url(/images/scenario-quote-bg.jpg)' }}
-        />
-        <div className="absolute inset-0 bg-[#0D2C54]/80" />
-        <div className="relative z-10 max-w-4xl mx-auto text-center text-white">
-          <blockquote className="text-2xl lg:text-3xl font-semibold italic leading-relaxed">
-            "Scenario planning doesn't predict the future — <span className="text-[#e11d48]">it prepares you to lead through it.</span>"
-          </blockquote>
-          <cite className="block mt-6 text-base not-italic opacity-70">— From The Nonprofit Edge</cite>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="py-20 px-6 text-center">
-        <div className="max-w-2xl mx-auto">
-          <h2 className="text-3xl lg:text-4xl font-bold text-[#0D2C54] mb-4">
-            Ready to Think Through What's Ahead?
-          </h2>
-          <p className="text-lg text-gray-600 mb-8">
-            Take 20 minutes to explore the uncertainties that matter most to your organization. Your report will be ready immediately.
-          </p>
-          <div className="flex flex-wrap gap-4 justify-center">
-            <a href="/signup" className="inline-flex items-center justify-center px-6 py-3 bg-[#e11d48] text-white font-semibold rounded-lg hover:bg-[#be123c] transition-all">
-              Start Your Free Trial
-            </a>
-            <a href="/samples/scenario-planner-report.pdf" className="inline-flex items-center justify-center px-6 py-3 border-2 border-[#0D2C54] text-[#0D2C54] font-semibold rounded-lg hover:bg-[#0D2C54] hover:text-white transition-all">
-              View Sample Report
-            </a>
-          </div>
+      {/* CTA */}
+      <section style={{ padding: '120px 0', position: 'relative', textAlign: 'center', overflow: 'hidden' }}>
+        <div style={{
+          position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+          backgroundImage: "url('https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1400&h=600&fit=crop')",
+          backgroundSize: 'cover', backgroundPosition: 'center'
+        }} />
+        <div style={{
+          position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+          background: 'linear-gradient(135deg, rgba(13,44,84,0.92) 0%, rgba(0,109,120,0.88) 100%)'
+        }} />
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
+          <h2 style={{ fontSize: '44px', fontWeight: 800, color: 'white', marginBottom: '16px' }}>Plan for Tomorrow, Today</h2>
+          <p style={{ fontSize: '20px', color: 'rgba(255,255,255,0.85)', marginBottom: '40px' }}>Don't wait for a crisis to discover you're not ready.</p>
+          <a href="/trial" style={{
+            display: 'inline-flex', alignItems: 'center', padding: '18px 42px',
+            background: 'white', color: NAVY, borderRadius: '8px', fontWeight: 700,
+            fontSize: '17px', textDecoration: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
+          }}>
+            Start Your Free 3-Day Trial →
+          </a>
         </div>
       </section>
     </div>
   );
-};
-
-export default ScenarioPlannerLanding;
+}
