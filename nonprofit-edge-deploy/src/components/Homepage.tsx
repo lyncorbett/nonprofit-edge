@@ -1,10 +1,9 @@
 /**
  * Homepage - The Nonprofit Edge
- * Uses images from /public folder
+ * Uses regular anchor tags for navigation
  */
 
 import React from 'react'
-import { Link } from 'react-router-dom'
 
 const NAVY = '#1a365d'
 const TEAL = '#00a0b0'
@@ -65,13 +64,13 @@ const Homepage: React.FC = () => {
                 Discover the strategic tools top nonprofit leaders use to unlock clarity, funding, and impact.
               </p>
               <div className="flex flex-wrap gap-4">
-                <Link 
-                  to="/signup"
+                <a 
+                  href="/signup"
                   className="px-6 py-3 text-base font-semibold text-white rounded-lg transition hover:opacity-90 hover:shadow-lg inline-block"
                   style={{ backgroundColor: TEAL }}
                 >
                   Start Your Free Trial
-                </Link>
+                </a>
                 <a 
                   href="#demo"
                   className="px-6 py-3 text-base font-semibold rounded-lg border-2 border-gray-300 hover:border-gray-400 transition flex items-center gap-2 bg-white"
@@ -133,9 +132,9 @@ const Homepage: React.FC = () => {
 
           <div className="grid md:grid-cols-3 gap-6">
             {tools.map((tool, idx) => (
-              <Link 
+              <a 
                 key={idx}
-                to={tool.link}
+                href={tool.link}
                 className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all group border border-gray-100"
               >
                 {/* Image */}
@@ -156,7 +155,7 @@ const Homepage: React.FC = () => {
                     Launch Tool →
                   </span>
                 </div>
-              </Link>
+              </a>
             ))}
           </div>
         </div>
@@ -219,13 +218,13 @@ const Homepage: React.FC = () => {
                 </div>
               </div>
               
-              <Link
-                to="/ask-the-professor"
+              <a
+                href="/ask-the-professor"
                 className="inline-block px-6 py-3 text-base font-semibold text-white rounded-lg transition hover:opacity-90"
                 style={{ backgroundColor: NAVY }}
               >
                 Ask Your First Question — Free
-              </Link>
+              </a>
             </div>
           </div>
         </div>
@@ -246,13 +245,13 @@ const Homepage: React.FC = () => {
               Find out in 3 minutes — no login required.
             </span>
           </h2>
-          <Link
-            to="/assessment"
+          <a
+            href="/assessment"
             className="inline-block mt-4 px-6 py-3 text-base font-semibold rounded-lg transition hover:opacity-90"
             style={{ backgroundColor: TEAL, color: 'white' }}
           >
             Take the Assessment →
-          </Link>
+          </a>
         </div>
       </section>
 
@@ -288,13 +287,13 @@ const Homepage: React.FC = () => {
                   <span style={{ color: TEAL }}>✓</span> Full Resource Library
                 </li>
               </ul>
-              <Link 
-                to="/signup"
+              <a 
+                href="/signup"
                 className="block w-full py-2.5 text-center text-sm font-semibold rounded-lg border border-gray-200 hover:border-gray-300 transition"
                 style={{ color: NAVY }}
               >
                 Start 3-Day Trial
-              </Link>
+              </a>
             </div>
 
             {/* Professional - Popular */}
@@ -322,13 +321,13 @@ const Homepage: React.FC = () => {
                   <span style={{ color: TEAL }}>✓</span> Full Resource Library
                 </li>
               </ul>
-              <Link 
-                to="/signup"
+              <a 
+                href="/signup"
                 className="block w-full py-2.5 text-center text-sm font-semibold text-white rounded-lg transition hover:opacity-90"
                 style={{ backgroundColor: TEAL }}
               >
                 Start 3-Day Trial
-              </Link>
+              </a>
             </div>
 
             {/* Premium */}
@@ -350,13 +349,13 @@ const Homepage: React.FC = () => {
                   <span style={{ color: TEAL }}>✓</span> Monthly coaching call
                 </li>
               </ul>
-              <Link 
-                to="/signup"
+              <a 
+                href="/signup"
                 className="block w-full py-2.5 text-center text-sm font-semibold rounded-lg border border-gray-200 hover:border-gray-300 transition"
                 style={{ color: NAVY }}
               >
                 Start 3-Day Trial
-              </Link>
+              </a>
             </div>
 
             {/* Enterprise */}
