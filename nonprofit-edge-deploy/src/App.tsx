@@ -3,10 +3,8 @@
  * Complete Routing with Usage Tracking Integration
  * 
  * Route Pattern:
- *   /tool-name         → Landing page (public, marketing)
+ *   /tool-name         → Landing page (public, marketing) - WITH HEADER/FOOTER
  *   /tool-name/use     → Actual tool (requires login, tracked)
- * 
- * All tools receive tracking props to connect with Dashboard counters
  */
 
 import React, { useState, useEffect } from 'react';
@@ -14,6 +12,9 @@ import React, { useState, useEffect } from 'react';
 // ============================================
 // COMPONENT IMPORTS
 // ============================================
+
+// Layout Components (Header + Footer)
+import Layout from './components/Layout';
 
 // Dashboard & Core Components
 import RealDashboard from './components/Dashboard';
@@ -52,10 +53,11 @@ import AskTheProfessor from './AskTheProfessor';
 import AISummary from './AISummary';
 
 // Landing Page Components
-import ScenarioPlannerLanding from './components/ScenarioPlannerLanding';
+import ScenarioPlannerLanding from './ScenarioPlannerLanding';
 import BoardAssessmentLanding from './BoardAssessmentLanding';
 import CEOEvaluationLanding from './CEOEvaluationLanding';
 import StrategicPlanCheckupLanding from './StrategicPlanCheckupLanding';
+import GrantRFPReviewLanding from './GrantRFPReviewLanding';
 import CertificationsLanding from './CertificationsLanding';
 
 // Tracking utilities
@@ -66,9 +68,6 @@ import {
   trackProfessorSession,
   TIER_LIMITS 
 } from './lib/tracking';
-
-// Supabase client (if using)
-// import { supabase } from './lib/supabase';
 
 // ============================================
 // TYPES
@@ -160,7 +159,6 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentSession, setCurrentSession] = useState<ToolSession | null>(null);
   
-  // Usage tracking state
   const [usage, setUsage] = useState<UsageData>({
     tools_started: 0,
     tools_completed: 0,
@@ -175,37 +173,27 @@ const App: React.FC = () => {
   // ==========================================
 
   useEffect(() => {
-    // Handle browser navigation
     const handlePopState = () => {
       setCurrentRoute(window.location.pathname);
     };
     window.addEventListener('popstate', handlePopState);
 
-    // Check for saved user
     try {
       const savedUser = localStorage.getItem('nonprofit_edge_user');
       const savedOrg = localStorage.getItem('nonprofit_edge_org');
       const savedUsage = localStorage.getItem('nonprofit_edge_usage');
       
-      if (savedUser) {
-        setUser(JSON.parse(savedUser));
-      }
-      if (savedOrg) {
-        setOrganization(JSON.parse(savedOrg));
-      }
-      if (savedUsage) {
-        setUsage(JSON.parse(savedUsage));
-      }
+      if (savedUser) setUser(JSON.parse(savedUser));
+      if (savedOrg) setOrganization(JSON.parse(savedOrg));
+      if (savedUsage) setUsage(JSON.parse(savedUsage));
     } catch (e) {
       console.error('Error loading saved data:', e);
     }
     
     setIsLoading(false);
-
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Save usage to localStorage when it changes
   useEffect(() => {
     if (user) {
       localStorage.setItem('nonprofit_edge_usage', JSON.stringify(usage));
@@ -261,111 +249,62 @@ const App: React.FC = () => {
   };
 
   // ==========================================
-  // TRACKING HANDLERS (Connect to Dashboard)
+  // TRACKING HANDLERS
   // ==========================================
 
-  /**
-   * Called when a user opens a tool - creates session only (NO counter increment)
-   * Counter only increments on COMPLETION
-   */
   const handleToolStart = async (toolId: string, toolName: string): Promise<string | null> => {
     if (!user || !organization) return null;
-
-    // Create session (for tracking purposes only - no counter update)
     const sessionId = `session_${Date.now()}`;
-    const session: ToolSession = {
-      id: sessionId,
-      tool_type: toolId,
-      started_at: new Date().toISOString(),
-    };
-    setCurrentSession(session);
-
-    // NOTE: We do NOT increment counters here - only on completion
-    // If using Supabase, you might still want to log the start for analytics
-    // await trackToolStart(organization.id, user.id, toolId, toolName, { email: user.email });
-
+    setCurrentSession({ id: sessionId, tool_type: toolId, started_at: new Date().toISOString() });
     console.log(`Tool opened: ${toolName} (Session: ${sessionId})`);
     return sessionId;
   };
 
-  /**
-   * Called when a user COMPLETES a tool - THIS is when counters increment
-   */
   const handleToolComplete = async (sessionId: string, toolName: string, score?: number) => {
     if (!user || !organization) return;
-
-    // Update ALL usage counters on completion
     setUsage(prev => ({
       ...prev,
-      tools_started: prev.tools_started + 1,      // Count as "used"
-      tools_completed: prev.tools_completed + 1,   // Count as "completed"
+      tools_started: prev.tools_started + 1,
+      tools_completed: prev.tools_completed + 1,
       tools_used_this_month: prev.tools_used_this_month + 1,
     }));
-
     setCurrentSession(null);
-
-    // If using Supabase
-    // await trackToolComplete(organization.id, user.id, sessionId, toolName, score);
-
-    console.log(`Tool COMPLETED: ${toolName} (Score: ${score || 'N/A'}) - Counters updated!`);
+    console.log(`Tool COMPLETED: ${toolName} (Score: ${score || 'N/A'})`);
   };
 
-  /**
-   * Called when a user downloads a report or template
-   */
   const handleDownload = async (resourceName: string, resourceType: 'report' | 'template' = 'report') => {
     if (!user || !organization) return;
-
     const tier = organization.tier;
     const limits = TIER_LIMITS[tier] || TIER_LIMITS.essential;
-
     if (usage.downloads_this_month >= limits.downloads) {
       alert(`You've reached your monthly download limit (${limits.downloads}). Upgrade for more.`);
       return;
     }
-
     setUsage(prev => ({
       ...prev,
       downloads_this_month: prev.downloads_this_month + 1,
       report_downloads: prev.report_downloads + 1,
     }));
-
-    // If using Supabase
-    // await trackDownload(organization.id, user.id, tier, resourceName, resourceType);
-
     console.log(`Download tracked: ${resourceName}`);
   };
 
-  /**
-   * Called when starting Ask the Professor
-   */
   const handleStartProfessor = async () => {
     if (!user || !organization) {
       navigate('/login');
       return;
     }
-
     const tier = organization.tier;
     const limits = TIER_LIMITS[tier] || TIER_LIMITS.essential;
-
     if (tier !== 'premium' && usage.professor_sessions_this_month >= limits.professor) {
       alert(`You've reached your monthly limit (${limits.professor}). Upgrade for more.`);
       return;
     }
-
-    setUsage(prev => ({
-      ...prev,
-      professor_sessions_this_month: prev.professor_sessions_this_month + 1,
-    }));
-
-    // If using Supabase
-    // await trackProfessorSession(organization.id, user.id, tier);
-
+    setUsage(prev => ({ ...prev, professor_sessions_this_month: prev.professor_sessions_this_month + 1 }));
     navigate('/ask-the-professor/use');
   };
 
   // ==========================================
-  // TOOL PAGE WRAPPER (with tracking)
+  // TOOL PAGE WRAPPER
   // ==========================================
 
   interface ToolWrapperProps {
@@ -378,53 +317,28 @@ const App: React.FC = () => {
     const [sessionId, setSessionId] = useState<string | null>(null);
 
     useEffect(() => {
-      // Track tool start when component mounts
       handleToolStart(toolId, toolName).then(id => setSessionId(id));
     }, [toolId, toolName]);
 
     const onComplete = (score?: number) => {
-      if (sessionId) {
-        handleToolComplete(sessionId, toolName, score);
-      }
+      if (sessionId) handleToolComplete(sessionId, toolName, score);
     };
 
     return (
       <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: 'system-ui, sans-serif' }}>
-        <header style={{ 
-          background: 'white', 
-          padding: '12px 32px', 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          borderBottom: '1px solid #e2e8f0' 
-        }}>
+        <header style={{ background: 'white', padding: '12px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <Logo width={140} />
             <span style={{ color: '#cbd5e1' }}>|</span>
             <span style={{ color: NAVY, fontWeight: 600 }}>{toolName}</span>
           </div>
-          <button 
-            onClick={() => navigate('/dashboard')} 
-            style={{ 
-              padding: '8px 16px', 
-              background: '#f1f5f9', 
-              color: '#475569', 
-              border: 'none', 
-              borderRadius: '6px', 
-              cursor: 'pointer' 
-            }}
-          >
+          <button onClick={() => navigate('/dashboard')} style={{ padding: '8px 16px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
             ← Back to Dashboard
           </button>
         </header>
-        {/* Clone children with onComplete prop */}
         {React.Children.map(children, child => {
           if (React.isValidElement(child)) {
-            return React.cloneElement(child, { 
-              onComplete, 
-              sessionId,
-              onBack: () => navigate('/dashboard')
-            } as any);
+            return React.cloneElement(child, { onComplete, sessionId, onBack: () => navigate('/dashboard') } as any);
           }
           return child;
         })}
@@ -450,13 +364,7 @@ const App: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div style={{ 
-        minHeight: '100vh', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        background: '#f8fafc' 
-      }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
         <div style={{ textAlign: 'center' }}>
           <Logo width={200} />
           <p style={{ color: '#64748b', marginTop: '16px' }}>Loading...</p>
@@ -466,7 +374,7 @@ const App: React.FC = () => {
   }
 
   // ==========================================
-  // ROUTE MAPPING HELPER
+  // ROUTE MAPPING
   // ==========================================
 
   const mapDashboardNavigation = (page: string): string => {
@@ -481,15 +389,11 @@ const App: React.FC = () => {
       'book-summaries': '/book-summaries',
       'certifications': '/certifications',
       'pricing': '/pricing',
-      'constraint-assessment': '/constraint-assessment',
-      'getting-started': '/getting-started',
-      // Tools (go to actual tool, not landing)
       'strategic-checkup': '/strategic-plan-checkup/use',
       'ceo-evaluation': '/ceo-evaluation/use',
       'board-assessment': '/board-assessment/use',
       'scenario-planner': '/scenario-planner/use',
       'grant-review': '/grant-review/use',
-      // Admin
       'content-manager': '/admin/content',
       'platform-admin': '/admin/platform',
       'owner-dashboard': '/admin/owner',
@@ -497,7 +401,6 @@ const App: React.FC = () => {
       'marketing': '/admin/marketing',
       'link-manager': '/admin/links',
       'team-access': '/admin/team',
-      'homepage-editor': '/admin/homepage',
     };
     return routeMap[page] || `/${page}`;
   };
@@ -507,10 +410,6 @@ const App: React.FC = () => {
   // ==========================================
 
   const renderRoute = (): React.ReactNode => {
-    // Parse session ID from URL if present
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlSessionId = urlParams.get('session');
-
     switch (currentRoute) {
       // ========================================
       // PUBLIC ROUTES
@@ -535,31 +434,57 @@ const App: React.FC = () => {
         return <ResetPassword onNavigate={navigate} />;
 
       // ========================================
-      // TOOL LANDING PAGES (Public)
+      // TOOL LANDING PAGES (Public) - WITH LAYOUT (HEADER + FOOTER)
       // ========================================
       
       case '/strategic-plan-checkup':
-        return <StrategicPlanCheckupLanding onNavigate={navigate} onGetStarted={() => navigate('/strategic-plan-checkup/use')} />;
+        return (
+          <Layout onNavigate={navigate}>
+            <StrategicPlanCheckupLanding onNavigate={navigate} onGetStarted={() => navigate('/strategic-plan-checkup/use')} />
+          </Layout>
+        );
       
       case '/board-assessment':
-        return <BoardAssessmentLanding onNavigate={navigate} onGetStarted={() => navigate('/board-assessment/use')} />;
+        return (
+          <Layout onNavigate={navigate}>
+            <BoardAssessmentLanding onNavigate={navigate} onGetStarted={() => navigate('/board-assessment/use')} />
+          </Layout>
+        );
       
       case '/ceo-evaluation':
-        return <CEOEvaluationLanding onNavigate={navigate} onGetStarted={() => navigate('/ceo-evaluation/use')} />;
+        return (
+          <Layout onNavigate={navigate}>
+            <CEOEvaluationLanding onNavigate={navigate} onGetStarted={() => navigate('/ceo-evaluation/use')} />
+          </Layout>
+        );
       
       case '/scenario-planner':
-        return <ScenarioPlannerLanding onNavigate={navigate} onGetStarted={() => navigate('/scenario-planner/use')} />;
+        return (
+          <Layout onNavigate={navigate}>
+            <ScenarioPlannerLanding onNavigate={navigate} onGetStarted={() => navigate('/scenario-planner/use')} />
+          </Layout>
+        );
       
       case '/grant-review':
-        // If you have a GrantReviewLanding component, use it here
-        return <ScenarioPlannerLanding onNavigate={navigate} onGetStarted={() => navigate('/grant-review/use')} />;
+        return (
+          <Layout onNavigate={navigate}>
+            <GrantRFPReviewLanding onNavigate={navigate} onGetStarted={() => navigate('/grant-review/use')} />
+          </Layout>
+        );
       
       case '/ask-the-professor':
-        // Landing page for Ask the Professor
-        return <ScenarioPlannerLanding onNavigate={navigate} onGetStarted={handleStartProfessor} />;
+        return (
+          <Layout onNavigate={navigate}>
+            <ScenarioPlannerLanding onNavigate={navigate} onGetStarted={handleStartProfessor} />
+          </Layout>
+        );
       
       case '/certifications':
-        return <CertificationsLanding onNavigate={navigate} />;
+        return (
+          <Layout onNavigate={navigate}>
+            <CertificationsLanding onNavigate={navigate} />
+          </Layout>
+        );
 
       // ========================================
       // TOOL PAGES (Require Auth, Tracked)
@@ -615,7 +540,7 @@ const App: React.FC = () => {
         );
 
       // ========================================
-      // DASHBOARD & MAIN APP (Require Auth)
+      // DASHBOARD & MAIN APP
       // ========================================
       
       case '/dashboard':
@@ -625,13 +550,7 @@ const App: React.FC = () => {
         }
         return (
           <RealDashboard 
-            user={{
-              ...user,
-              full_name: user.name,
-              avatar_url: null,
-              profile_photo: null,
-              created_at: user.created_at || new Date().toISOString(),
-            }}
+            user={{ ...user, full_name: user.name, avatar_url: null, profile_photo: null, created_at: user.created_at || new Date().toISOString() }}
             organization={organization}
             usage={usage}
             teamCount={1}
@@ -669,9 +588,7 @@ const App: React.FC = () => {
       case '/admin':
       case '/admin/owner':
       case '/admin/enhanced':
-        return requireAuth(
-          <EnhancedOwnerDashboard onNavigate={(page: string) => navigate(`/${page}`)} />
-        );
+        return requireAuth(<EnhancedOwnerDashboard onNavigate={(page: string) => navigate(`/${page}`)} />);
 
       case '/admin/marketing':
         return requireAuth(<MarketingDashboard />);
@@ -689,8 +606,7 @@ const App: React.FC = () => {
         return requireAuth(<AdminDashboard />);
 
       // ========================================
-      // LEGACY ROUTE REDIRECTS
-      // Keep these for backwards compatibility
+      // LEGACY REDIRECTS
       // ========================================
 
       case '/tools/strategic-plan':
@@ -712,45 +628,12 @@ const App: React.FC = () => {
       case '/tools/grant-review':
         navigate('/grant-review/use');
         return null;
-      
-      case '/tools/ask-professor':
-        navigate('/ask-the-professor/use');
-        return null;
-      
-      case '/tools/ai-summary':
-        navigate('/ai-summary/use');
-        return null;
-
-      case '/tools/scenario-planner/info':
-        navigate('/scenario-planner');
-        return null;
-
-      case '/owner':
-        navigate('/admin/owner');
-        return null;
-
-      case '/owner/enhanced':
-        navigate('/admin/enhanced');
-        return null;
-
-      case '/owner/marketing':
-        navigate('/admin/marketing');
-        return null;
-
-      case '/owner/links':
-        navigate('/admin/links');
-        return null;
-
-      case '/owner/team':
-        navigate('/admin/team');
-        return null;
 
       // ========================================
-      // DEFAULT / 404
+      // DEFAULT
       // ========================================
       
       default:
-        // Check if it's a tool route pattern we missed
         if (currentRoute.startsWith('/tools/')) {
           navigate('/dashboard');
           return null;
