@@ -1,398 +1,400 @@
 /**
- * THE NONPROFIT EDGE - Homepage (Editable)
- * Public landing page with admin editing capability
+ * Homepage - The Nonprofit Edge
+ * Uses images from /public folder
  */
 
-import React, { useState, useEffect } from 'react';
+import React from 'react'
+import { Link } from 'react-router-dom'
 
-const NAVY = '#1a365d';
-const TEAL = '#0097a7';
-const TEAL_DARK = '#00838f';
-const TEAL_LIGHT = '#5eead4';
+const NAVY = '#1a365d'
+const TEAL = '#00a0b0'
 
-interface HomepageProps {
-  onNavigate: (page: string) => void;
-  isAdmin?: boolean;
-  supabase?: any;
-}
-
-const DEFAULT_CONTENT: Record<string, any> = {
-  hero: {
-    headline: "Your Mission Deserves More Than Hope—",
-    headlineAccent: "It Needs an Edge.",
-    subheadline: "Discover the strategic tools top nonprofit leaders use to unlock clarity, funding, and impact.",
-    ctaPrimary: "Start Your Free Trial",
-    ctaSecondary: "► See How It Works"
-  },
-  trustBar: {
-    label: "Trusted By",
-    logos: ["Salvation Army", "YMCA", "American Red Cross", "San Diego Zoo"]
-  },
-  tools: {
-    headline: "Stop Guessing. Start Knowing.",
-    subheadline: "Professional tools that transform how nonprofits lead and govern",
-    items: [
-      { title: "Strategic Plan Analysis", desc: "Diagnose your current plan in minutes with scores & specific fixes.", link: "strategic-checkup" },
-      { title: "Grant Review", desc: "Win more grants with expert scoring, comments, and funder-ready polish.", link: "grant-review" },
-      { title: "Strategy & Scenario Planning", desc: "Stress-test strategy with clear \"what-if\" scenarios before risks hit.", link: "scenario-planner" },
-      { title: "CEO Evaluation", desc: "Build stronger leadership with fair, confidential performance reviews.", link: "ceo-evaluation" },
-      { title: "Board Assessment", desc: "Strengthen governance with measurable board practices & next steps.", link: "board-assessment" },
-      { title: "Member Resources", desc: "Access templates, guides, and trainings—new tools added each month.", link: "library" }
-    ]
-  },
-  professor: {
-    headline: "Ask the Professor",
-    subheadline: "Strategic guidance built on 25+ years of real-world experience",
-    description: "It's like having an expert consultant in your back pocket. Get expert-level strategic advice, available 24/7. Trained on Dr. Lyn Corbett's decades of nonprofit consulting — not generic AI.",
-    badge: "Over 25 Years of Nonprofit Experience",
-    questionsLabel: "Questions Leaders Are Asking:",
-    questions: [
-      "\"How do I transition my board from operational to strategic?\"",
-      "\"Should we accept this major restricted gift?\"",
-      "\"What's the best approach to a difficult ED/Board Chair relationship?\""
-    ],
-    cta: "Ask Your First Question — Free"
-  },
-  assessment: {
-    badge: "Free Assessment",
-    headline: "Every nonprofit has ONE constraint holding them back. What's yours?",
-    subheadline: "Find out in 3 minutes — no login required.",
-    cta: "Take the Assessment →"
-  },
-  pricing: {
-    headline: "Simple, Transparent Pricing",
-    subheadline: "Start free. Upgrade when you're ready. Cancel anytime.",
-    note: "* Founding Member Rate: Lock in these rates forever. When we raise prices (and we will), your rate stays the same as long as you remain a member.",
-    plans: [
-      { name: "Essential", price: "$79", period: "/mo", label: "Founding Member Rate", features: ["1 person", "10 assessments/month", "100 Ask the Professor/month", "Full Resource Library"], featured: false },
-      { name: "Professional", price: "$159", period: "/mo", label: "Founding Member Rate", features: ["Up to 5 team members", "25 assessments/month", "Unlimited Ask the Professor", "Full Resource Library"], featured: true },
-      { name: "Premium", price: "$329", period: "/mo", label: "Founding Member Rate", features: ["Everything in Professional", "Up to 10 team members", "Unlimited assessments", "Monthly coaching call"], featured: false },
-      { name: "Enterprise", price: "Let's Talk", period: "", label: "Custom solutions", features: ["Everything in Premium", "Unlimited users", "Custom integrations", "Dedicated success manager"], featured: false, isEnterprise: true }
-    ]
-  },
-  faq: {
-    headline: "Frequently Asked Questions",
-    items: [
-      { q: "What is The Nonprofit Edge?" },
-      { q: "What is \"Ask the Professor\"?" },
-      { q: "What is the Theory of Constraints?" },
-      { q: "Can I run unlimited assessments?" },
-      { q: "How long does an assessment take?" }
-    ]
-  },
-  footer: {
-    tagline: "Where bold missions meet modern strategy. Smart AI tools, practical templates, and decades of leadership experience — your unfair advantage.",
-    copyright: "© 2026 The Nonprofit Edge. All rights reserved."
-  }
-};
-
-const Homepage: React.FC<HomepageProps> = ({ onNavigate, isAdmin = false, supabase }) => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [editMode, setEditMode] = useState(false);
-  const [editingSection, setEditingSection] = useState<string | null>(null);
-  const [content, setContent] = useState<Record<string, any>>(DEFAULT_CONTENT);
-  const [originalContent, setOriginalContent] = useState<Record<string, any>>(DEFAULT_CONTENT);
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
-
-  useEffect(() => {
-    if (supabase) loadContent();
-  }, [supabase]);
-
-  const loadContent = async () => {
-    if (!supabase) return;
-    try {
-      const { data } = await supabase.from('homepage_content').select('*');
-      if (data && data.length > 0) {
-        const loadedContent = { ...DEFAULT_CONTENT };
-        data.forEach((item: any) => { loadedContent[item.section] = item.content; });
-        setContent(loadedContent);
-        setOriginalContent(loadedContent);
-      }
-    } catch (err) { console.error('Error loading content:', err); }
-  };
-
-  const saveSection = async (section: string) => {
-    if (!supabase) {
-      setOriginalContent({ ...content });
-      setEditingSection(null);
-      setSaveStatus('saved');
-      setTimeout(() => setSaveStatus('idle'), 2000);
-      return;
-    }
-    setSaveStatus('saving');
-    try {
-      await supabase.from('homepage_content').upsert({ section, content: content[section], updated_at: new Date().toISOString() }, { onConflict: 'section' });
-      setOriginalContent({ ...content });
-      setEditingSection(null);
-      setSaveStatus('saved');
-      setTimeout(() => setSaveStatus('idle'), 2000);
-    } catch (err) {
-      setSaveStatus('error');
-      setTimeout(() => setSaveStatus('idle'), 3000);
-    }
-  };
-
-  const cancelEdit = (section: string) => {
-    setContent({ ...content, [section]: originalContent[section] });
-    setEditingSection(null);
-  };
-
-  const updateContent = (section: string, key: string, value: any) => {
-    setContent({ ...content, [section]: { ...content[section], [key]: value } });
-  };
-
-  const handleNavClick = (page: string) => {
-    setMobileMenuOpen(false);
-    onNavigate(page);
-  };
-
-  const isEditing = (section: string) => editingSection === section;
+const Homepage: React.FC = () => {
+  const tools = [
+    { 
+      image: '/tool-strategic.jpg',
+      title: 'Strategic Plan Analysis', 
+      desc: 'Diagnose your current plan in minutes with scores & specific fixes.',
+      link: '/tools/strategic-plan-analysis'
+    },
+    { 
+      image: '/tool-grant.jpg',
+      title: 'Grant Review', 
+      desc: 'Win more grants with expert scoring, comments, and funder-ready polish.',
+      link: '/tools/grant-review'
+    },
+    { 
+      image: '/tool-scenario.jpg',
+      title: 'Strategy & Scenario Planning', 
+      desc: 'Stress-test strategy with clear "what-if" scenarios before risks hit.',
+      link: '/tools/scenario-planning'
+    },
+    { 
+      image: '/tool-ceo.jpg',
+      title: 'CEO Evaluation', 
+      desc: 'Build stronger leadership with fair, confidential performance reviews.',
+      link: '/tools/ceo-evaluation'
+    },
+    { 
+      image: '/board-hero.jpg',
+      title: 'Board Assessment', 
+      desc: 'Strengthen governance with measurable board practices & next steps.',
+      link: '/tools/board-assessment'
+    },
+    { 
+      image: '/tool-resources.jpg',
+      title: 'Member Resources', 
+      desc: 'Access templates, guides, and trainings—new tools added each month.',
+      link: '/resources'
+    },
+  ]
 
   return (
-    <div style={{ fontFamily: "'Outfit', sans-serif", color: '#1e293b' }}>
-      {/* Admin Edit Toggle */}
-      {isAdmin && (
-        <div style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 9999, background: NAVY, padding: '12px 20px', borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ color: 'white', fontSize: 14, fontWeight: 600 }}>Edit Mode:</span>
-          <label style={{ position: 'relative', display: 'inline-block', width: 50, height: 26, cursor: 'pointer' }}>
-            <input type="checkbox" checked={editMode} onChange={(e) => { setEditMode(e.target.checked); if (!e.target.checked) setEditingSection(null); }} style={{ opacity: 0, width: 0, height: 0 }} />
-            <span style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: editMode ? TEAL : '#475569', borderRadius: 26, transition: '0.3s' }} />
-            <span style={{ position: 'absolute', height: 20, width: 20, left: editMode ? 27 : 3, bottom: 3, background: 'white', borderRadius: '50%', transition: '0.3s' }} />
-          </label>
-          {saveStatus === 'saving' && <span style={{ color: '#fbbf24', fontSize: 12 }}>Saving...</span>}
-          {saveStatus === 'saved' && <span style={{ color: '#4ade80', fontSize: 12 }}>✓ Saved</span>}
-          {saveStatus === 'error' && <span style={{ color: '#f87171', fontSize: 12 }}>Error</span>}
-        </div>
-      )}
-
-      {/* Navigation */}
-      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', zIndex: 1000, borderBottom: '1px solid #e2e8f0' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <a href="#" onClick={(e) => { e.preventDefault(); handleNavClick('home'); }} style={{ fontSize: '1.25rem', fontWeight: 800, color: NAVY, textDecoration: 'none' }}>
-            The Nonprofit <span style={{ color: TEAL }}>Edge</span>
-          </a>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }} className="nav-desktop">
-            <a href="#tools" style={{ color: '#475569', textDecoration: 'none', fontSize: '0.9375rem', fontWeight: 500 }}>Our Tools</a>
-            <a href="#pricing" style={{ color: '#475569', textDecoration: 'none', fontSize: '0.9375rem', fontWeight: 500 }}>Pricing</a>
-            <button onClick={() => handleNavClick('signin')} style={{ background: NAVY, color: 'white', padding: '0.625rem 1.25rem', borderRadius: 8, fontWeight: 600, border: 'none', cursor: 'pointer', fontSize: '0.9375rem' }}>
-              Member Sign In
-            </button>
-          </div>
-        </div>
-      </nav>
-
+    <div className="pt-16">
       {/* Hero Section */}
-      <section style={{ padding: '8rem 2rem 4rem', background: '#f8fafc', position: 'relative' }}>
-        {editMode && (
-          <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 100 }}>
-            {isEditing('hero') ? (
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button onClick={() => saveSection('hero')} style={{ padding: '0.5rem 1rem', background: '#16a34a', color: 'white', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}>✓ Save</button>
-                <button onClick={() => cancelEdit('hero')} style={{ padding: '0.5rem 1rem', background: '#ef4444', color: 'white', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}>✕ Cancel</button>
+      <section className="py-16 md:py-20 px-6" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #e6f7f9 100%)' }}>
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Left: Text */}
+            <div>
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-6 leading-tight" style={{ color: NAVY }}>
+                Your Mission Deserves More Than Hope—
+                <span style={{ color: TEAL, fontStyle: 'italic' }}>It Needs an Edge.</span>
+              </h1>
+              <p className="text-lg text-gray-600 mb-8">
+                Discover the strategic tools top nonprofit leaders use to unlock clarity, funding, and impact.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Link 
+                  to="/signup"
+                  className="px-6 py-3 text-base font-semibold text-white rounded-lg transition hover:opacity-90 hover:shadow-lg inline-block"
+                  style={{ backgroundColor: TEAL }}
+                >
+                  Start Your Free Trial
+                </Link>
+                <a 
+                  href="#demo"
+                  className="px-6 py-3 text-base font-semibold rounded-lg border-2 border-gray-300 hover:border-gray-400 transition flex items-center gap-2 bg-white"
+                  style={{ color: NAVY }}
+                >
+                  <span className="w-5 h-5 bg-gray-800 rounded-full flex items-center justify-center text-white text-xs">▶</span>
+                  See How It Works
+                </a>
               </div>
-            ) : (
-              <button onClick={() => setEditingSection('hero')} style={{ padding: '0.5rem 1rem', background: NAVY, color: 'white', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}>✏️ Edit Hero</button>
-            )}
-          </div>
-        )}
-        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center' }}>
-          <div>
-            <h1 style={{ fontSize: '3.25rem', fontWeight: 800, lineHeight: 1.15, color: NAVY, marginBottom: '1.5rem' }}>
-              {isEditing('hero') ? (
-                <input type="text" value={content.hero.headline} onChange={(e) => updateContent('hero', 'headline', e.target.value)} style={{ width: '100%', fontSize: '3.25rem', fontWeight: 800, color: NAVY, border: '2px dashed #0097a7', borderRadius: 4, padding: '0.25rem', background: 'rgba(0,151,167,0.1)' }} />
-              ) : content.hero.headline}
-              <span style={{ color: TEAL, fontStyle: 'italic', display: 'block' }}>
-                {isEditing('hero') ? (
-                  <input type="text" value={content.hero.headlineAccent} onChange={(e) => updateContent('hero', 'headlineAccent', e.target.value)} style={{ width: '100%', fontSize: '3.25rem', fontWeight: 800, color: TEAL, fontStyle: 'italic', border: '2px dashed #0097a7', borderRadius: 4, padding: '0.25rem', background: 'rgba(0,151,167,0.1)' }} />
-                ) : content.hero.headlineAccent}
-              </span>
-            </h1>
-            <p style={{ fontSize: '1.25rem', color: '#475569', marginBottom: '2rem', maxWidth: 480 }}>
-              {isEditing('hero') ? (
-                <textarea value={content.hero.subheadline} onChange={(e) => updateContent('hero', 'subheadline', e.target.value)} style={{ width: '100%', fontSize: '1.25rem', color: '#475569', border: '2px dashed #0097a7', borderRadius: 4, padding: '0.5rem', background: 'rgba(0,151,167,0.1)', minHeight: 80 }} />
-              ) : content.hero.subheadline}
-            </p>
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-              <button onClick={() => handleNavClick('signup')} style={{ padding: '0.875rem 1.75rem', background: TEAL, border: 'none', borderRadius: 8, fontSize: '1rem', fontWeight: 600, color: 'white', cursor: 'pointer' }}>
-                {content.hero.ctaPrimary}
-              </button>
-              <button onClick={() => handleNavClick('demo')} style={{ padding: '0.875rem 1.75rem', border: '2px solid #cbd5e1', borderRadius: 8, fontSize: '1rem', fontWeight: 600, color: '#334155', background: 'white', cursor: 'pointer' }}>
-                {content.hero.ctaSecondary}
-              </button>
             </div>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <img src="/hero-image.png" alt="Hero" style={{ maxWidth: '100%', height: 'auto', borderRadius: 16 }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+            
+            {/* Right: Hero Image */}
+            <div className="flex justify-center md:justify-end">
+              <div 
+                className="overflow-hidden"
+                style={{ 
+                  width: '100%',
+                  maxWidth: '450px',
+                }}
+              >
+                <img 
+                  src="/hero-image.png"
+                  alt="Nonprofit leader"
+                  className="w-full h-auto object-contain"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Trust Bar */}
-      <section style={{ padding: '2.5rem 2rem', background: 'white', borderBottom: '1px solid #e2e8f0' }}>
-        <div style={{ maxWidth: 1000, margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '1.25rem' }}>
-            {content.trustBar.label}
+      <section className="py-8 px-6 bg-white border-b border-gray-100">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-4">
+            Trusted By
           </div>
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-            {content.trustBar.logos.map((logo: string, i: number) => (
-              <span key={i} style={{ padding: '0.5rem 1rem', border: '1px solid #e2e8f0', borderRadius: 100, fontSize: '0.8125rem', color: '#64748b', fontWeight: 500 }}>{logo}</span>
-            ))}
+          <div className="flex justify-center">
+            <img 
+              src="/trusted-logos.png" 
+              alt="Trusted by Salvation Army, YMCA, American Red Cross, San Diego Zoo"
+              className="h-12 md:h-16 object-contain"
+            />
           </div>
         </div>
       </section>
 
       {/* Tools Section */}
-      <section id="tools" style={{ padding: '5rem 2rem', background: 'white', position: 'relative' }}>
-        {editMode && (
-          <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 100 }}>
-            {isEditing('tools') ? (
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button onClick={() => saveSection('tools')} style={{ padding: '0.5rem 1rem', background: '#16a34a', color: 'white', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}>✓ Save</button>
-                <button onClick={() => cancelEdit('tools')} style={{ padding: '0.5rem 1rem', background: '#ef4444', color: 'white', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}>✕ Cancel</button>
-              </div>
-            ) : (
-              <button onClick={() => setEditingSection('tools')} style={{ padding: '0.5rem 1rem', background: NAVY, color: 'white', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}>✏️ Edit Tools</button>
-            )}
+      <section className="py-16 px-6 bg-gray-50" id="tools">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-extrabold mb-3" style={{ color: NAVY }}>
+              Stop Guessing. Start Knowing.
+            </h2>
+            <p className="text-lg text-gray-600">
+              Professional tools that transform how nonprofits lead and govern
+            </p>
           </div>
-        )}
-        <div style={{ textAlign: 'center', maxWidth: 600, margin: '0 auto 3rem' }}>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: NAVY, marginBottom: '0.75rem' }}>{content.tools.headline}</h2>
-          <p style={{ fontSize: '1.125rem', color: '#64748b' }}>{content.tools.subheadline}</p>
-        </div>
-        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
-          {content.tools.items.map((tool: any, i: number) => (
-            <div key={i} onClick={() => !isEditing('tools') && handleNavClick(tool.link)} style={{ position: 'relative', height: 280, borderRadius: 16, overflow: 'hidden', background: `linear-gradient(135deg, ${NAVY} 0%, ${TEAL_DARK} 100%)`, cursor: isEditing('tools') ? 'default' : 'pointer' }}>
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.1) 100%)', padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-                <h3 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'white', marginBottom: '0.5rem' }}>
-                  {isEditing('tools') ? (
-                    <input type="text" value={tool.title} onChange={(e) => { const items = [...content.tools.items]; items[i] = { ...items[i], title: e.target.value }; updateContent('tools', 'items', items); }} style={{ width: '100%', background: 'rgba(255,255,255,0.2)', border: '1px dashed white', borderRadius: 4, padding: '0.25rem', color: 'white', fontWeight: 700, fontSize: '1.4rem' }} />
-                  ) : tool.title}
-                </h3>
-                <p style={{ fontSize: '0.95rem', color: 'rgba(255,255,255,0.85)', marginBottom: '1rem' }}>
-                  {isEditing('tools') ? (
-                    <textarea value={tool.desc} onChange={(e) => { const items = [...content.tools.items]; items[i] = { ...items[i], desc: e.target.value }; updateContent('tools', 'items', items); }} style={{ width: '100%', background: 'rgba(255,255,255,0.2)', border: '1px dashed white', borderRadius: 4, padding: '0.25rem', color: 'white', fontSize: '0.95rem', minHeight: 60 }} />
-                  ) : tool.desc}
-                </p>
-                <span style={{ color: TEAL_LIGHT, fontWeight: 600, fontSize: '0.95rem' }}>Launch Tool →</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
 
-      {/* Professor Section */}
-      <section style={{ padding: '5rem 2rem', background: '#f8fafc' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: '350px 1fr', gap: '4rem', alignItems: 'start' }}>
-          <div style={{ position: 'relative' }}>
-            <img src="/dr-corbett.png" alt="Dr. Lyn Corbett" style={{ width: '100%', height: 'auto', borderRadius: 12, minHeight: 300, background: '#e2e8f0' }} onError={(e) => { (e.target as HTMLImageElement).style.background = '#e2e8f0'; }} />
-            <div style={{ position: 'absolute', bottom: '1rem', left: '50%', transform: 'translateX(-50%)', background: NAVY, color: 'white', padding: '0.75rem 1.25rem', borderRadius: 8, fontSize: '0.875rem', fontWeight: 600, whiteSpace: 'nowrap' }}>
-              {content.professor.badge}
-            </div>
-          </div>
-          <div>
-            <h2 style={{ fontSize: '2.25rem', fontWeight: 800, color: NAVY, marginBottom: '0.75rem' }}>{content.professor.headline}</h2>
-            <p style={{ fontSize: '1.0625rem', color: '#475569', marginBottom: '1.25rem' }}>{content.professor.subheadline}</p>
-            <p style={{ fontSize: '1.0625rem', color: '#334155', marginBottom: '1.5rem' }}>{content.professor.description}</p>
-            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>{content.professor.questionsLabel}</div>
-            <ul style={{ listStyle: 'none', marginBottom: '1.5rem', padding: 0 }}>
-              {content.professor.questions.map((q: string, i: number) => (
-                <li key={i} style={{ fontSize: '0.9375rem', color: '#475569', padding: '0.5rem 0', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: TEAL, fontWeight: 'bold' }}>→</span>{q}
-                </li>
-              ))}
-            </ul>
-            <button onClick={() => handleNavClick('professor')} style={{ background: NAVY, color: 'white', padding: '1rem 1.75rem', borderRadius: 8, fontSize: '1rem', fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-              {content.professor.cta}
-            </button>
+          <div className="grid md:grid-cols-3 gap-6">
+            {tools.map((tool, idx) => (
+              <Link 
+                key={idx}
+                to={tool.link}
+                className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all group border border-gray-100"
+              >
+                {/* Image */}
+                <div className="h-36 overflow-hidden">
+                  <img 
+                    src={tool.image}
+                    alt={tool.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                {/* Content */}
+                <div className="p-5">
+                  <h3 className="text-base font-bold mb-2 text-white rounded px-3 py-2" style={{ backgroundColor: NAVY }}>
+                    {tool.title}
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-3">{tool.desc}</p>
+                  <span className="text-sm font-semibold" style={{ color: TEAL }}>
+                    Launch Tool →
+                  </span>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Assessment CTA */}
-      <section style={{ background: NAVY, padding: '2.5rem 2rem' }}>
-        <div style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-          <div style={{ color: 'white' }}>
-            <div style={{ display: 'inline-block', background: 'rgba(255,255,255,0.15)', padding: '0.375rem 0.875rem', borderRadius: 4, fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.75rem' }}>{content.assessment.badge}</div>
-            <h3 style={{ fontSize: '1.5rem', fontWeight: 700 }}>{content.assessment.headline} <span style={{ color: '#94a3b8', fontSize: '0.9375rem', fontWeight: 500 }}>{content.assessment.subheadline}</span></h3>
+      {/* Ask the Professor Section */}
+      <section className="py-16 px-6 bg-white" id="professor">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Left: Image */}
+            <div className="relative">
+              <div 
+                className="rounded-2xl overflow-hidden bg-gray-100"
+                style={{ maxWidth: '320px' }}
+              >
+                <img 
+                  src="/dr-corbett.jpg"
+                  alt="Dr. Lyn Corbett"
+                  className="w-full h-auto object-cover"
+                />
+              </div>
+              {/* Badge */}
+              <div 
+                className="absolute bottom-4 left-4 right-4 rounded-xl py-3 px-4 text-center text-white text-sm font-semibold"
+                style={{ backgroundColor: NAVY, maxWidth: '280px' }}
+              >
+                Over 25 Years of Nonprofit Experience
+              </div>
+            </div>
+            
+            {/* Right: Content */}
+            <div>
+              <h2 className="text-3xl font-extrabold mb-2" style={{ color: NAVY }}>
+                Ask the Professor
+              </h2>
+              <p className="text-lg mb-4" style={{ color: TEAL }}>
+                Strategic guidance built on 25+ years of real-world experience
+              </p>
+              <p className="text-gray-600 mb-6 leading-relaxed">
+                It's like having an expert consultant in your back pocket. Get expert-level strategic advice, available 24/7. Trained on Dr. Lyn Corbett's decades of nonprofit consulting — not generic AI.
+              </p>
+              
+              <div className="mb-6">
+                <div className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
+                  Questions Leaders Are Asking:
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-start gap-2 text-gray-600 text-sm">
+                    <span style={{ color: TEAL }}>→</span>
+                    "How do I transition my board from operational to strategic?"
+                  </div>
+                  <div className="flex items-start gap-2 text-gray-600 text-sm">
+                    <span style={{ color: TEAL }}>→</span>
+                    "Should we accept this major restricted gift?"
+                  </div>
+                  <div className="flex items-start gap-2 text-gray-600 text-sm">
+                    <span style={{ color: TEAL }}>→</span>
+                    "What's the best approach to a difficult ED/Board Chair relationship?"
+                  </div>
+                </div>
+              </div>
+              
+              <Link
+                to="/ask-the-professor"
+                className="inline-block px-6 py-3 text-base font-semibold text-white rounded-lg transition hover:opacity-90"
+                style={{ backgroundColor: NAVY }}
+              >
+                Ask Your First Question — Free
+              </Link>
+            </div>
           </div>
-          <button onClick={() => handleNavClick('assessment')} style={{ background: TEAL, color: 'white', padding: '1rem 1.75rem', borderRadius: 8, fontSize: '1rem', fontWeight: 700, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}>{content.assessment.cta}</button>
+        </div>
+      </section>
+
+      {/* Free Assessment CTA */}
+      <section className="py-12 px-6 bg-gray-100">
+        <div className="max-w-4xl mx-auto">
+          <div 
+            className="inline-block px-3 py-1 rounded text-xs font-bold mb-4"
+            style={{ backgroundColor: NAVY, color: 'white' }}
+          >
+            FREE ASSESSMENT
+          </div>
+          <h2 className="text-2xl md:text-3xl font-extrabold mb-2" style={{ color: NAVY }}>
+            Every nonprofit has ONE constraint holding them back. What's yours?
+            <span className="text-base font-normal text-gray-500 ml-2">
+              Find out in 3 minutes — no login required.
+            </span>
+          </h2>
+          <Link
+            to="/assessment"
+            className="inline-block mt-4 px-6 py-3 text-base font-semibold rounded-lg transition hover:opacity-90"
+            style={{ backgroundColor: TEAL, color: 'white' }}
+          >
+            Take the Assessment →
+          </Link>
         </div>
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" style={{ padding: '5rem 2rem', background: 'white' }}>
-        <div style={{ textAlign: 'center', maxWidth: 600, margin: '0 auto 3rem' }}>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: NAVY, marginBottom: '0.75rem' }}>{content.pricing.headline}</h2>
-          <p style={{ fontSize: '1.125rem', color: '#64748b' }}>{content.pricing.subheadline}</p>
-        </div>
-        <div style={{ maxWidth: 1150, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem' }}>
-          {content.pricing.plans.map((plan: any, i: number) => (
-            <div key={i} style={{ background: 'white', border: `2px solid ${plan.featured ? NAVY : '#e2e8f0'}`, borderRadius: 12, padding: '1.75rem', textAlign: 'center', position: 'relative' }}>
-              {plan.featured && <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: NAVY, color: 'white', padding: '0.25rem 0.75rem', borderRadius: 4, fontSize: '0.625rem', fontWeight: 700 }}>MOST POPULAR</div>}
-              <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: NAVY, marginBottom: '0.75rem' }}>{plan.name}</h3>
-              <div style={{ marginBottom: '0.25rem' }}>
-                <span style={{ fontSize: plan.isEnterprise ? '1.75rem' : '2.25rem', fontWeight: 800, color: NAVY }}>{plan.price}</span>
-                {!plan.isEnterprise && <span style={{ fontSize: '1rem', color: '#64748b' }}>{plan.period}</span>}
-              </div>
-              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: plan.isEnterprise ? '#64748b' : TEAL, marginBottom: '1rem' }}>{plan.label}</div>
-              <ul style={{ listStyle: 'none', padding: 0, textAlign: 'left', marginBottom: '1.5rem' }}>
-                {plan.features.map((f: string, j: number) => (
-                  <li key={j} style={{ fontSize: '0.875rem', color: '#475569', padding: '0.375rem 0', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                    <span style={{ color: '#16a34a', fontWeight: 'bold' }}>✓</span>{f}
-                  </li>
-                ))}
-              </ul>
-              <button onClick={() => handleNavClick(plan.isEnterprise ? 'contact' : 'signup')} style={{ display: 'block', width: '100%', padding: '0.875rem 1rem', borderRadius: 8, fontSize: '0.9375rem', fontWeight: 700, border: 'none', cursor: 'pointer', background: plan.featured ? NAVY : '#f1f5f9', color: plan.featured ? 'white' : NAVY }}>
-                {plan.isEnterprise ? 'Contact Sales' : 'Start 3-Day Trial'}
-              </button>
-            </div>
-          ))}
-        </div>
-        <p style={{ maxWidth: 700, margin: '2rem auto 0', textAlign: 'center', fontSize: '0.875rem', color: '#64748b' }}>{content.pricing.note}</p>
-      </section>
-
-      {/* FAQ Section */}
-      <section style={{ padding: '5rem 2rem', background: '#f8fafc' }}>
-        <h2 style={{ textAlign: 'center', fontSize: '2.25rem', fontWeight: 800, color: NAVY, marginBottom: '2.5rem' }}>{content.faq.headline}</h2>
-        <div style={{ maxWidth: 750, margin: '0 auto' }}>
-          {content.faq.items.map((item: any, i: number) => (
-            <div key={i} style={{ borderBottom: '1px solid #e2e8f0', padding: '1.25rem 0' }}>
-              <div style={{ fontSize: '1rem', fontWeight: 600, color: NAVY, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-                Q{i + 1}: {item.q}
-                <span style={{ fontSize: '1.25rem', color: '#94a3b8' }}>+</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer style={{ background: NAVY, color: 'white', padding: '4rem 2rem 2rem' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: '1.5fr repeat(4, 1fr)', gap: '3rem' }}>
-          <div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1rem' }}>The Nonprofit <span style={{ color: TEAL_LIGHT }}>Edge</span></div>
-            <p style={{ fontSize: '0.875rem', color: '#94a3b8', maxWidth: 250, lineHeight: 1.6 }}>{content.footer.tagline}</p>
+      <section className="py-16 px-6 bg-white" id="pricing">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-extrabold mb-3" style={{ color: NAVY }}>
+              Simple, Transparent Pricing
+            </h2>
+            <p className="text-lg text-gray-600">
+              Start free. Upgrade when you're ready. Cancel anytime.
+            </p>
           </div>
-          {[{ title: 'Product', links: ['Features', 'Pricing', 'FAQ'] }, { title: 'Company', links: ['About', 'Resources', 'Contact'] }, { title: 'Legal', links: ['Privacy', 'Terms'] }, { title: 'Support', links: ['Help Center', 'Contact'] }].map((col, i) => (
-            <div key={i}>
-              <h4 style={{ fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', color: '#94a3b8' }}>{col.title}</h4>
-              {col.links.map((link, j) => <a key={j} href="#" style={{ display: 'block', fontSize: '0.9375rem', color: 'white', textDecoration: 'none', padding: '0.375rem 0' }}>{link}</a>)}
+
+          <div className="grid md:grid-cols-4 gap-5">
+            {/* Essential */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-6">
+              <h3 className="text-lg font-bold mb-2" style={{ color: NAVY }}>Essential</h3>
+              <div className="text-3xl font-extrabold mb-1" style={{ color: NAVY }}>$79<span className="text-sm font-normal text-gray-500">/mo</span></div>
+              <div className="text-xs font-semibold mb-5" style={{ color: TEAL }}>Founding Member Rate</div>
+              <ul className="space-y-2 mb-6 text-sm">
+                <li className="flex items-start gap-2 text-gray-600">
+                  <span style={{ color: TEAL }}>✓</span> 1 person
+                </li>
+                <li className="flex items-start gap-2 text-gray-600">
+                  <span style={{ color: TEAL }}>✓</span> 10 assessments/month
+                </li>
+                <li className="flex items-start gap-2 text-gray-600">
+                  <span style={{ color: TEAL }}>✓</span> 100 Ask the Professor/month
+                </li>
+                <li className="flex items-start gap-2 text-gray-600">
+                  <span style={{ color: TEAL }}>✓</span> Full Resource Library
+                </li>
+              </ul>
+              <Link 
+                to="/signup"
+                className="block w-full py-2.5 text-center text-sm font-semibold rounded-lg border border-gray-200 hover:border-gray-300 transition"
+                style={{ color: NAVY }}
+              >
+                Start 3-Day Trial
+              </Link>
             </div>
-          ))}
+
+            {/* Professional - Popular */}
+            <div className="bg-white border-2 rounded-2xl p-6 relative shadow-lg" style={{ borderColor: TEAL }}>
+              <div 
+                className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-bold text-white"
+                style={{ backgroundColor: TEAL }}
+              >
+                MOST POPULAR
+              </div>
+              <h3 className="text-lg font-bold mb-2" style={{ color: NAVY }}>Professional</h3>
+              <div className="text-3xl font-extrabold mb-1" style={{ color: NAVY }}>$159<span className="text-sm font-normal text-gray-500">/mo</span></div>
+              <div className="text-xs font-semibold mb-5" style={{ color: TEAL }}>Founding Member Rate</div>
+              <ul className="space-y-2 mb-6 text-sm">
+                <li className="flex items-start gap-2 text-gray-600">
+                  <span style={{ color: TEAL }}>✓</span> Up to 5 team members
+                </li>
+                <li className="flex items-start gap-2 text-gray-600">
+                  <span style={{ color: TEAL }}>✓</span> 25 assessments/month
+                </li>
+                <li className="flex items-start gap-2 text-gray-600">
+                  <span style={{ color: TEAL }}>✓</span> Unlimited Ask the Professor
+                </li>
+                <li className="flex items-start gap-2 text-gray-600">
+                  <span style={{ color: TEAL }}>✓</span> Full Resource Library
+                </li>
+              </ul>
+              <Link 
+                to="/signup"
+                className="block w-full py-2.5 text-center text-sm font-semibold text-white rounded-lg transition hover:opacity-90"
+                style={{ backgroundColor: TEAL }}
+              >
+                Start 3-Day Trial
+              </Link>
+            </div>
+
+            {/* Premium */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-6">
+              <h3 className="text-lg font-bold mb-2" style={{ color: NAVY }}>Premium</h3>
+              <div className="text-3xl font-extrabold mb-1" style={{ color: NAVY }}>$329<span className="text-sm font-normal text-gray-500">/mo</span></div>
+              <div className="text-xs font-semibold mb-5" style={{ color: TEAL }}>Founding Member Rate</div>
+              <ul className="space-y-2 mb-6 text-sm">
+                <li className="flex items-start gap-2 text-gray-600">
+                  <span style={{ color: TEAL }}>✓</span> Everything in Professional
+                </li>
+                <li className="flex items-start gap-2 text-gray-600">
+                  <span style={{ color: TEAL }}>✓</span> Up to 10 team members
+                </li>
+                <li className="flex items-start gap-2 text-gray-600">
+                  <span style={{ color: TEAL }}>✓</span> Unlimited assessments
+                </li>
+                <li className="flex items-start gap-2 text-gray-600">
+                  <span style={{ color: TEAL }}>✓</span> Monthly coaching call
+                </li>
+              </ul>
+              <Link 
+                to="/signup"
+                className="block w-full py-2.5 text-center text-sm font-semibold rounded-lg border border-gray-200 hover:border-gray-300 transition"
+                style={{ color: NAVY }}
+              >
+                Start 3-Day Trial
+              </Link>
+            </div>
+
+            {/* Enterprise */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-6">
+              <h3 className="text-lg font-bold mb-2" style={{ color: NAVY }}>Enterprise</h3>
+              <div className="text-3xl font-extrabold mb-1" style={{ color: NAVY }}>Let's Talk</div>
+              <div className="text-xs font-semibold mb-5" style={{ color: TEAL }}>Custom solutions</div>
+              <ul className="space-y-2 mb-6 text-sm">
+                <li className="flex items-start gap-2 text-gray-600">
+                  <span style={{ color: TEAL }}>✓</span> Everything in Premium
+                </li>
+                <li className="flex items-start gap-2 text-gray-600">
+                  <span style={{ color: TEAL }}>✓</span> Unlimited users
+                </li>
+                <li className="flex items-start gap-2 text-gray-600">
+                  <span style={{ color: TEAL }}>✓</span> Custom integrations
+                </li>
+                <li className="flex items-start gap-2 text-gray-600">
+                  <span style={{ color: TEAL }}>✓</span> Dedicated success manager
+                </li>
+              </ul>
+              <a 
+                href="mailto:lyn@thepivotalgroup.com"
+                className="block w-full py-2.5 text-center text-sm font-semibold rounded-lg border border-gray-200 hover:border-gray-300 transition"
+                style={{ color: NAVY }}
+              >
+                Contact Sales
+              </a>
+            </div>
+          </div>
+
+          <p className="text-center mt-8 text-sm text-gray-500">
+            🔒 <strong className="text-gray-700">Founding Member Rate:</strong> Lock in these prices forever. When we raise rates, yours stays the same as long as you remain a member.
+          </p>
         </div>
-        <div style={{ maxWidth: 1100, margin: '3rem auto 0', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '0.8125rem', color: '#94a3b8' }}>{content.footer.copyright}</div>
-      </footer>
-
-      {/* Responsive Styles */}
-      <style>{`
-        @media (max-width: 1000px) { .nav-desktop { display: none !important; } }
-        @media (max-width: 768px) {
-          section > div { grid-template-columns: 1fr !important; }
-          footer > div { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
+      </section>
     </div>
-  );
-};
+  )
+}
 
-export default Homepage;
+export default Homepage
