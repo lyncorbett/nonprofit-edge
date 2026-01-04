@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PIVOT Scenario Planner | The Nonprofit Edge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #0D2C54;
+      --teal: #0097A9;
+      --gold: #D4A853;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--gray-700);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid transparent;
+    }
+
+    .btn-primary {
+      background: var(--navy);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #0a1f3d;
+    }
+
+    .btn-outline {
+      background: white;
+      color: var(--navy);
+      border: 2px solid var(--navy);
+    }
+
+    .btn-outline:hover {
+      background: var(--navy);
+      color: white;
+    }
+
+    /* Hero */
+    .hero {
+      padding: 80px 0 100px;
+    }
+
+    .hero .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    .hero-content {
+      max-width: 540px;
+    }
+
+    .hero h1 {
+      font-size: 46px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 .navy {
+      color: var(--navy);
+    }
+
+    .hero h1 .teal {
+      color: var(--teal);
+    }
+
+    .hero .subtitle {
+      font-size: 19px;
+      color: var(--gray-600);
+      margin-bottom: 12px;
+      line-height: 1.6;
+    }
+
+    .hero .audience-line {
+      font-size: 15px;
+      color: var(--teal);
+      font-weight: 500;
+      margin-bottom: 32px;
+      font-style: italic;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+    }
+
+    /* Hero Image */
+    .hero-image {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+
+    .hero-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* Stats */
+    .stats {
+      padding: 60px 0;
+      background: var(--navy);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 40px;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 48px;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      font-size: 15px;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* What You Get - Image Cards */
+    .features {
+      padding: 80px 0 40px;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .section-header h2 {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 12px;
+    }
+
+    .section-header p {
+      font-size: 18px;
+      color: var(--gray-500);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .feature-card {
+      position: relative;
+      height: 320px;
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .feature-card-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      transition: transform 0.5s ease;
+    }
+
+    .feature-card:hover .feature-card-bg {
+      transform: scale(1.05);
+    }
+
+    .feature-card-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, rgba(13, 44, 84, 0) 0%, rgba(13, 44, 84, 0.85) 60%, rgba(13, 44, 84, 0.95) 100%);
+    }
+
+    .feature-card-content {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 28px;
+      color: white;
+    }
+
+    .feature-card h3 {
+      font-size: 22px;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 8px;
+    }
+
+    .feature-card p {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.85);
+      line-height: 1.5;
+    }
+
+    /* Before/After Section */
+    .before-after {
+      padding: 40px 0 80px;
+      background: white;
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .comparison-card {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid var(--gray-200);
+    }
+
+    .comparison-label {
+      padding: 12px 24px;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .comparison-card.before .comparison-label {
+      background: var(--gray-700);
+      color: white;
+    }
+
+    .comparison-card.after .comparison-label {
+      background: var(--teal);
+      color: white;
+    }
+
+    .comparison-content {
+      padding: 24px;
+    }
+
+    .comparison-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gray-500);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .comparison-text {
+      font-size: 16px;
+      line-height: 1.7;
+      color: var(--gray-700);
+      font-style: italic;
+      margin-bottom: 20px;
+      padding: 16px;
+      background: var(--gray-50);
+      border-radius: 8px;
+      border-left: 3px solid var(--gray-300);
+    }
+
+    .comparison-card.after .comparison-text {
+      border-left-color: var(--teal);
+      background: rgba(0, 151, 169, 0.05);
+    }
+
+    .comparison-verdict {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .comparison-card.before .comparison-verdict {
+      color: var(--gray-500);
+    }
+
+    .comparison-card.after .comparison-verdict {
+      color: var(--teal);
+    }
+
+    .verdict-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .comparison-card.before .verdict-icon {
+      background: var(--gray-200);
+    }
+
+    .comparison-card.after .verdict-icon {
+      background: rgba(0, 151, 169, 0.15);
+    }
+
+    /* Quote Section */
+    .quote-section {
+      padding: 60px 0;
+      background: var(--navy);
+    }
+
+    .featured-quote {
+      max-width: 900px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .quote-badge {
+      display: inline-block;
+      background: var(--teal);
+      color: white;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 24px;
+    }
+
+    .featured-quote p {
+      font-size: 32px;
+      line-height: 1.5;
+      color: white;
+      font-style: italic;
+      margin-bottom: 32px;
+      font-weight: 400;
+      text-align: center;
+    }
+
+    .featured-quote cite {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      text-align: center;
+    }
+
+    .cite-name {
+      font-size: 22px;
+      font-weight: 600;
+      color: white;
+      font-style: normal;
+    }
+
+    .cite-title {
+      font-size: 17px;
+      color: rgba(255, 255, 255, 0.7);
+      font-style: normal;
+    }
+
+    /* How It Works - 2 Column with Animation */
+    .how-it-works {
+      padding: 100px 0;
+      background: linear-gradient(180deg, var(--gray-50) 0%, white 100%);
+    }
+
+    .how-it-works-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .step {
+      text-align: left;
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    .step-number {
+      width: 56px;
+      height: 56px;
+      min-width: 56px;
+      background: white;
+      border: 3px solid var(--navy);
+      color: var(--navy);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 800;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s ease;
+    }
+
+    .step:hover .step-number {
+      background: var(--navy);
+      color: white;
+      transform: scale(1.1);
+    }
+
+    .step-content {
+      flex: 1;
+    }
+
+    .step h3 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 6px;
+    }
+
+    .step p {
+      font-size: 15px;
+      color: var(--gray-500);
+      margin: 0;
+    }
+
+    .mockup-container {
+      position: relative;
+    }
+
+    /* Browser Frame Animation */
+    .browser-frame {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      overflow: hidden;
+    }
+
+    .browser-header {
+      background: var(--gray-100);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .browser-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .browser-dot.red { background: #ef4444; }
+    .browser-dot.yellow { background: #eab308; }
+    .browser-dot.green { background: #22c55e; }
+
+    .browser-url {
+      flex: 1;
+      margin-left: 12px;
+      background: white;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 12px;
+      color: var(--gray-500);
+    }
+
+    .browser-content {
+      height: 300px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      padding: 24px;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .screen.active {
+      opacity: 1;
+    }
+
+    /* Screen 1: Select Scenario */
+    .scenario-select {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .scenario-select-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--navy);
+      margin-bottom: 8px;
+    }
+
+    .scenario-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--gray-50);
+      border-radius: 8px;
+      border: 2px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .scenario-option.selected {
+      border-color: var(--teal);
+      background: rgba(0, 151, 169, 0.05);
+    }
+
+    .scenario-icon {
+      font-size: 20px;
+    }
+
+    .scenario-label {
+      font-size: 13px;
+      color: var(--gray-700);
+    }
+
+    /* Screen 2: Futures */
+    .futures-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .future-card {
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .future-card.best {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .future-card.likely {
+      background: rgba(234, 179, 8, 0.1);
+      border: 1px solid rgba(234, 179, 8, 0.3);
+    }
+
+    .future-card.worst {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .future-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .future-card.best .future-title { color: #16a34a; }
+    .future-card.likely .future-title { color: #ca8a04; }
+    .future-card.worst .future-title { color: #dc2626; }
+
+    .future-desc {
+      font-size: 11px;
+      color: var(--gray-600);
+      line-height: 1.4;
+    }
+
+    /* Screen 3: Readiness */
+    .readiness-header {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--navy);
+      margin-bottom: 16px;
+    }
+
+    .readiness-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .readiness-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .readiness-label {
+      width: 80px;
+      font-size: 12px;
+      color: var(--gray-600);
+    }
+
+    .readiness-bar {
+      flex: 1;
+      height: 8px;
+      background: var(--gray-200);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .readiness-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 1s ease;
+    }
+
+    .readiness-fill.high { background: #22c55e; }
+    .readiness-fill.medium { background: #eab308; }
+    .readiness-fill.low { background: #ef4444; }
+
+    .readiness-score {
+      width: 40px;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: right;
+    }
+
+    /* CTA */
+    .cta {
+      padding: 120px 0;
+      position: relative;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .cta-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1400&h=600&fit=crop');
+      background-size: cover;
+      background-position: center;
+    }
+
+    .cta-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(13, 44, 84, 0.92) 0%, rgba(0, 109, 120, 0.88) 100%);
+    }
+
+    .cta .container {
+      position: relative;
+      z-index: 1;
+    }
+
+    .cta h2 {
+      font-size: 44px;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 16px;
+    }
+
+    .cta p {
+      font-size: 20px;
+      color: rgba(255, 255, 255, 0.85);
+      margin-bottom: 40px;
+    }
+
+    .cta .btn-primary {
+      background: white;
+      color: var(--navy);
+      padding: 18px 42px;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .hero .container {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+
+      .hero-content {
+        max-width: 100%;
+      }
+
+      .hero-buttons {
+        justify-content: center;
+      }
+
+      .hero h1 {
+        font-size: 36px;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .comparison-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .how-it-works-content {
+        grid-template-columns: 1fr;
+        gap: 48px;
+      }
+
+      .mockup-container {
+        order: -1;
+      }
+
+      .cta h2 {
+        font-size: 32px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <h1>
+          <span class="navy">What If Your Biggest</span><br>
+          <span class="teal">Funder Disappeared?</span>
+        </h1>
+        <p class="subtitle">Explore "what if" scenarios before they become crises. Our PIVOT framework helps you stress-test your organization and build contingency plans that actually work.</p>
+        <p class="audience-line">For executive directors and board members who refuse to be caught off guard.</p>
+        <div class="hero-buttons">
+          <a href="/trial" class="btn btn-primary">Start Your Free 3-Day Trial →</a>
+          <a href="#features" class="btn btn-outline">See What You Get</a>
+        </div>
+      </div>
+      
+      <!-- Hero Image -->
+      <div class="hero-image">
+        <img src="/images/scenario-planner-hero.jpg" alt="Leadership team planning for the future">
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="stats">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-number">73%</div>
+          <div class="stat-label">of nonprofits have no contingency plan</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">6mo</div>
+          <div class="stat-label">average warning time before a crisis</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">40%</div>
+          <div class="stat-label">of organizations fail within 2 years of major disruption</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- What You Get -->
+  <section class="features" id="features">
+    <div class="container">
+      <div class="section-header">
+        <h2>What You Get</h2>
+        <p>Scenario planning tools built for nonprofit realities.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-card-bg" style="background-image: url('https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=600&h=400&fit=crop');"></div>
+          <div class="feature-card-overlay"></div>
+          <div class="feature-card-content">
+            <h3>Leadership Changes</h3>
+            <p>Plan for executive transitions, board turnover, and key staff departures.</p>
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-bg" style="background-image: url('https://images.unsplash.com/photo-1501466044931-62695aada8e9?w=600&h=400&fit=crop');"></div>
+          <div class="feature-card-overlay"></div>
+          <div class="feature-card-content">
+            <h3>Funding Shifts</h3>
+            <p>Model what happens if a major funder cuts back, delays, or disappears entirely.</p>
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-bg" style="background-image: url('https://images.unsplash.com/photo-1534088568595-a066f410bcda?w=600&h=400&fit=crop');"></div>
+          <div class="feature-card-overlay"></div>
+          <div class="feature-card-content">
+            <h3>External Disruptions</h3>
+            <p>Prepare for policy changes, economic downturns, and competitive threats.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Before/After Panel -->
+  <section class="before-after">
+    <div class="container">
+      <div class="section-header">
+        <h2>See the Difference</h2>
+        <p>The same scenario. Two very different responses.</p>
+      </div>
+      <div class="comparison-grid">
+        <div class="comparison-card before">
+          <div class="comparison-label">Before</div>
+          <div class="comparison-content">
+            <div class="comparison-title">When Major Funder Cuts 50%</div>
+            <div class="comparison-text">"We'll figure it out. Maybe we can do a fundraiser or something. Let's wait and see what happens."</div>
+            <div class="comparison-verdict">
+              <span class="verdict-icon">⚠</span>
+              <span>Reactive • Unprepared • High Risk</span>
+            </div>
+          </div>
+        </div>
+        <div class="comparison-card after">
+          <div class="comparison-label">After</div>
+          <div class="comparison-content">
+            <div class="comparison-title">When Major Funder Cuts 50%</div>
+            <div class="comparison-text">"We activate Plan B: Reduce contractor hours, accelerate individual giving campaign, and notify board of bridge loan option. Timeline: 30 days."</div>
+            <div class="comparison-verdict">
+              <span class="verdict-icon">✓</span>
+              <span>Proactive • Prepared • Resilient</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quote Section -->
+  <section class="quote-section">
+    <div class="container">
+      <blockquote class="featured-quote">
+        <span class="quote-badge">Strategic Foresight</span>
+        <p>"In preparing for battle I have always found that plans are useless, but planning is indispensable."</p>
+        <cite>
+          <span class="cite-name">Dwight D. Eisenhower</span>
+          <span class="cite-title">34th President of the United States</span>
+        </cite>
+      </blockquote>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="how-it-works">
+    <div class="container">
+      <div class="section-header">
+        <h2>How It Works</h2>
+      </div>
+      <div class="how-it-works-content">
+        <div class="steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <h3>Choose Your Scenario</h3>
+              <p>Select from leadership, funding, or disruption scenarios that matter most to your organization</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <h3>Explore Three Futures</h3>
+              <p>We guide you through best case, most likely, and worst case possibilities</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <h3>Build Your Playbook</h3>
+              <p>Get a concrete action plan with triggers, owners, and timelines</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Animated Product Mockup -->
+        <div class="mockup-container">
+          <div class="browser-frame">
+            <div class="browser-header">
+              <div class="browser-dot red"></div>
+              <div class="browser-dot yellow"></div>
+              <div class="browser-dot green"></div>
+              <div class="browser-url">thenonprofitedge.org</div>
+            </div>
+            <div class="browser-content">
+              
+              <!-- Screen 1: Select Scenario -->
+              <div class="screen active" id="screen1">
+                <div class="scenario-select">
+                  <div class="scenario-select-title">Select a scenario to explore:</div>
+                  <div class="scenario-option selected">
+                    <span class="scenario-icon">👤</span>
+                    <span class="scenario-label">Executive Director Departure</span>
+                  </div>
+                  <div class="scenario-option">
+                    <span class="scenario-icon">💰</span>
+                    <span class="scenario-label">Major Funder Reduction (50%+)</span>
+                  </div>
+                  <div class="scenario-option">
+                    <span class="scenario-icon">📋</span>
+                    <span class="scenario-label">Government Contract Loss</span>
+                  </div>
+                  <div class="scenario-option">
+                    <span class="scenario-icon">⚡</span>
+                    <span class="scenario-label">Economic Recession Impact</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Screen 2: Three Futures -->
+              <div class="screen" id="screen2">
+                <div class="scenario-select-title" style="margin-bottom: 16px;">ED Departure: Three Futures</div>
+                <div class="futures-grid">
+                  <div class="future-card best">
+                    <div class="future-title">Best Case</div>
+                    <div class="future-desc">Smooth transition with internal candidate ready. Operations continue seamlessly.</div>
+                  </div>
+                  <div class="future-card likely">
+                    <div class="future-title">Most Likely</div>
+                    <div class="future-desc">6-month search with interim leadership. Some program delays.</div>
+                  </div>
+                  <div class="future-card worst">
+                    <div class="future-title">Worst Case</div>
+                    <div class="future-desc">Extended vacancy, staff turnover, funder concerns about stability.</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Screen 3: Readiness -->
+              <div class="screen" id="screen3">
+                <div class="readiness-header">Your Readiness Score</div>
+                <div class="readiness-bars">
+                  <div class="readiness-item">
+                    <span class="readiness-label">Succession</span>
+                    <div class="readiness-bar">
+                      <div class="readiness-fill low" style="width: 25%"></div>
+                    </div>
+                    <span class="readiness-score">25%</span>
+                  </div>
+                  <div class="readiness-item">
+                    <span class="readiness-label">Documentation</span>
+                    <div class="readiness-bar">
+                      <div class="readiness-fill medium" style="width: 60%"></div>
+                    </div>
+                    <span class="readiness-score">60%</span>
+                  </div>
+                  <div class="readiness-item">
+                    <span class="readiness-label">Board Ready</span>
+                    <div class="readiness-bar">
+                      <div class="readiness-fill medium" style="width: 45%"></div>
+                    </div>
+                    <span class="readiness-score">45%</span>
+                  </div>
+                  <div class="readiness-item">
+                    <span class="readiness-label">Cash Reserve</span>
+                    <div class="readiness-bar">
+                      <div class="readiness-fill high" style="width: 80%"></div>
+                    </div>
+                    <span class="readiness-score">80%</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <div class="cta-bg"></div>
+    <div class="cta-overlay"></div>
+    <div class="container">
+      <h2>Plan for Tomorrow, Today</h2>
+      <p>Don't wait for a crisis to discover you're not ready.</p>
+      <a href="/trial" class="btn btn-primary">Start Your Free 3-Day Trial →</a>
+    </div>
+  </section>
+
+  <!-- Animation Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const screens = [
+        document.getElementById('screen1'),
+        document.getElementById('screen2'),
+        document.getElementById('screen3')
+      ];
+      
+      let currentScreen = 0;
+
+      function showScreen(index) {
+        screens.forEach((screen, i) => {
+          screen.classList.toggle('active', i === index);
+        });
+      }
+
+      function nextScreen() {
+        currentScreen = (currentScreen + 1) % screens.length;
+        showScreen(currentScreen);
+      }
+
+      // Auto-advance every 3 seconds
+      setInterval(nextScreen, 3000);
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Certifications | The Nonprofit Edge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #0D2C54;
+      --teal: #0097A9;
+      --gold: #D4A853;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--gray-700);
+      line-height: 1.6;
+      background: white;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Navigation */
+    .nav {
+      padding: 16px 0;
+      border-bottom: 1px solid var(--gray-200);
+      background: white;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--navy);
+      text-decoration: none;
+    }
+
+    .logo span {
+      color: var(--teal);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 15px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--navy);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #0a1f3d;
+    }
+
+    .btn-teal {
+      background: var(--teal);
+      color: white;
+    }
+
+    .btn-teal:hover {
+      background: #007d8a;
+    }
+
+    /* Hero */
+    .hero {
+      padding: 80px 0;
+      background: linear-gradient(135deg, var(--navy) 0%, #1a4070 100%);
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: var(--teal);
+      color: white;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      font-size: 48px;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 20px;
+      line-height: 1.2;
+    }
+
+    .hero p {
+      font-size: 20px;
+      color: rgba(255, 255, 255, 0.85);
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    /* Section Headers */
+    .section-header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .section-header h2 {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 12px;
+    }
+
+    .section-header p {
+      font-size: 18px;
+      color: var(--gray-500);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Certification Cards */
+    .certs-section {
+      padding: 80px 0;
+    }
+
+    .cert-card {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 0;
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      margin-bottom: 40px;
+      border: 1px solid var(--gray-200);
+    }
+
+    .cert-card.reverse {
+      direction: rtl;
+    }
+
+    .cert-card.reverse > * {
+      direction: ltr;
+    }
+
+    .cert-image {
+      position: relative;
+      min-height: 320px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .cert-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .cert-content {
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .cert-type {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+      width: fit-content;
+    }
+
+    .cert-type.partner {
+      background: rgba(0, 151, 169, 0.1);
+      color: var(--teal);
+    }
+
+    .cert-type.nonprofit-edge {
+      background: rgba(13, 44, 84, 0.1);
+      color: var(--navy);
+    }
+
+    .cert-content h3 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 16px;
+    }
+
+    .cert-content > p {
+      font-size: 16px;
+      color: var(--gray-600);
+      margin-bottom: 24px;
+      line-height: 1.7;
+    }
+
+    .cert-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .cert-detail {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--gray-600);
+    }
+
+    .cert-detail-icon {
+      color: var(--teal);
+      font-weight: 600;
+    }
+
+    .cert-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--teal);
+      color: white;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 15px;
+      text-decoration: none;
+      width: fit-content;
+      transition: all 0.2s;
+    }
+
+    .cert-cta:hover {
+      background: #007d8a;
+    }
+
+    /* Why Get Certified */
+    .benefits-section {
+      padding: 80px 0;
+      background: var(--gray-50);
+    }
+
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .benefit-card {
+      background: white;
+      border-radius: 12px;
+      padding: 32px 24px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      border: 1px solid var(--gray-200);
+    }
+
+    .benefit-icon {
+      width: 56px;
+      height: 56px;
+      background: rgba(0, 151, 169, 0.1);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 24px;
+    }
+
+    .benefit-card h4 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 8px;
+    }
+
+    .benefit-card p {
+      font-size: 14px;
+      color: var(--gray-500);
+      line-height: 1.6;
+    }
+
+    /* How It Works */
+    .process-section {
+      padding: 80px 0;
+    }
+
+    .process-steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 32px;
+      max-width: 1000px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .process-steps::before {
+      content: '';
+      position: absolute;
+      top: 32px;
+      left: 15%;
+      right: 15%;
+      height: 2px;
+      background: var(--gray-200);
+      z-index: 0;
+    }
+
+    .process-step {
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .step-number {
+      width: 64px;
+      height: 64px;
+      background: var(--navy);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 700;
+      margin: 0 auto 20px;
+    }
+
+    .process-step h4 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 8px;
+    }
+
+    .process-step p {
+      font-size: 14px;
+      color: var(--gray-500);
+    }
+
+    /* CTA Section */
+    .cta-section {
+      padding: 80px 0;
+      background: var(--navy);
+      text-align: center;
+    }
+
+    .cta-section h2 {
+      font-size: 36px;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 16px;
+    }
+
+    .cta-section p {
+      font-size: 18px;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 32px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .cta-section .btn {
+      background: white;
+      color: var(--navy);
+      padding: 16px 32px;
+      font-size: 16px;
+    }
+
+    .cta-section .btn:hover {
+      background: var(--gray-100);
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .cert-card {
+        grid-template-columns: 1fr;
+      }
+
+      .cert-card.reverse {
+        direction: ltr;
+      }
+
+      .cert-image {
+        min-height: 240px;
+      }
+
+      .benefits-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .process-steps {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 48px;
+      }
+
+      .process-steps::before {
+        display: none;
+      }
+
+      .hero h1 {
+        font-size: 36px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .benefits-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .process-steps {
+        grid-template-columns: 1fr;
+      }
+
+      .cert-details {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="container">
+      <a href="/" class="logo">The Nonprofit <span>Edge</span></a>
+      <a href="/trial" class="btn btn-primary">Start Your Free Trial</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <span class="hero-badge">Professional Development</span>
+      <h1>Earn Credentials That Advance Your Career</h1>
+      <p>Gain recognized certifications in leadership assessment, team development, nonprofit governance, and strategic consulting—all through live, online training with The Nonprofit Edge.</p>
+    </div>
+  </section>
+
+  <!-- Partner Certifications -->
+  <section class="certs-section">
+    <div class="container">
+      <div class="section-header">
+        <h2>Partner Certifications</h2>
+        <p>Become certified in industry-leading assessment tools. As authorized distributors, we'll guide you through the certification process and connect you with the official training.</p>
+      </div>
+
+      <!-- DiSC Certification -->
+      <div class="cert-card">
+        <div class="cert-image">
+          <img src="/images/cert-disc.jpg" alt="DiSC Training">
+        </div>
+        <div class="cert-content">
+          <span class="cert-type partner">Partner Certification</span>
+          <h3>Everything DiSC® Certification</h3>
+          <p>Master the world's most trusted behavioral assessment tool. Learn to administer, interpret, and facilitate DiSC workshops that transform how teams communicate and collaborate.</p>
+          <div class="cert-details">
+            <div class="cert-detail">
+              <span class="cert-detail-icon">✓</span>
+              <span><strong>Duration:</strong> 2 weeks (20 hours)</span>
+            </div>
+            <div class="cert-detail">
+              <span class="cert-detail-icon">✓</span>
+              <span><strong>Format:</strong> Live online + self-paced</span>
+            </div>
+            <div class="cert-detail">
+              <span class="cert-detail-icon">✓</span>
+              <span><strong>Exam:</strong> 80% to pass</span>
+            </div>
+            <div class="cert-detail">
+              <span class="cert-detail-icon">✓</span>
+              <span><strong>Credits:</strong> 20 SHRM/HRCI PDCs</span>
+            </div>
+          </div>
+          <a href="#" class="cert-cta">Learn More & Register →</a>
+        </div>
+      </div>
+
+      <!-- Five Behaviors Certification -->
+      <div class="cert-card reverse">
+        <div class="cert-image">
+          <img src="/images/cert-five-behaviors.png" alt="Five Behaviors Training">
+        </div>
+        <div class="cert-content">
+          <span class="cert-type partner">Partner Certification</span>
+          <h3>The Five Behaviors® Certification</h3>
+          <p>Based on Patrick Lencioni's bestselling "The Five Dysfunctions of a Team." Learn to build trust, drive healthy conflict, and create accountability in any team environment.</p>
+          <div class="cert-details">
+            <div class="cert-detail">
+              <span class="cert-detail-icon">✓</span>
+              <span><strong>Duration:</strong> 2 weeks (20 hours)</span>
+            </div>
+            <div class="cert-detail">
+              <span class="cert-detail-icon">✓</span>
+              <span><strong>Format:</strong> Live online + self-paced</span>
+            </div>
+            <div class="cert-detail">
+              <span class="cert-detail-icon">✓</span>
+              <span><strong>Exam:</strong> 80% to pass</span>
+            </div>
+            <div class="cert-detail">
+              <span class="cert-detail-icon">✓</span>
+              <span><strong>Credits:</strong> 20 SHRM/HRCI PDCs</span>
+            </div>
+          </div>
+          <a href="#" class="cert-cta">Learn More & Register →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Nonprofit Edge Certifications -->
+  <section class="certs-section" style="background: var(--gray-50); padding-top: 80px;">
+    <div class="container">
+      <div class="section-header">
+        <h2>The Nonprofit Edge Certifications</h2>
+        <p>Exclusive credentials developed by Dr. Lyn Corbett, drawing on 25+ years of nonprofit leadership experience. Designed specifically for the nonprofit sector.</p>
+      </div>
+
+      <!-- Nonprofit Governance Certification -->
+      <div class="cert-card">
+        <div class="cert-image">
+          <img src="/images/cert-governance.jpg" alt="Governance Training">
+        </div>
+        <div class="cert-content">
+          <span class="cert-type nonprofit-edge">Nonprofit Edge Certification</span>
+          <h3>Nonprofit Governance Certification</h3>
+          <p>For board members and executives who want to master nonprofit governance. Learn fiduciary responsibilities, strategic oversight, board-staff dynamics, and how to build a high-performing board.</p>
+          <div class="cert-details">
+            <div class="cert-detail">
+              <span class="cert-detail-icon">✓</span>
+              <span><strong>Duration:</strong> 4 weeks</span>
+            </div>
+            <div class="cert-detail">
+              <span class="cert-detail-icon">✓</span>
+              <span><strong>Format:</strong> Live online sessions</span>
+            </div>
+            <div class="cert-detail">
+              <span class="cert-detail-icon">✓</span>
+              <span><strong>Exam:</strong> Final assessment required</span>
+            </div>
+            <div class="cert-detail">
+              <span class="cert-detail-icon">✓</span>
+              <span><strong>Certificate:</strong> The Nonprofit Edge</span>
+            </div>
+          </div>
+          <a href="#" class="cert-cta">Learn More & Register →</a>
+        </div>
+      </div>
+
+      <!-- Nonprofit Consultant Certification -->
+      <div class="cert-card reverse">
+        <div class="cert-image">
+          <img src="/images/cert-consultant.jpg" alt="Consultant Training">
+        </div>
+        <div class="cert-content">
+          <span class="cert-type nonprofit-edge">Nonprofit Edge Certification</span>
+          <h3>Nonprofit Consultant Certification</h3>
+          <p>For aspiring and practicing consultants who want to serve the nonprofit sector. Learn consulting frameworks, client engagement, facilitation skills, and how to deliver strategic value.</p>
+          <div class="cert-details">
+            <div class="cert-detail">
+              <span class="cert-detail-icon">✓</span>
+              <span><strong>Duration:</strong> 6 weeks</span>
+            </div>
+            <div class="cert-detail">
+              <span class="cert-detail-icon">✓</span>
+              <span><strong>Format:</strong> Live online sessions</span>
+            </div>
+            <div class="cert-detail">
+              <span class="cert-detail-icon">✓</span>
+              <span><strong>Exam:</strong> Final assessment required</span>
+            </div>
+            <div class="cert-detail">
+              <span class="cert-detail-icon">✓</span>
+              <span><strong>Certificate:</strong> The Nonprofit Edge</span>
+            </div>
+          </div>
+          <a href="#" class="cert-cta">Learn More & Register →</a>
+        </div>
+      </div>
+
+      <!-- Strategic Leadership Certification -->
+      <div class="cert-card">
+        <div class="cert-image">
+          <img src="/images/cert-leadership.jpg" alt="Leadership Training">
+        </div>
+        <div class="cert-content">
+          <span class="cert-type nonprofit-edge">Nonprofit Edge Certification</span>
+          <h3>Strategic Leadership Certification</h3>
+          <p>For nonprofit executives ready to elevate their leadership. Master strategic thinking, change management, organizational culture, and the skills needed to lead with clarity and impact.</p>
+          <div class="cert-details">
+            <div class="cert-detail">
+              <span class="cert-detail-icon">✓</span>
+              <span><strong>Duration:</strong> 6 weeks</span>
+            </div>
+            <div class="cert-detail">
+              <span class="cert-detail-icon">✓</span>
+              <span><strong>Format:</strong> Live online sessions</span>
+            </div>
+            <div class="cert-detail">
+              <span class="cert-detail-icon">✓</span>
+              <span><strong>Exam:</strong> Final assessment required</span>
+            </div>
+            <div class="cert-detail">
+              <span class="cert-detail-icon">✓</span>
+              <span><strong>Certificate:</strong> The Nonprofit Edge</span>
+            </div>
+          </div>
+          <a href="#" class="cert-cta">Learn More & Register →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why Get Certified -->
+  <section class="benefits-section">
+    <div class="container">
+      <div class="section-header">
+        <h2>Why Get Certified?</h2>
+        <p>Credentials that demonstrate expertise and open doors</p>
+      </div>
+      <div class="benefits-grid">
+        <div class="benefit-card">
+          <div class="benefit-icon">📋</div>
+          <h4>Advance Your Career</h4>
+          <p>Stand out with recognized credentials that signal expertise to employers and clients.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">🎯</div>
+          <h4>Deepen Your Expertise</h4>
+          <p>Go beyond surface knowledge with rigorous training from experienced practitioners.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">🤝</div>
+          <h4>Join a Community</h4>
+          <p>Connect with fellow professionals committed to nonprofit excellence.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">💡</div>
+          <h4>Apply Immediately</h4>
+          <p>Every certification includes practical tools you can use right away.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">✅</div>
+          <h4>Earn PDCs</h4>
+          <p>Partner certifications count toward SHRM, HRCI, ATD, and ICF recertification.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">🏆</div>
+          <h4>Lifetime Credential</h4>
+          <p>Your certification doesn't expire—it's a permanent addition to your credentials.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="process-section">
+    <div class="container">
+      <div class="section-header">
+        <h2>How It Works</h2>
+        <p>A simple path from enrollment to certification</p>
+      </div>
+      <div class="process-steps">
+        <div class="process-step">
+          <div class="step-number">1</div>
+          <h4>Choose Your Program</h4>
+          <p>Select the certification that matches your goals</p>
+        </div>
+        <div class="process-step">
+          <div class="step-number">2</div>
+          <h4>Complete Training</h4>
+          <p>Attend live sessions and finish coursework</p>
+        </div>
+        <div class="process-step">
+          <div class="step-number">3</div>
+          <h4>Pass the Exam</h4>
+          <p>Demonstrate mastery with final assessment</p>
+        </div>
+        <div class="process-step">
+          <div class="step-number">4</div>
+          <h4>Get Certified</h4>
+          <p>Receive your credential and start applying</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="container">
+      <h2>Ready to Elevate Your Expertise?</h2>
+      <p>Explore upcoming certification cohorts or contact us to discuss which program is right for you.</p>
+      <a href="#" class="btn">View Upcoming Cohorts →</a>
+    </div>
+  </section>
+
+</body>
+</html>
