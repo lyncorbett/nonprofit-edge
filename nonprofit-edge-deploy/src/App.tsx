@@ -31,16 +31,16 @@ import PlatformOwnerDashboard from './components/PlatformOwnerDashboard';
 import Login from './components/Login';
 import SignUp from './components/SignUp';
 import SignUpSuccess from './components/SignUpSuccess';
-import SignupFlow from './components/SignupFlow';
+// import SignupFlow from './components/SignupFlow';  // COMMENTED OUT - causes Router context error
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 
 // UI Components
 import Homepage from './components/Homepage';
-import Sidebar from './components/Sidebar';
-import ProductTour from './components/ProductTour';
-import WelcomeModal from './components/WelcomeModal';
-import AIGuideChatbot from './components/AIGuideChatbot';
+// import Sidebar from './components/Sidebar';  // COMMENTED OUT - causes Router context error
+// import ProductTour from './components/ProductTour';  // COMMENTED OUT - not used directly
+// import WelcomeModal from './components/WelcomeModal';  // COMMENTED OUT - not used directly
+// import AIGuideChatbot from './components/AIGuideChatbot';  // COMMENTED OUT - not used directly
 
 // Tool Components (Actual Tools)
 import StrategicPlanCheckup from './StrategicPlanCheckup';
@@ -66,9 +66,6 @@ import {
   trackProfessorSession,
   TIER_LIMITS 
 } from './lib/tracking';
-
-// Supabase client (if using)
-// import { supabase } from './lib/supabase';
 
 // ============================================
 // TYPES
@@ -264,14 +261,9 @@ const App: React.FC = () => {
   // TRACKING HANDLERS (Connect to Dashboard)
   // ==========================================
 
-  /**
-   * Called when a user opens a tool - creates session only (NO counter increment)
-   * Counter only increments on COMPLETION
-   */
   const handleToolStart = async (toolId: string, toolName: string): Promise<string | null> => {
     if (!user || !organization) return null;
 
-    // Create session (for tracking purposes only - no counter update)
     const sessionId = `session_${Date.now()}`;
     const session: ToolSession = {
       id: sessionId,
@@ -280,39 +272,24 @@ const App: React.FC = () => {
     };
     setCurrentSession(session);
 
-    // NOTE: We do NOT increment counters here - only on completion
-    // If using Supabase, you might still want to log the start for analytics
-    // await trackToolStart(organization.id, user.id, toolId, toolName, { email: user.email });
-
     console.log(`Tool opened: ${toolName} (Session: ${sessionId})`);
     return sessionId;
   };
 
-  /**
-   * Called when a user COMPLETES a tool - THIS is when counters increment
-   */
   const handleToolComplete = async (sessionId: string, toolName: string, score?: number) => {
     if (!user || !organization) return;
 
-    // Update ALL usage counters on completion
     setUsage(prev => ({
       ...prev,
-      tools_started: prev.tools_started + 1,      // Count as "used"
-      tools_completed: prev.tools_completed + 1,   // Count as "completed"
+      tools_started: prev.tools_started + 1,
+      tools_completed: prev.tools_completed + 1,
       tools_used_this_month: prev.tools_used_this_month + 1,
     }));
 
     setCurrentSession(null);
-
-    // If using Supabase
-    // await trackToolComplete(organization.id, user.id, sessionId, toolName, score);
-
     console.log(`Tool COMPLETED: ${toolName} (Score: ${score || 'N/A'}) - Counters updated!`);
   };
 
-  /**
-   * Called when a user downloads a report or template
-   */
   const handleDownload = async (resourceName: string, resourceType: 'report' | 'template' = 'report') => {
     if (!user || !organization) return;
 
@@ -330,15 +307,9 @@ const App: React.FC = () => {
       report_downloads: prev.report_downloads + 1,
     }));
 
-    // If using Supabase
-    // await trackDownload(organization.id, user.id, tier, resourceName, resourceType);
-
     console.log(`Download tracked: ${resourceName}`);
   };
 
-  /**
-   * Called when starting Ask the Professor
-   */
   const handleStartProfessor = async () => {
     if (!user || !organization) {
       navigate('/login');
@@ -358,9 +329,6 @@ const App: React.FC = () => {
       professor_sessions_this_month: prev.professor_sessions_this_month + 1,
     }));
 
-    // If using Supabase
-    // await trackProfessorSession(organization.id, user.id, tier);
-
     navigate('/ask-the-professor/use');
   };
 
@@ -378,7 +346,6 @@ const App: React.FC = () => {
     const [sessionId, setSessionId] = useState<string | null>(null);
 
     useEffect(() => {
-      // Track tool start when component mounts
       handleToolStart(toolId, toolName).then(id => setSessionId(id));
     }, [toolId, toolName]);
 
@@ -417,7 +384,6 @@ const App: React.FC = () => {
             ← Back to Dashboard
           </button>
         </header>
-        {/* Clone children with onComplete prop */}
         {React.Children.map(children, child => {
           if (React.isValidElement(child)) {
             return React.cloneElement(child, { 
@@ -483,13 +449,11 @@ const App: React.FC = () => {
       'pricing': '/pricing',
       'constraint-assessment': '/constraint-assessment',
       'getting-started': '/getting-started',
-      // Tools (go to actual tool, not landing)
       'strategic-checkup': '/strategic-plan-checkup/use',
       'ceo-evaluation': '/ceo-evaluation/use',
       'board-assessment': '/board-assessment/use',
       'scenario-planner': '/scenario-planner/use',
       'grant-review': '/grant-review/use',
-      // Admin
       'content-manager': '/admin/content',
       'platform-admin': '/admin/platform',
       'owner-dashboard': '/admin/owner',
@@ -507,7 +471,6 @@ const App: React.FC = () => {
   // ==========================================
 
   const renderRoute = (): React.ReactNode => {
-    // Parse session ID from URL if present
     const urlParams = new URLSearchParams(window.location.search);
     const urlSessionId = urlParams.get('session');
 
@@ -551,11 +514,9 @@ const App: React.FC = () => {
         return <ScenarioPlannerLanding onNavigate={navigate} onGetStarted={() => navigate('/scenario-planner/use')} />;
       
       case '/grant-review':
-        // If you have a GrantReviewLanding component, use it here
         return <ScenarioPlannerLanding onNavigate={navigate} onGetStarted={() => navigate('/grant-review/use')} />;
       
       case '/ask-the-professor':
-        // Landing page for Ask the Professor
         return <ScenarioPlannerLanding onNavigate={navigate} onGetStarted={handleStartProfessor} />;
       
       case '/certifications':
@@ -690,7 +651,6 @@ const App: React.FC = () => {
 
       // ========================================
       // LEGACY ROUTE REDIRECTS
-      // Keep these for backwards compatibility
       // ========================================
 
       case '/tools/strategic-plan':
@@ -750,7 +710,6 @@ const App: React.FC = () => {
       // ========================================
       
       default:
-        // Check if it's a tool route pattern we missed
         if (currentRoute.startsWith('/tools/')) {
           navigate('/dashboard');
           return null;
