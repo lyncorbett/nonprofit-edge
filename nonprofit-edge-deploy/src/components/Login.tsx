@@ -1,11 +1,17 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
 // ============================================
-// LOGIN PAGE
+// LOGIN PAGE - FIXED VERSION
+// Now properly redirects after Supabase auth
 // ============================================
 
-const Login: React.FC = () => {
+interface LoginProps {
+  onLogin?: (email: string) => void  // Callback to parent App
+  onNavigate?: (route: string) => void
+}
+
+const Login: React.FC<LoginProps> = ({ onLogin, onNavigate }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -13,21 +19,70 @@ const Login: React.FC = () => {
   const [mode, setMode] = useState<'login' | 'magic'>('login')
   const [magicLinkSent, setMagicLinkSent] = useState(false)
 
+  // Check if already logged in on mount
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        console.log('[Login] Already authenticated, redirecting...')
+        handleSuccessfulAuth(session.user.email || '')
+      }
+    }
+    checkSession()
+  }, [])
+
+  // Listen for auth state changes (handles magic link returns)
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('[Login] Auth event:', event)
+        if (event === 'SIGNED_IN' && session) {
+          handleSuccessfulAuth(session.user.email || '')
+        }
+      }
+    )
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  // ✅ FIX: Centralized success handler
+  const handleSuccessfulAuth = (userEmail: string) => {
+    console.log('[Login] Success! Redirecting to dashboard...')
+    
+    // Call parent's onLogin if provided
+    if (onLogin) {
+      onLogin(userEmail)
+    }
+    
+    // Navigate to dashboard
+    if (onNavigate) {
+      onNavigate('/dashboard')
+    } else {
+      // Fallback: direct navigation
+      window.location.href = '/dashboard'
+    }
+  }
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (error) throw error
+
+      // ✅ FIX: Actually redirect on success
+      if (data.session) {
+        handleSuccessfulAuth(email)
+      }
     } catch (err: any) {
+      console.error('[Login] Error:', err.message)
       setError(err.message || 'Failed to sign in')
-    } finally {
       setLoading(false)
     }
   }
@@ -41,7 +96,8 @@ const Login: React.FC = () => {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: window.location.origin,
+          // ✅ FIX: Redirect to dashboard, not homepage
+          emailRedirectTo: `${window.location.origin}/dashboard`,
         },
       })
 
@@ -54,11 +110,27 @@ const Login: React.FC = () => {
     }
   }
 
+  const goToForgotPassword = () => {
+    if (onNavigate) {
+      onNavigate('/forgot-password')
+    } else {
+      window.location.href = '/forgot-password'
+    }
+  }
+
+  const goToSignup = () => {
+    if (onNavigate) {
+      onNavigate('/signup')
+    } else {
+      window.location.href = '/signup'
+    }
+  }
+
   if (magicLinkSent) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-teal-bg rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <span className="text-3xl">✉️</span>
           </div>
           <h2 className="text-2xl font-bold text-navy mb-4">Check Your Email</h2>
@@ -95,13 +167,13 @@ const Login: React.FC = () => {
             />
           </svg>
           <div className="leading-none">
-            <div className="text-xs font-extrabold text-navy">THE</div>
-            <div className="text-sm font-extrabold text-teal">NONPROFIT</div>
-            <div className="text-lg font-extrabold text-navy">EDGE</div>
+            <div className="text-xs font-extrabold" style={{ color: '#1a365d' }}>THE</div>
+            <div className="text-sm font-extrabold" style={{ color: '#00a0b0' }}>NONPROFIT</div>
+            <div className="text-lg font-extrabold" style={{ color: '#1a365d' }}>EDGE</div>
           </div>
         </div>
 
-        <h1 className="text-2xl font-bold text-navy text-center mb-2">Welcome Back</h1>
+        <h1 className="text-2xl font-bold text-center mb-2" style={{ color: '#1a365d' }}>Welcome Back</h1>
         <p className="text-gray-500 text-center mb-8">Sign in to your account</p>
 
         {error && (
@@ -120,7 +192,7 @@ const Login: React.FC = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-teal focus:border-transparent"
+                className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 placeholder="you@nonprofit.org"
                 required
               />
@@ -134,7 +206,7 @@ const Login: React.FC = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-teal focus:border-transparent"
+                className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 placeholder="••••••••"
                 required
               />
@@ -143,10 +215,26 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-teal hover:bg-teal-dark text-white py-3 rounded-lg font-bold transition disabled:opacity-50"
+              className="w-full py-3 rounded-lg font-bold transition disabled:opacity-50"
+              style={{ 
+                background: '#00a0b0', 
+                color: 'white',
+                cursor: loading ? 'not-allowed' : 'pointer'
+              }}
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
+
+            {/* Forgot Password Link */}
+            <div className="mt-4 text-center">
+              <button 
+                type="button"
+                onClick={goToForgotPassword}
+                className="text-sm text-gray-500 hover:text-teal-600"
+              >
+                Forgot your password?
+              </button>
+            </div>
           </form>
         ) : (
           <form onSubmit={handleMagicLink}>
@@ -158,7 +246,7 @@ const Login: React.FC = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-teal focus:border-transparent"
+                className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 placeholder="you@nonprofit.org"
                 required
               />
@@ -167,7 +255,12 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-teal hover:bg-teal-dark text-white py-3 rounded-lg font-bold transition disabled:opacity-50"
+              className="w-full py-3 rounded-lg font-bold transition disabled:opacity-50"
+              style={{ 
+                background: '#00a0b0', 
+                color: 'white',
+                cursor: loading ? 'not-allowed' : 'pointer'
+              }}
             >
               {loading ? 'Sending...' : 'Send Magic Link'}
             </button>
@@ -176,10 +269,25 @@ const Login: React.FC = () => {
 
         <div className="mt-6 text-center">
           <button
+            type="button"
             onClick={() => setMode(mode === 'login' ? 'magic' : 'login')}
-            className="text-teal hover:underline text-sm"
+            className="text-sm hover:underline"
+            style={{ color: '#00a0b0' }}
           >
             {mode === 'login' ? 'Sign in with magic link instead' : 'Sign in with password instead'}
+          </button>
+        </div>
+
+        {/* Sign Up Link */}
+        <div className="mt-6 pt-6 border-t border-gray-200 text-center">
+          <span className="text-gray-500 text-sm">Don't have an account? </span>
+          <button 
+            type="button"
+            onClick={goToSignup}
+            className="font-medium hover:underline text-sm"
+            style={{ color: '#00a0b0' }}
+          >
+            Sign up
           </button>
         </div>
       </div>
