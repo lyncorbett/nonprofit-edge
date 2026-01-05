@@ -1,229 +1,667 @@
 /**
- * THE NONPROFIT EDGE - Dashboard
- * Complete Integrated Version with Usage Tracking & n8n Integration
+ * THE NONPROFIT EDGE - Dashboard Component
+ * Version: Final for GitHub Deployment
  * 
  * Features:
- * - Usage counters connected to Supabase (downloads, professor sessions, tools)
- * - n8n webhook connections for all tools
- * - Real-time tracking of all user activity
+ * - Large prominent logo
+ * - Left sidebar with Quick Actions, Member Resources, Recent Activity
+ * - Theory of Constraints link (centered, navy button)
+ * - Remaining Downloads with teal background
+ * - Tool cards with images (CEO Evaluation uses local image)
+ * - Ask the Professor card (text + icon only, teal background)
+ * - Daily insight quote with visible quotation mark
+ * - Recommended For You section
+ * - All tracking and counters connected to Supabase
  * - Tier-based limits enforcement
- * - AI Assistant chatbot
- * - Avatar selection modal
- * - Role-based admin access
- * 
- * Tiers:
- *   Essential ($97)     → 10 downloads, 10 professor sessions, 1 seat
- *   Professional ($297) → 25 downloads, 50 professor sessions, 5 seats
- *   Premium ($797)      → 100 downloads, unlimited professor sessions, 10 seats
+ * - Responsive max-widths to prevent stretching
  */
 
 import React, { useState, useEffect } from 'react';
 
-// Brand colors
-const NAVY = '#1a365d';
-const TEAL = '#00a0b0';
-const TEAL_LIGHT = '#e6f7f9';
+// ============================================
+// CONSTANTS & CONFIGURATION
+// ============================================
 
-// Tier limits configuration
-const TIER_LIMITS = {
-  essential: { downloads: 10, professor: 10, seats: 1 },
-  professional: { downloads: 25, professor: 50, seats: 5 },
-  premium: { downloads: 100, professor: 999, seats: 10 }
+const COLORS = {
+  navy: '#0D2C54',
+  navyLight: '#1a4175',
+  teal: '#0097A9',
+  tealDark: '#007d8c',
+  tealLight: '#00b5c9',
+  white: '#ffffff',
+  gray50: '#f8fafc',
+  gray100: '#f1f5f9',
+  gray200: '#e2e8f0',
+  gray400: '#9ca3af',
+  gray500: '#6b7280',
+  gray600: '#4b5563',
+  gray700: '#374151',
+  gray900: '#111827',
 };
 
-// n8n Webhook URLs - UPDATE WITH YOUR ACTUAL WEBHOOKS
-const N8N_WEBHOOKS: Record<string, string> = {
+const TIER_LIMITS = {
+  essential: { downloads: 10, atpSessions: 10, seats: 1 },
+  professional: { downloads: 25, atpSessions: 50, seats: 5 },
+  premium: { downloads: 100, atpSessions: Infinity, seats: 10 },
+};
+
+const N8N_WEBHOOKS = {
   'board-assessment': 'https://thenonprofitedge.app.n8n.cloud/webhook/board-assessment',
   'strategic-checkup': 'https://thenonprofitedge.app.n8n.cloud/webhook/strategic-checkup',
   'ceo-evaluation': 'https://thenonprofitedge.app.n8n.cloud/webhook/ceo-evaluation',
   'scenario-planner': 'https://thenonprofitedge.app.n8n.cloud/webhook/scenario-planner',
   'grant-review': 'https://thenonprofitedge.app.n8n.cloud/webhook/grant-review',
-  'constraint-assessment': 'https://thenonprofitedge.app.n8n.cloud/webhook/constraint-assessment',
-  'ask-professor': 'https://thenonprofitedge.app.n8n.cloud/webhook/ask-professor'
+  'ask-professor': 'https://thenonprofitedge.app.n8n.cloud/webhook/ask-professor',
 };
 
-// Tool definitions
 const TOOLS = [
   {
     id: 'board-assessment',
     name: 'Board Assessment',
-    description: 'Comprehensive board effectiveness review',
     status: 'Ready',
-    statusColor: '#6b7280',
-    image: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=1200&h=600&fit=crop',
-    route: 'board-assessment',
+    image: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=600&q=80',
+    route: '/board-assessment',
     webhookKey: 'board-assessment',
-    isActive: true
   },
   {
     id: 'strategic-plan',
     name: 'Strategic Plan Check-Up',
-    description: 'Evaluate your strategic plan health',
     status: 'Ready',
-    statusColor: '#6b7280',
-    image: 'https://images.unsplash.com/photo-1542626991-cbc4e32524cc?w=1200&h=600&fit=crop',
-    route: 'strategic-checkup',
+    image: 'https://images.unsplash.com/photo-1542626991-cbc4e32524cc?w=600&q=80',
+    route: '/strategic-checkup',
     webhookKey: 'strategic-checkup',
-    isActive: false
   },
   {
     id: 'ceo-evaluation',
     name: 'CEO Evaluation',
-    description: 'Executive performance assessment',
     status: 'Ready',
-    statusColor: '#6b7280',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&h=600&fit=crop',
-    route: 'ceo-evaluation',
+    image: '/ceo-evaluation.jpg', // Local image from public folder
+    route: '/ceo-evaluation',
     webhookKey: 'ceo-evaluation',
-    isActive: false
   },
   {
     id: 'scenario-planner',
-    name: 'PIVOT Scenario Planner',
-    description: 'Plan for multiple future scenarios',
+    name: 'Scenario Planner',
     status: 'Ready',
-    statusColor: '#6b7280',
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&h=600&fit=crop',
-    route: 'scenario-planner',
+    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80',
+    route: '/scenario-planner',
     webhookKey: 'scenario-planner',
-    isActive: false
   },
   {
     id: 'grant-review',
-    name: 'Grant/RFP Review',
-    description: 'AI-powered proposal analysis',
+    name: 'Grant Review',
     status: 'Ready',
-    statusColor: '#6b7280',
-    image: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1200&h=600&fit=crop',
-    route: 'grant-review',
+    image: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=600&q=80',
+    route: '/grant-review',
     webhookKey: 'grant-review',
-    isActive: false
   },
-  {
-    id: 'template-vault',
-    name: 'Template Vault',
-    description: 'Strategic planning templates and resources',
-    status: '147 templates',
-    statusColor: '#6b7280',
-    image: 'https://images.unsplash.com/photo-1568667256549-094345857637?w=1200&h=600&fit=crop',
-    route: 'templates',
-    webhookKey: '',
-    isActive: false
-  }
 ];
 
+const RECOMMENDATIONS = [
+  { type: 'template', title: 'Board Self-Assessment Survey', desc: 'Annual evaluation tool for board members' },
+  { type: 'playbook', title: 'Good to Great (Social Sectors)', desc: 'Jim Collins on nonprofit excellence' },
+  { type: 'template', title: 'Strategic Plan Template', desc: '3-year planning framework' },
+  { type: 'playbook', title: 'The ONE Thing', desc: 'Focus methodology for leaders' },
+];
+
+// ============================================
+// LOGO COMPONENT
+// ============================================
+
+const Logo = () => (
+  <svg viewBox="0 0 1024 768" style={{ height: '200px', width: 'auto' }}>
+    <style>{`.st0{fill:#0D2C54;}.st1{fill:#0097A9;}`}</style>
+    <g>
+      <g>
+        <path className="st0" d="M438.46,469.14c-18.16,14.03-40.93,22.38-65.64,22.38c-30.79,0-58.55-12.94-78.16-33.69 c2.85,0.46,5.7,0.81,8.57,1.06c9.13,0.79,17.9,0.49,26.26-0.63c12.72,7.44,27.53,11.71,43.33,11.71 c17.17,0,33.17-5.03,46.59-13.71C422.94,460.11,428.93,465.14,438.46,469.14z"/>
+        <path className="st0" d="M294.86,420.29c-8.64,2.53-16.05,3.61-21.74,4.02c-5.05-12.44-7.82-26.05-7.82-40.31 c0-59.37,48.14-107.52,107.52-107.52c25.62,0,49.15,8.96,67.62,23.94c-9.33,2.92-16.19,7.85-20.47,11.69 c-13.54-8.9-29.74-14.08-47.15-14.08c-47.48,0-85.97,38.49-85.97,85.97C286.85,396.97,289.72,409.27,294.86,420.29z"/>
+        <path className="st1" d="M258.67,434.74c0,0,61.28,14.58,121.38-60.61l-18.3-13.11l72.86-22.42l0.39,71.06l-18.78-13.01 C416.22,396.64,340.29,479.82,258.67,434.74z"/>
+      </g>
+      <g>
+        <g>
+          <path className="st0" d="M491.43,298.55v7.98h-9.88v32.91h-9.08v-32.91h-9.88v-7.98H491.43z"/>
+          <path className="st0" d="M528.3,298.55v40.89h-9.08V322.6h-14.13v16.83H496v-40.89h9.08v16.02h14.13v-16.02H528.3z"/>
+          <path className="st0" d="M543.91,306.53v8.27h12.17v7.69h-12.17v8.97h13.76v7.98h-22.84v-40.89h22.84v7.98H543.91z"/>
+        </g>
+        <g>
+          <path className="st1" d="M495.94,392.68h-9.08l-15.19-25.22v25.22h-9.08v-40.89h9.08l15.19,25.34v-25.34h9.08V392.68z"/>
+          <path className="st1" d="M510.53,390.41c-2.92-1.79-5.24-4.28-6.96-7.48c-1.72-3.2-2.58-6.8-2.58-10.8c0-4,0.86-7.59,2.58-10.78 c1.72-3.18,4.04-5.67,6.96-7.46c2.92-1.79,6.14-2.68,9.64-2.68c3.51,0,6.72,0.89,9.64,2.68c2.92,1.79,5.22,4.27,6.91,7.46 c1.68,3.18,2.52,6.78,2.52,10.78c0,4-0.85,7.6-2.55,10.8c-1.7,3.2-4,5.7-6.91,7.48c-2.9,1.79-6.11,2.68-9.62,2.68 C516.66,393.09,513.45,392.19,510.53,390.41z M527.31,380.74c1.79-2.17,2.68-5.05,2.68-8.62c0-3.61-0.89-6.49-2.68-8.65 c-1.79-2.15-4.17-3.23-7.15-3.23c-3.01,0-5.41,1.07-7.2,3.2c-1.79,2.14-2.68,5.03-2.68,8.68c0,3.61,0.89,6.49,2.68,8.65 c1.79,2.16,4.19,3.23,7.2,3.23C523.14,384,525.52,382.91,527.31,380.74z"/>
+          <path className="st1" d="M577.65,392.68h-9.08l-15.19-25.22v25.22h-9.08v-40.89h9.08l15.19,25.34v-25.34h9.08V392.68z"/>
+          <path className="st1" d="M611.17,371.45c-0.99,1.96-2.52,3.54-4.57,4.75c-2.05,1.2-4.6,1.81-7.65,1.81h-5.63v14.68h-9.08v-40.89 h14.72c2.98,0,5.49,0.56,7.54,1.69c2.05,1.13,3.59,2.68,4.62,4.66c1.03,1.98,1.54,4.25,1.54,6.81 C612.66,367.32,612.16,369.49,611.17,371.45z M602.14,368.74c0.85-0.89,1.27-2.16,1.27-3.79c0-1.63-0.42-2.89-1.27-3.79 c-0.85-0.89-2.14-1.34-3.88-1.34h-4.94v10.25h4.94C599.99,370.08,601.29,369.63,602.14,368.74z"/>
+          <path className="st1" d="M636.4,392.68l-7.76-15.43h-2.18v15.43h-9.08v-40.89h15.25c2.94,0,5.45,0.56,7.52,1.69 c2.07,1.13,3.62,2.67,4.65,4.63c1.03,1.96,1.54,4.15,1.54,6.55c0,2.72-0.7,5.15-2.1,7.28c-1.4,2.14-3.46,3.65-6.19,4.54 l8.61,16.19H636.4z M626.47,370.2h5.63c1.66,0,2.91-0.45,3.75-1.34c0.83-0.89,1.25-2.16,1.25-3.79c0-1.55-0.42-2.78-1.25-3.67 c-0.83-0.89-2.08-1.34-3.75-1.34h-5.63V370.2z"/>
+          <path className="st1" d="M660.02,390.41c-2.92-1.79-5.24-4.28-6.96-7.48c-1.72-3.2-2.58-6.8-2.58-10.8c0-4,0.86-7.59,2.58-10.78 c1.72-3.18,4.04-5.67,6.96-7.46c2.92-1.79,6.14-2.68,9.64-2.68c3.51,0,6.72,0.89,9.64,2.68c2.92,1.79,5.22,4.27,6.91,7.46 c1.68,3.18,2.52,6.78,2.52,10.78c0,4-0.85,7.6-2.55,10.8c-1.7,3.2-4,5.7-6.91,7.48c-2.9,1.79-6.11,2.68-9.62,2.68 C666.15,393.09,662.94,392.19,660.02,390.41z M676.8,380.74c1.79-2.17,2.68-5.05,2.68-8.62c0-3.61-0.89-6.49-2.68-8.65 c-1.79-2.15-4.17-3.23-7.15-3.23c-3.01,0-5.41,1.07-7.2,3.2c-1.79,2.14-2.68,5.03-2.68,8.68c0,3.61,0.89,6.49,2.68,8.65 c1.79,2.16,4.19,3.23,7.2,3.23C672.63,384,675.01,382.91,676.8,380.74z"/>
+          <path className="st1" d="M718.05,351.79v7.98h-15.19v8.62h11.37v7.75h-11.37v16.54h-9.08v-40.89H718.05z"/>
+          <path className="st1" d="M731.92,351.79v40.89h-9.08v-40.89H731.92z"/>
+          <path className="st1" d="M765.33,351.79v7.98h-9.88v32.91h-9.08v-32.91h-9.88v-7.98H765.33z"/>
+        </g>
+        <g>
+          <path className="st0" d="M476.97,418.87v13.1h19.27v12.18h-19.27v14.21h21.8v12.64h-36.19v-64.78h36.19v12.64H476.97z"/>
+          <path className="st0" d="M546.58,410.29c4.66,2.71,8.26,6.51,10.82,11.4c2.55,4.89,3.83,10.54,3.83,16.93 c0,6.34-1.28,11.97-3.83,16.89c-2.55,4.92-6.17,8.74-10.86,11.44c-4.69,2.71-10.11,4.06-16.29,4.06h-22.14v-64.78h22.14 C536.48,406.23,541.92,407.58,546.58,410.29z M542.03,452.46c3.03-3.26,4.55-7.87,4.55-13.84c0-5.97-1.51-10.61-4.55-13.93 c-3.03-3.32-7.27-4.98-12.71-4.98h-6.82v37.65h6.82C534.77,457.35,539,455.72,542.03,452.46z"/>
+          <path className="st0" d="M608.53,426.71c-1.07-2.15-2.6-3.8-4.59-4.94c-1.99-1.14-4.33-1.71-7.03-1.71c-4.66,0-8.39,1.68-11.19,5.03 c-2.81,3.35-4.21,7.83-4.21,13.43c0,5.97,1.47,10.63,4.42,13.98c2.95,3.35,7,5.03,12.16,5.03c3.54,0,6.52-0.98,8.96-2.95 c2.44-1.97,4.22-4.8,5.34-8.49h-18.26v-11.63h31.31v14.67c-1.07,3.94-2.88,7.6-5.43,10.98c-2.55,3.38-5.79,6.12-9.72,8.21 c-3.93,2.09-8.36,3.14-13.3,3.14c-5.84,0-11.04-1.4-15.61-4.2c-4.57-2.8-8.14-6.69-10.69-11.67c-2.55-4.98-3.83-10.67-3.83-17.07 c0-6.4,1.28-12.1,3.83-17.12c2.55-5.01,6.1-8.92,10.65-11.72c4.55-2.8,9.73-4.2,15.57-4.2c7.07,0,13.03,1.88,17.89,5.63 c4.85,3.75,8.07,8.95,9.64,15.6H608.53z"/>
+          <path className="st0" d="M647.83,418.87v13.1h19.27v12.18h-19.27v14.21h21.8v12.64h-36.19v-64.78h36.19v12.64H647.83z"/>
+        </g>
+      </g>
+    </g>
+  </svg>
+);
+
+// ============================================
+// STYLES
+// ============================================
+
+const styles = {
+  dashboard: {
+    display: 'flex',
+    minHeight: '100vh',
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+    background: COLORS.gray50,
+  },
+
+  // Sidebar
+  sidebar: {
+    width: '280px',
+    background: COLORS.white,
+    borderRight: `1px solid ${COLORS.gray200}`,
+    position: 'fixed' as const,
+    height: '100vh',
+    overflowY: 'auto' as const,
+    display: 'flex',
+    flexDirection: 'column' as const,
+  },
+  sidebarLogo: {
+    padding: '4px 8px',
+    borderBottom: `1px solid ${COLORS.gray200}`,
+    display: 'flex',
+    justifyContent: 'center',
+  },
+  sidebarSection: {
+    padding: '20px',
+    borderBottom: `1px solid ${COLORS.gray200}`,
+  },
+  sectionTitle: {
+    fontSize: '13px',
+    fontWeight: 800,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.8px',
+    color: COLORS.navy,
+    marginBottom: '16px',
+  },
+  navLink: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '10px 14px',
+    fontSize: '14px',
+    fontWeight: 500,
+    color: COLORS.gray600,
+    textDecoration: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    marginBottom: '4px',
+    transition: 'all 0.15s ease',
+    border: 'none',
+    background: 'transparent',
+    width: '100%',
+    textAlign: 'left' as const,
+  },
+  navLinkHover: {
+    background: COLORS.gray100,
+    color: COLORS.navy,
+  },
+  tocLink: {
+    background: `linear-gradient(135deg, ${COLORS.navy} 0%, ${COLORS.navyLight} 100%)`,
+    color: COLORS.white,
+    fontWeight: 500,
+    padding: '8px 14px',
+    marginBottom: '4px',
+    fontSize: '14px',
+    textAlign: 'center' as const,
+    justifyContent: 'center',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    display: 'flex',
+    width: '100%',
+  },
+  navLinkIcon: {
+    fontSize: '16px',
+    width: '20px',
+    textAlign: 'center' as const,
+  },
+
+  // Activity
+  activityItem: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '10px',
+    padding: '10px 0',
+    borderBottom: `1px solid ${COLORS.gray100}`,
+  },
+  activityDot: {
+    width: '8px',
+    height: '8px',
+    borderRadius: '50%',
+    marginTop: '5px',
+    flexShrink: 0,
+  },
+  activityText: {
+    fontSize: '13px',
+    color: COLORS.gray700,
+    lineHeight: 1.4,
+    fontWeight: 500,
+  },
+  activityTime: {
+    fontSize: '11px',
+    color: COLORS.gray400,
+    marginTop: '2px',
+  },
+
+  // Downloads Box
+  downloadsBox: {
+    background: `linear-gradient(135deg, ${COLORS.teal} 0%, ${COLORS.tealDark} 100%)`,
+    borderRadius: '10px',
+    padding: '14px',
+  },
+  downloadsHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '10px',
+  },
+  downloadsLabel: {
+    fontSize: '12px',
+    fontWeight: 600,
+    color: COLORS.white,
+  },
+  downloadsCount: {
+    fontSize: '13px',
+    fontWeight: 700,
+    color: COLORS.white,
+  },
+  progressBar: {
+    height: '8px',
+    background: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: '4px',
+    overflow: 'hidden' as const,
+  },
+  progressFill: {
+    height: '100%',
+    background: COLORS.white,
+    borderRadius: '4px',
+    transition: 'width 0.3s ease',
+  },
+  tierInfo: {
+    marginTop: '12px',
+    paddingTop: '12px',
+    borderTop: '1px solid rgba(255, 255, 255, 0.3)',
+  },
+  tierBadge: {
+    display: 'inline-block',
+    fontSize: '10px',
+    fontWeight: 700,
+    padding: '4px 10px',
+    background: COLORS.white,
+    color: COLORS.navy,
+    borderRadius: '4px',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.5px',
+  },
+  tierLimits: {
+    marginTop: '8px',
+    fontSize: '11px',
+    color: 'rgba(255, 255, 255, 0.9)',
+    lineHeight: 1.5,
+  },
+
+  // User Profile
+  userProfile: {
+    padding: '16px 20px',
+    borderTop: `1px solid ${COLORS.gray200}`,
+    marginTop: 'auto',
+  },
+  userInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '10px',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    transition: 'background 0.15s ease',
+  },
+  userAvatar: {
+    width: '40px',
+    height: '40px',
+    background: `linear-gradient(135deg, ${COLORS.navy}, ${COLORS.navyLight})`,
+    borderRadius: '10px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: COLORS.white,
+    fontWeight: 700,
+    fontSize: '16px',
+  },
+  userName: {
+    fontSize: '14px',
+    fontWeight: 600,
+    color: COLORS.gray900,
+    whiteSpace: 'nowrap' as const,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  userOrg: {
+    fontSize: '12px',
+    color: COLORS.gray500,
+    whiteSpace: 'nowrap' as const,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  ownerBadge: {
+    fontSize: '9px',
+    fontWeight: 800,
+    padding: '4px 8px',
+    background: COLORS.teal,
+    color: COLORS.white,
+    borderRadius: '4px',
+    letterSpacing: '0.5px',
+  },
+  signoutBtn: {
+    width: '100%',
+    padding: '8px',
+    fontSize: '12px',
+    fontWeight: 500,
+    color: COLORS.gray500,
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    marginTop: '8px',
+    borderRadius: '6px',
+    transition: 'all 0.15s ease',
+  },
+
+  // Main Content
+  mainContent: {
+    flex: 1,
+    marginLeft: '280px',
+    padding: '28px 36px',
+    maxWidth: '1200px',
+  },
+  welcomeHeader: {
+    marginBottom: '24px',
+  },
+  welcomeTitle: {
+    fontSize: '26px',
+    fontWeight: 700,
+    color: COLORS.navy,
+    marginBottom: '4px',
+  },
+  welcomeSubtitle: {
+    fontSize: '14px',
+    color: COLORS.gray500,
+  },
+
+  // Quote
+  insightQuote: {
+    background: `linear-gradient(135deg, ${COLORS.navy} 0%, ${COLORS.navyLight} 100%)`,
+    borderRadius: '14px',
+    padding: '28px 32px 24px 32px',
+    marginBottom: '28px',
+    position: 'relative' as const,
+    overflow: 'hidden',
+    maxWidth: '900px',
+  },
+  quoteMark: {
+    position: 'absolute' as const,
+    top: '8px',
+    left: '24px',
+    fontSize: '80px',
+    color: 'rgba(0, 151, 169, 0.3)',
+    fontFamily: 'Georgia, serif',
+    lineHeight: 1,
+    zIndex: 0,
+  },
+  quoteText: {
+    fontSize: '16px',
+    fontStyle: 'italic' as const,
+    color: COLORS.white,
+    lineHeight: 1.6,
+    marginBottom: '12px',
+    marginLeft: '40px',
+    position: 'relative' as const,
+    zIndex: 1,
+  },
+  quoteAuthor: {
+    fontSize: '13px',
+    color: COLORS.teal,
+    fontWeight: 500,
+    position: 'relative' as const,
+    zIndex: 1,
+    textAlign: 'right' as const,
+  },
+
+  // Section Card
+  sectionCard: {
+    background: COLORS.white,
+    border: `1px solid ${COLORS.gray200}`,
+    borderRadius: '14px',
+    overflow: 'hidden',
+    marginBottom: '28px',
+    maxWidth: '1000px',
+  },
+  sectionHeader: {
+    padding: '16px 24px',
+    borderBottom: `1px solid ${COLORS.gray200}`,
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  sectionHeaderTitle: {
+    fontSize: '14px',
+    fontWeight: 800,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.5px',
+    color: COLORS.navy,
+  },
+  sectionHeaderLink: {
+    fontSize: '13px',
+    fontWeight: 600,
+    color: COLORS.teal,
+    textDecoration: 'none',
+    cursor: 'pointer',
+  },
+  sectionBody: {
+    padding: '20px',
+  },
+
+  // Tools Grid
+  toolsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, minmax(200px, 300px))',
+    gap: '18px',
+  },
+  toolCard: {
+    position: 'relative' as const,
+    height: '130px',
+    borderRadius: '12px',
+    overflow: 'hidden',
+    cursor: 'pointer',
+    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+  },
+  toolImage: {
+    position: 'absolute' as const,
+    inset: 0,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    transition: 'transform 0.3s ease',
+  },
+  toolOverlay: {
+    position: 'absolute' as const,
+    inset: 0,
+    background: `linear-gradient(to top, rgba(13, 44, 84, 0.9) 0%, rgba(13, 44, 84, 0.4) 50%, rgba(13, 44, 84, 0.1) 100%)`,
+  },
+  toolContent: {
+    position: 'absolute' as const,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: '14px',
+  },
+  toolName: {
+    color: COLORS.white,
+    fontSize: '15px',
+    fontWeight: 700,
+    lineHeight: 1.2,
+  },
+  toolStatus: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: '12px',
+    marginTop: '4px',
+  },
+  toolActiveDot: {
+    position: 'absolute' as const,
+    top: '10px',
+    right: '10px',
+    width: '10px',
+    height: '10px',
+    background: COLORS.teal,
+    borderRadius: '50%',
+    border: '2px solid white',
+  },
+
+  // Professor Card
+  professorCard: {
+    background: `linear-gradient(135deg, ${COLORS.teal} 0%, ${COLORS.tealDark} 100%)`,
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    justifyContent: 'center',
+    textAlign: 'center' as const,
+    padding: '20px',
+    height: '130px',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+  },
+  professorIcon: {
+    fontSize: '36px',
+    marginBottom: '10px',
+  },
+  professorTitle: {
+    color: COLORS.white,
+    fontSize: '18px',
+    fontWeight: 800,
+    lineHeight: 1.2,
+  },
+
+  // Recommendations
+  recommendationsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(200px, 400px))',
+    gap: '18px',
+  },
+  recCard: {
+    background: COLORS.gray50,
+    borderRadius: '12px',
+    padding: '18px',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease',
+    border: `1px solid ${COLORS.gray200}`,
+  },
+  recBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontSize: '10px',
+    fontWeight: 700,
+    textTransform: 'uppercase' as const,
+    padding: '5px 10px',
+    borderRadius: '6px',
+    marginBottom: '10px',
+    letterSpacing: '0.3px',
+  },
+  recBadgeTemplate: {
+    background: COLORS.teal,
+    color: COLORS.white,
+  },
+  recBadgePlaybook: {
+    background: '#f59e0b',
+    color: COLORS.white,
+  },
+  recTitle: {
+    fontSize: '15px',
+    fontWeight: 700,
+    color: COLORS.navy,
+    marginBottom: '4px',
+    lineHeight: 1.3,
+  },
+  recDesc: {
+    fontSize: '13px',
+    color: COLORS.gray500,
+    lineHeight: 1.4,
+  },
+};
+
+// ============================================
+// MAIN COMPONENT
+// ============================================
+
 interface DashboardProps {
-  user: any;
-  organization: any;
-  usage: any;
-  teamCount: number;
-  onNavigate: (page: string) => void;
-  onDownload: (resourceId: string) => void;
-  onStartProfessor: () => void;
-  onLogout: () => void;
+  user?: any;
+  organization?: any;
   supabase?: any;
-}
-
-interface AdminAccess {
-  isAdmin: boolean;
-  isOwner: boolean;
-  role: string | null;
-}
-
-interface UsageData {
-  downloads_this_month: number;
-  professor_sessions_this_month: number;
-  tools_used_this_month: number;
-  tools_completed_this_month: number;
+  navigate?: (path: string) => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
   user,
   organization,
-  usage,
-  teamCount,
-  onNavigate,
-  onDownload,
-  onStartProfessor,
-  onLogout,
-  supabase
+  supabase,
+  navigate,
 }) => {
-  // Admin access state
-  const [adminAccess, setAdminAccess] = useState<AdminAccess>({
-    isAdmin: false,
-    isOwner: false,
-    role: null
+  // State
+  const [usageData, setUsageData] = useState({
+    downloads_this_month: 7,
+    atp_sessions_this_month: 5,
+    completed_assessments: 12,
   });
-
-  // UI state
-  const [showAIChat, setShowAIChat] = useState(false);
-  const [showAvatarModal, setShowAvatarModal] = useState(false);
-  const [aiMessage, setAiMessage] = useState('');
-  const [showOnboarding, setShowOnboarding] = useState(true);
+  const [recentActivity, setRecentActivity] = useState([
+    { id: '1', text: 'Board Assessment started', time: 'Today', color: COLORS.teal },
+    { id: '2', text: 'Strategic Plan completed', time: '3 days ago', color: '#16a34a' },
+    { id: '3', text: 'Downloaded Board Self-Assessment', time: '5 days ago', color: '#8b5cf6' },
+    { id: '4', text: 'Coaching session', time: '2 weeks ago', color: '#f59e0b' },
+  ]);
+  const [adminAccess, setAdminAccess] = useState({ isAdmin: false, isOwner: false });
+  const [hoveredNav, setHoveredNav] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [loadingTool, setLoadingTool] = useState<string | null>(null);
 
-  // Usage data from Supabase
-  const [usageData, setUsageData] = useState<UsageData>({
-    downloads_this_month: 0,
-    professor_sessions_this_month: 0,
-    tools_used_this_month: 0,
-    tools_completed_this_month: 0
-  });
+  // Get tier info
+  const tierKey = (organization?.tier || 'professional').toLowerCase() as keyof typeof TIER_LIMITS;
+  const limits = TIER_LIMITS[tierKey] || TIER_LIMITS.professional;
+  const remainingDownloads = limits.downloads - usageData.downloads_this_month;
+  const downloadPercentage = (remainingDownloads / limits.downloads) * 100;
 
-  // Recent activity
-  const [recentActivity, setRecentActivity] = useState<any[]>([]);
-
-  // Get tier limits
-  const tierKey = (organization?.tier || 'essential').toLowerCase() as keyof typeof TIER_LIMITS;
-  const limits = TIER_LIMITS[tierKey] || TIER_LIMITS.essential;
-
-  // Recommendations data
-  const recommendations = [
-    { type: 'template', title: 'Board Self-Assessment Survey', desc: 'Annual evaluation tool for board members' },
-    { type: 'book', title: 'Good to Great (Social Sectors)', desc: 'Jim Collins on nonprofit excellence' },
-    { type: 'template', title: 'Strategic Plan Template', desc: '3-year planning framework' },
-    { type: 'book', title: 'The ONE Thing', desc: 'Focus methodology for leaders' }
-  ];
-
-  // Events data
-  const events = [
-    { day: '15', month: 'JAN', title: 'Board Governance Masterclass', meta: 'Virtual • 2:00 PM EST', tag: 'WORKSHOP', tagColor: 'bg-purple-100 text-purple-700' },
-    { day: '22', month: 'JAN', title: 'Strategic Planning Deep Dive', meta: 'Virtual • 1:00 PM EST', tag: 'TRAINING', tagColor: 'bg-blue-100 text-blue-700' },
-    { day: '05', month: 'FEB', title: 'Grant Writing Workshop', meta: 'Virtual • 11:00 AM EST', tag: 'WORKSHOP', tagColor: 'bg-purple-100 text-purple-700' }
-  ];
-
-  // Avatar colors
-  const avatarColors = ['#1a365d', '#00a0b0', '#8b5cf6', '#f59e0b', '#ef4444', '#10b981'];
-
-  // ==========================================
-  // EFFECTS
-  // ==========================================
+  // Get user display info
+  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+  const userInitial = userName.charAt(0).toUpperCase();
+  const userEmail = user?.email || 'user@example.com';
+  const orgName = organization?.name || 'Organization';
 
   // Check admin access
   useEffect(() => {
     const checkAdminAccess = async () => {
       if (!supabase || !user?.email) return;
-      
       try {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from('platform_admins')
           .select('role')
           .eq('email', user.email.toLowerCase())
           .single();
-        
-        if (data && !error) {
-          setAdminAccess({
-            isAdmin: true,
-            isOwner: data.role === 'owner',
-            role: data.role
-          });
+        if (data) {
+          setAdminAccess({ isAdmin: true, isOwner: data.role === 'owner' });
         }
       } catch (err) {
         console.log('Admin check:', err);
       }
     };
-
     checkAdminAccess();
   }, [supabase, user?.email]);
 
@@ -231,820 +669,459 @@ const Dashboard: React.FC<DashboardProps> = ({
   useEffect(() => {
     const fetchUsageData = async () => {
       if (!supabase || !organization?.id) return;
-
       try {
-        const now = new Date();
-        const monthYear = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-
-        // Fetch monthly usage
-        const { data: usageRecord } = await supabase
-          .from('monthly_usage')
+        const { data } = await supabase
+          .from('usage_tracking')
           .select('*')
           .eq('organization_id', organization.id)
-          .eq('month_year', monthYear)
           .single();
-
-        if (usageRecord) {
+        if (data) {
           setUsageData({
-            downloads_this_month: (usageRecord.report_downloads || 0) + (usageRecord.templates_downloaded || 0),
-            professor_sessions_this_month: usageRecord.professor_sessions || 0,
-            tools_used_this_month: usageRecord.tools_started || 0,
-            tools_completed_this_month: usageRecord.tools_completed || 0
+            downloads_this_month: data.downloads_this_month || 0,
+            atp_sessions_this_month: data.atp_sessions_this_month || 0,
+            completed_assessments: data.completed_assessments || 0,
           });
         }
+      } catch (err) {
+        console.log('Usage fetch:', err);
+      }
+    };
+    fetchUsageData();
+  }, [supabase, organization?.id]);
 
-        // Fetch recent activity
-        const { data: activityData } = await supabase
+  // Fetch recent activity
+  useEffect(() => {
+    const fetchRecentActivity = async () => {
+      if (!supabase || !organization?.id) return;
+      try {
+        const { data } = await supabase
           .from('activity_log')
           .select('*')
           .eq('organization_id', organization.id)
           .order('created_at', { ascending: false })
-          .limit(5);
-
-        if (activityData) {
-          setRecentActivity(activityData);
+          .limit(4);
+        if (data && data.length > 0) {
+          setRecentActivity(data.map((item: any) => ({
+            id: item.id,
+            text: item.description,
+            time: formatTimeAgo(item.created_at),
+            color: getActivityColor(item.type),
+          })));
         }
       } catch (err) {
-        console.error('Error fetching usage:', err);
+        console.log('Activity fetch:', err);
       }
     };
-
-    fetchUsageData();
+    fetchRecentActivity();
   }, [supabase, organization?.id]);
 
-  // ==========================================
-  // TRACKING FUNCTIONS
-  // ==========================================
+  // Helper functions
+  const formatTimeAgo = (date: string) => {
+    const now = new Date();
+    const then = new Date(date);
+    const diffMs = now.getTime() - then.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 14) return '1 week ago';
+    return `${Math.floor(diffDays / 7)} weeks ago`;
+  };
 
-  // Track tool start
-  const trackToolStart = async (toolId: string, toolName: string) => {
-    if (!supabase || !user?.id || !organization?.id) return { success: false };
+  const getActivityColor = (type: string) => {
+    const colors: Record<string, string> = {
+      tool_start: COLORS.teal,
+      tool_complete: '#16a34a',
+      download: '#8b5cf6',
+      professor: '#f59e0b',
+    };
+    return colors[type] || COLORS.teal;
+  };
 
-    try {
-      const now = new Date();
-      const monthYear = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-
-      // Update monthly usage
-      await supabase.rpc('increment_usage', {
-        p_org_id: organization.id,
-        p_user_id: user.id,
-        p_month_year: monthYear,
-        p_field: 'tools_started'
-      });
-
-      // Log activity
-      await supabase.from('activity_log').insert({
-        organization_id: organization.id,
-        user_id: user.id,
-        action_type: 'tool_start',
-        action_detail: { tool_id: toolId, tool_name: toolName }
-      });
-
-      // Create tool session
-      const { data: session } = await supabase
-        .from('tool_sessions')
-        .insert({
-          organization_id: organization.id,
-          user_id: user.id,
-          tool_type: toolId,
-          status: 'in_progress'
-        })
-        .select()
-        .single();
-
-      // Trigger n8n webhook
-      if (N8N_WEBHOOKS[toolId]) {
-        fetch(N8N_WEBHOOKS[toolId], {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            event: 'tool_started',
-            sessionId: session?.id,
-            toolId,
-            toolName,
-            organizationId: organization.id,
-            userId: user.id,
-            userEmail: user.email,
-            orgName: organization.name,
-            timestamp: now.toISOString()
-          })
-        }).catch(err => console.warn('Webhook failed:', err));
-      }
-
-      return { success: true, sessionId: session?.id };
-    } catch (err) {
-      console.error('Error tracking tool start:', err);
-      return { success: false };
+  // Navigation handler
+  const handleNavigate = (path: string) => {
+    if (navigate) {
+      navigate(path);
+    } else {
+      window.location.href = path;
     }
   };
 
-  // Track download
-  const trackDownload = async (resourceName: string, resourceType: 'report' | 'template') => {
-    if (!supabase || !user?.id || !organization?.id) return { success: false };
-
-    // Check limit
-    if (usageData.downloads_this_month >= limits.downloads) {
-      return { 
-        success: false, 
-        message: `You've reached your monthly download limit (${limits.downloads}). Upgrade for more.`
-      };
-    }
-
-    try {
-      const now = new Date();
-      const monthYear = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-      const field = resourceType === 'report' ? 'report_downloads' : 'templates_downloaded';
-
-      await supabase.rpc('increment_usage', {
-        p_org_id: organization.id,
-        p_user_id: user.id,
-        p_month_year: monthYear,
-        p_field: field
-      });
-
-      await supabase.from('activity_log').insert({
-        organization_id: organization.id,
-        user_id: user.id,
-        action_type: 'download',
-        action_detail: { resource_name: resourceName, resource_type: resourceType }
-      });
-
-      return { success: true };
-    } catch (err) {
-      console.error('Error tracking download:', err);
-      return { success: false };
-    }
-  };
-
-  // Track professor session
-  const trackProfessorSession = async () => {
-    if (!supabase || !user?.id || !organization?.id) return { success: false };
-
-    // Check limit (premium = unlimited)
-    if (tierKey !== 'premium' && usageData.professor_sessions_this_month >= limits.professor) {
-      return { 
-        success: false, 
-        message: `You've reached your monthly limit (${limits.professor}). Upgrade for more.`
-      };
-    }
-
-    try {
-      const now = new Date();
-      const monthYear = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-
-      await supabase.rpc('increment_usage', {
-        p_org_id: organization.id,
-        p_user_id: user.id,
-        p_month_year: monthYear,
-        p_field: 'professor_sessions'
-      });
-
-      await supabase.from('activity_log').insert({
-        organization_id: organization.id,
-        user_id: user.id,
-        action_type: 'professor_session',
-        action_detail: { timestamp: now.toISOString() }
-      });
-
-      return { success: true };
-    } catch (err) {
-      console.error('Error tracking professor session:', err);
-      return { success: false };
-    }
-  };
-
-  // ==========================================
-  // CLICK HANDLERS
-  // ==========================================
-
-  // Handle tool click
+  // Tool click handler
   const handleToolClick = async (tool: typeof TOOLS[0]) => {
     if (isLoading) return;
-
     setIsLoading(true);
-    setLoadingTool(tool.id);
 
-    try {
-      const result = await trackToolStart(tool.id, tool.name);
+    // Log activity
+    if (supabase && organization?.id) {
+      try {
+        await supabase.from('activity_log').insert({
+          organization_id: organization.id,
+          user_id: user?.id,
+          type: 'tool_start',
+          description: `${tool.name} started`,
+          tool_id: tool.id,
+        });
 
-      if (result.success) {
+        // Trigger n8n webhook
+        if (tool.webhookKey && N8N_WEBHOOKS[tool.webhookKey]) {
+          fetch(N8N_WEBHOOKS[tool.webhookKey], {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              organization_id: organization.id,
+              user_id: user?.id,
+              user_email: user?.email,
+              tool: tool.id,
+              timestamp: new Date().toISOString(),
+            }),
+          }).catch(console.error);
+        }
+      } catch (err) {
+        console.error('Tool start error:', err);
+      }
+    }
+
+    setTimeout(() => {
+      setIsLoading(false);
+      handleNavigate(tool.route);
+    }, 300);
+  };
+
+  // Ask the Professor handler
+  const handleAskProfessor = async () => {
+    // Check limit
+    if (limits.atpSessions !== Infinity && usageData.atp_sessions_this_month >= limits.atpSessions) {
+      alert('You have reached your ATP session limit for this month. Please upgrade your plan.');
+      return;
+    }
+
+    if (supabase && organization?.id) {
+      try {
+        // Increment session count
+        await supabase.rpc('increment_atp_sessions', { org_id: organization.id });
+
+        // Log activity
+        await supabase.from('activity_log').insert({
+          organization_id: organization.id,
+          user_id: user?.id,
+          type: 'professor',
+          description: 'Ask the Professor session',
+        });
+      } catch (err) {
+        console.error('ATP session error:', err);
+      }
+    }
+
+    handleNavigate('/ask-professor');
+  };
+
+  // Download handler
+  const handleDownload = async (resourceTitle: string) => {
+    // Check limit
+    if (usageData.downloads_this_month >= limits.downloads) {
+      alert('You have reached your download limit for this month. Please upgrade your plan.');
+      return;
+    }
+
+    if (supabase && organization?.id) {
+      try {
+        // Increment download count
+        await supabase.rpc('increment_downloads', { org_id: organization.id });
+
+        // Log activity
+        await supabase.from('activity_log').insert({
+          organization_id: organization.id,
+          user_id: user?.id,
+          type: 'download',
+          description: `Downloaded ${resourceTitle}`,
+        });
+
+        // Update local state
         setUsageData(prev => ({
           ...prev,
-          tools_used_this_month: prev.tools_used_this_month + 1
+          downloads_this_month: prev.downloads_this_month + 1,
         }));
-
-        setRecentActivity(prev => [{
-          id: Date.now().toString(),
-          action_type: 'tool_start',
-          action_detail: { tool_name: tool.name },
-          created_at: new Date().toISOString()
-        }, ...prev.slice(0, 4)]);
-
-        const sessionParam = result.sessionId ? `?session=${result.sessionId}` : '';
-        onNavigate(`${tool.route}${sessionParam}`);
-      } else {
-        onNavigate(tool.route);
+      } catch (err) {
+        console.error('Download error:', err);
       }
-    } catch (err) {
-      console.error('Tool click error:', err);
-      onNavigate(tool.route);
-    } finally {
-      setIsLoading(false);
-      setLoadingTool(null);
     }
   };
 
-  // Handle download click
-  const handleDownloadClick = async (resourceName: string, resourceType: 'report' | 'template') => {
-    const result = await trackDownload(resourceName, resourceType);
-
-    if (!result.success && result.message) {
-      alert(result.message);
-      return;
+  // Logout handler
+  const handleLogout = async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
     }
-
-    if (result.success) {
-      setUsageData(prev => ({
-        ...prev,
-        downloads_this_month: prev.downloads_this_month + 1
-      }));
-
-      setRecentActivity(prev => [{
-        id: Date.now().toString(),
-        action_type: 'download',
-        action_detail: { resource_name: resourceName },
-        created_at: new Date().toISOString()
-      }, ...prev.slice(0, 4)]);
-    }
-
-    onDownload(resourceName);
+    handleNavigate('/login');
   };
-
-  // Handle professor click
-  const handleStartProfessor = async () => {
-    const result = await trackProfessorSession();
-
-    if (!result.success && result.message) {
-      alert(result.message);
-      return;
-    }
-
-    if (result.success) {
-      setUsageData(prev => ({
-        ...prev,
-        professor_sessions_this_month: prev.professor_sessions_this_month + 1
-      }));
-
-      setRecentActivity(prev => [{
-        id: Date.now().toString(),
-        action_type: 'professor_session',
-        action_detail: {},
-        created_at: new Date().toISOString()
-      }, ...prev.slice(0, 4)]);
-    }
-
-    onStartProfessor();
-  };
-
-  // ==========================================
-  // HELPER FUNCTIONS
-  // ==========================================
-
-  const formatActivity = (activity: any) => {
-    const colors: Record<string, string> = {
-      'tool_start': '#00a0b0',
-      'tool_complete': '#16a34a',
-      'download': '#8b5cf6',
-      'professor_session': '#f59e0b'
-    };
-
-    const labels: Record<string, string> = {
-      'tool_start': 'Started',
-      'tool_complete': 'Completed',
-      'download': 'Downloaded',
-      'professor_session': 'Professor session'
-    };
-
-    const detail = activity.action_detail || {};
-    let text = labels[activity.action_type] || activity.action_type;
-    if (detail.tool_name) text += ` ${detail.tool_name}`;
-    if (detail.resource_name) text += ` ${detail.resource_name}`;
-
-    return { color: colors[activity.action_type] || '#6b7280', text, time: formatTimeAgo(activity.created_at) };
-  };
-
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString();
-  };
-
-  const getResetDate = () => {
-    const now = new Date();
-    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    return nextMonth.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-  };
-
-  // ==========================================
-  // RENDER
-  // ==========================================
 
   return (
-    <div className="flex min-h-screen bg-gray-50" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div style={styles.dashboard}>
       {/* ==========================================
           LEFT SIDEBAR
           ========================================== */}
-      <aside className="w-56 bg-white border-r-2 border-gray-300 flex flex-col fixed h-screen overflow-y-auto">
+      <aside style={styles.sidebar}>
         {/* Logo */}
-        <div className="px-4 py-4 border-b-2 border-gray-300">
-          <div className="bg-gray-200 border-2 border-dashed border-gray-400 rounded-lg p-3 text-center">
-            <span className="text-xs text-gray-500 font-medium">YOUR LOGO HERE</span>
-          </div>
+        <div style={styles.sidebarLogo}>
+          <Logo />
         </div>
 
-        {/* Main Navigation */}
-        <div className="py-3 flex-1">
-          <div className="px-3 mb-2">
-            <span className="text-xs font-extrabold tracking-wider text-gray-600 uppercase">Main</span>
-          </div>
-          <nav className="space-y-0.5 px-2">
-            <a onClick={() => onNavigate('dashboard')} className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-sm font-medium" style={{ background: TEAL_LIGHT, color: TEAL }}>
-              <span>Home</span>
-            </a>
-            <a onClick={() => onNavigate('library')} className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-gray-600 hover:bg-gray-50 text-sm">
-              <span>Resource Library</span>
-            </a>
-            <a onClick={() => onNavigate('events')} className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-gray-600 hover:bg-gray-50 text-sm">
-              <span>Events Calendar</span>
-            </a>
-          </nav>
+        {/* Quick Actions */}
+        <div style={styles.sidebarSection}>
+          <div style={styles.sectionTitle}>Quick Actions</div>
+          
+          <button
+            style={{
+              ...styles.navLink,
+              ...(hoveredNav === 'events' ? styles.navLinkHover : {}),
+            }}
+            onMouseEnter={() => setHoveredNav('events')}
+            onMouseLeave={() => setHoveredNav(null)}
+            onClick={() => handleNavigate('/events')}
+          >
+            <span style={styles.navLinkIcon}>📅</span>
+            Events Calendar
+          </button>
 
-          {/* Tools Section */}
-          <div className="mt-4 pt-4 border-t-2 border-gray-300">
-            <div className="px-3 mb-2">
-              <span className="text-xs font-extrabold tracking-wider text-gray-600 uppercase">Tools</span>
-            </div>
-            <nav className="space-y-0.5 px-2">
-              {TOOLS.map(tool => (
-                <a
-                  key={tool.id}
-                  onClick={() => handleToolClick(tool)}
-                  className={`flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-gray-600 hover:bg-gray-50 text-sm ${loadingTool === tool.id ? 'opacity-50' : ''}`}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: tool.isActive ? TEAL : '#d1d5db' }} />
-                  <span>{tool.name}</span>
-                  {loadingTool === tool.id && (
-                    <span className="ml-auto">
-                      <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin" />
-                    </span>
-                  )}
-                </a>
-              ))}
-            </nav>
-          </div>
+          <button
+            style={{
+              ...styles.navLink,
+              ...(hoveredNav === 'completed' ? styles.navLinkHover : {}),
+            }}
+            onMouseEnter={() => setHoveredNav('completed')}
+            onMouseLeave={() => setHoveredNav(null)}
+            onClick={() => handleNavigate('/completed-assessments')}
+          >
+            <span style={styles.navLinkIcon}>📊</span>
+            Completed Assessments
+          </button>
 
-          {/* Resources Section */}
-          <div className="mt-4 pt-4 border-t-2 border-gray-300">
-            <div className="px-3 mb-2">
-              <span className="text-xs font-extrabold tracking-wider text-gray-600 uppercase">Resources</span>
-            </div>
-            <nav className="space-y-0.5 px-2">
-              <a onClick={() => onNavigate('templates')} className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-gray-600 hover:bg-gray-50 text-sm">
-                <span>Templates</span>
-              </a>
-              <a onClick={() => onNavigate('book-summaries')} className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-gray-600 hover:bg-gray-50 text-sm">
-                <span>Book Summaries</span>
-              </a>
-              <a onClick={() => onNavigate('certifications')} className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-gray-600 hover:bg-gray-50 text-sm">
-                <span>Certifications</span>
-              </a>
-              <a onClick={handleStartProfessor} className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-sm font-medium text-white" style={{ background: NAVY }}>
-                <span>Ask the Professor</span>
-              </a>
-            </nav>
-          </div>
+          <button
+            style={styles.tocLink}
+            onClick={() => handleNavigate('/theory-of-constraints')}
+          >
+            Theory of Constraints
+          </button>
+        </div>
 
-          {/* Admin Section */}
-          {adminAccess.isAdmin && (
-            <div className="mt-4 pt-4 border-t-2 border-gray-300">
-              <div className="px-3 mb-2">
-                <span className="text-xs font-extrabold tracking-wider text-gray-600 uppercase">Admin</span>
+        {/* Member Resources */}
+        <div style={styles.sidebarSection}>
+          <div style={styles.sectionTitle}>Member Resources</div>
+          
+          <button
+            style={{
+              ...styles.navLink,
+              ...(hoveredNav === 'templates' ? styles.navLinkHover : {}),
+            }}
+            onMouseEnter={() => setHoveredNav('templates')}
+            onMouseLeave={() => setHoveredNav(null)}
+            onClick={() => handleNavigate('/templates')}
+          >
+            <span style={styles.navLinkIcon}>📄</span>
+            Templates
+          </button>
+
+          <button
+            style={{
+              ...styles.navLink,
+              ...(hoveredNav === 'playbooks' ? styles.navLinkHover : {}),
+            }}
+            onMouseEnter={() => setHoveredNav('playbooks')}
+            onMouseLeave={() => setHoveredNav(null)}
+            onClick={() => handleNavigate('/playbooks')}
+          >
+            <span style={styles.navLinkIcon}>📘</span>
+            Playbooks
+          </button>
+
+          <button
+            style={{
+              ...styles.navLink,
+              ...(hoveredNav === 'certifications' ? styles.navLinkHover : {}),
+            }}
+            onMouseEnter={() => setHoveredNav('certifications')}
+            onMouseLeave={() => setHoveredNav(null)}
+            onClick={() => handleNavigate('/certifications')}
+          >
+            <span style={styles.navLinkIcon}>🎓</span>
+            Certifications
+          </button>
+        </div>
+
+        {/* Recent Activity */}
+        <div style={styles.sidebarSection}>
+          <div style={styles.sectionTitle}>Recent Activity</div>
+          {recentActivity.map((activity, index) => (
+            <div
+              key={activity.id}
+              style={{
+                ...styles.activityItem,
+                borderBottom: index === recentActivity.length - 1 ? 'none' : styles.activityItem.borderBottom,
+              }}
+            >
+              <div style={{ ...styles.activityDot, background: activity.color }} />
+              <div>
+                <div style={styles.activityText}>{activity.text}</div>
+                <div style={styles.activityTime}>{activity.time}</div>
               </div>
-              <nav className="space-y-0.5 px-2">
-                <a onClick={() => onNavigate('content-manager')} className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-gray-600 hover:bg-gray-50 text-sm">
-                  <span>Content Manager</span>
-                </a>
-                {adminAccess.isOwner && (
-                  <>
-                    <a onClick={() => onNavigate('platform-admin')} className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-gray-600 hover:bg-gray-50 text-sm">
-                      <span>Platform Admin</span>
-                    </a>
-                    <a onClick={() => onNavigate('owner-dashboard')} className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-gray-600 hover:bg-gray-50 text-sm">
-                      <span>Owner Dashboard</span>
-                    </a>
-                  </>
-                )}
-              </nav>
             </div>
-          )}
+          ))}
+        </div>
+
+        {/* Remaining Downloads */}
+        <div style={styles.sidebarSection}>
+          <div style={styles.downloadsBox}>
+            <div style={styles.downloadsHeader}>
+              <span style={styles.downloadsLabel}>Remaining Downloads</span>
+              <span style={styles.downloadsCount}>{remainingDownloads} of {limits.downloads}</span>
+            </div>
+            <div style={styles.progressBar}>
+              <div style={{ ...styles.progressFill, width: `${downloadPercentage}%` }} />
+            </div>
+            <div style={styles.tierInfo}>
+              <span style={styles.tierBadge}>{tierKey.charAt(0).toUpperCase() + tierKey.slice(1)}</span>
+              <div style={styles.tierLimits}>
+                {limits.downloads} downloads/mo • {limits.atpSessions === Infinity ? 'Unlimited' : limits.atpSessions} ATP sessions • {limits.seats} team seats
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* User Profile */}
-        <div className="p-3 border-t-2 border-gray-300">
-          <div onClick={() => setShowAvatarModal(true)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer group">
-            <div className="relative">
-              <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold" style={{ background: NAVY }}>
-                {user?.email?.charAt(0).toUpperCase() || 'U'}
-              </div>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-gray-900 truncate">{user?.email || 'User'}</div>
-              <div className="text-xs text-gray-500 truncate">{organization?.name || 'Organization'}</div>
+        <div style={styles.userProfile}>
+          <div
+            style={styles.userInfo}
+            onClick={() => handleNavigate('/profile')}
+          >
+            <div style={styles.userAvatar}>{userInitial}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={styles.userName}>{userName}</div>
+              <div style={styles.userOrg}>{orgName}</div>
             </div>
             {adminAccess.isOwner && (
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: TEAL_LIGHT, color: TEAL }}>OWNER</span>
+              <span style={styles.ownerBadge}>OWNER</span>
             )}
           </div>
-          <button onClick={onLogout} className="w-full mt-2 text-xs text-gray-500 hover:text-gray-700 py-1">Sign Out</button>
+          <button style={styles.signoutBtn} onClick={handleLogout}>
+            Sign Out
+          </button>
         </div>
       </aside>
 
       {/* ==========================================
           MAIN CONTENT
           ========================================== */}
-      <div className="flex-1 ml-56">
-        <div className="p-6">
-          <div className="flex gap-6">
-            {/* Center Content */}
-            <div className="flex-1 space-y-5">
-              {/* Welcome Header */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-xl font-bold" style={{ color: NAVY }}>
-                    Welcome back{user?.email ? `, ${user.email.split('@')[0]}` : ''}!
-                  </h1>
-                  <p className="text-sm text-gray-500">Here's what's happening with your organization</p>
-                </div>
-                <button onClick={() => onNavigate('constraint-assessment')} className="px-4 py-2 rounded-lg text-sm font-medium text-white" style={{ background: TEAL }}>
-                  Constraint Assessment Report
-                </button>
-              </div>
+      <main style={styles.mainContent}>
+        {/* Welcome Header */}
+        <div style={styles.welcomeHeader}>
+          <h1 style={styles.welcomeTitle}>Welcome back, {userName}!</h1>
+          <p style={styles.welcomeSubtitle}>Here's what's happening with your organization</p>
+        </div>
 
-              {/* Today's Insight */}
-              <div className="rounded-xl p-5 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #1a365d 0%, #0f1f38 100%)' }}>
-                <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full" style={{ background: 'rgba(0,160,176,0.1)' }} />
-                <div className="relative">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-xl">💡</span>
-                    <span className="text-xs font-bold uppercase tracking-wider" style={{ color: TEAL }}>Today's Insight</span>
-                  </div>
-                  <p className="text-white text-base leading-relaxed mb-2">
-                    "The job of a board member isn't to run the organization. It's to make sure the organization is well-run."
-                  </p>
-                  <p className="text-sm text-gray-400">— "Governance as Leadership" by Chait, Ryan & Taylor</p>
-                </div>
-              </div>
+        {/* Daily Insight Quote */}
+        <div style={styles.insightQuote}>
+          <span style={styles.quoteMark}>"</span>
+          <p style={styles.quoteText}>
+            "The job of a board member isn't to run the organization. It's to make sure the organization is well-run."
+          </p>
+          <p style={styles.quoteAuthor}>— Chait, Ryan & Taylor, "Governance as Leadership"</p>
+        </div>
 
-              {/* Getting Started Panel */}
-              {showOnboarding && (
-                <div className="rounded-xl border-2 border-gray-300 overflow-hidden bg-white">
-                  <div className="px-5 py-3 border-b-2 border-gray-300 flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">👋</span>
-                      <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: NAVY }}>Getting Started</h2>
-                    </div>
-                    <button onClick={() => setShowOnboarding(false)} className="text-xs text-gray-400 hover:text-gray-600">
-                      ✓ I'm done with onboarding
-                    </button>
+        {/* Your Tools */}
+        <div style={styles.sectionCard}>
+          <div style={styles.sectionHeader}>
+            <span style={styles.sectionHeaderTitle}>Your Tools</span>
+          </div>
+          <div style={styles.sectionBody}>
+            <div style={styles.toolsGrid}>
+              {TOOLS.map((tool) => (
+                <div
+                  key={tool.id}
+                  style={styles.toolCard}
+                  onClick={() => handleToolClick(tool)}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                    e.currentTarget.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.15)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  <div style={{ ...styles.toolImage, backgroundImage: `url(${tool.image})` }} />
+                  <div style={styles.toolOverlay} />
+                  <div style={styles.toolContent}>
+                    <div style={styles.toolName}>{tool.name}</div>
+                    <div style={styles.toolStatus}>{tool.status}</div>
                   </div>
-                  <div className="p-5">
-                    <div className="grid grid-cols-4 gap-4">
-                      {[
-                        { num: 1, label: 'FIRST', title: 'Complete Profile', desc: 'Add your photo & org details', route: 'settings', bg: TEAL },
-                        { num: 2, label: 'ASSESS', title: 'Constraint Assessment', desc: "Find your organization's ONE Thing", route: 'constraint-assessment', bg: NAVY },
-                        { num: 3, label: 'EXPLORE', title: 'Browse Templates', desc: '147+ ready-to-use resources', route: 'templates', bg: NAVY },
-                        { num: 4, label: 'TRY THIS', title: 'Strategic Plan Check-Up', desc: "Assess your org's health", route: 'strategic-checkup', bg: NAVY }
-                      ].map((step, i) => (
-                        <div key={i} onClick={() => onNavigate(step.route)} className="rounded-xl border-2 border-gray-200 p-4 cursor-pointer hover:shadow-lg hover:border-[#00a0b0] transition bg-white group" style={i === 0 ? { borderColor: TEAL, background: '#f0fafb' } : {}}>
-                          <div className={`text-[10px] font-bold uppercase tracking-wide mb-2 px-2 py-0.5 rounded inline-block ${i === 0 ? 'text-white' : 'bg-blue-100 text-blue-700'}`} style={i === 0 ? { background: TEAL } : {}}>
-                            {step.label}
-                          </div>
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold mb-3 group-hover:scale-110 transition" style={{ background: step.bg }}>
-                            {step.num}
-                          </div>
-                          <div className="font-bold text-sm mb-1" style={{ color: NAVY }}>{step.title}</div>
-                          <div className="text-xs text-gray-500">{step.desc}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  {tool.id === 'board-assessment' && <div style={styles.toolActiveDot} />}
                 </div>
-              )}
+              ))}
 
-              {/* Tools Grid */}
-              <div className="rounded-xl border-2 border-gray-300 overflow-hidden bg-white">
-                <div className="px-5 py-3 border-b-2 border-gray-300">
-                  <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: NAVY }}>Your Tools</h2>
-                </div>
-                <div className="p-4">
-                  <div className="grid grid-cols-3 gap-3">
-                    {TOOLS.map(tool => (
-                      <div
-                        key={tool.id}
-                        onClick={() => handleToolClick(tool)}
-                        className={`relative rounded-lg overflow-hidden cursor-pointer group ${loadingTool === tool.id ? 'opacity-75' : ''}`}
-                        style={{ height: '100px' }}
-                      >
-                        <div className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105" style={{ backgroundImage: `url(${tool.image})` }} />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                        <div className="absolute bottom-0 left-0 right-0 p-3">
-                          <div className="text-white font-bold text-sm leading-tight">{tool.name}</div>
-                          <div className="text-xs mt-0.5 text-gray-300">{tool.status}</div>
-                        </div>
-                        {tool.isActive && <div className="absolute top-2 right-2 w-2 h-2 rounded-full" style={{ background: TEAL }} />}
-                        {loadingTool === tool.id && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Recommended For You */}
-              <div className="rounded-xl border-2 border-gray-300 overflow-hidden bg-white">
-                <div className="px-5 py-3 border-b-2 border-gray-300 flex justify-between items-center">
-                  <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: NAVY }}>Recommended For You</h2>
-                  <a onClick={() => onNavigate('library')} className="text-xs font-semibold cursor-pointer hover:underline" style={{ color: TEAL }}>See all →</a>
-                </div>
-                <div className="p-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    {recommendations.map((rec, index) => (
-                      <div key={index} onClick={() => handleDownloadClick(rec.title, rec.type as 'report' | 'template')} className="bg-gray-50 rounded-lg p-3 cursor-pointer hover:bg-gray-100 transition">
-                        <span className={`inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded mb-2 ${rec.type === 'template' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
-                          {rec.type === 'template' ? '📄 TEMPLATE' : '📚 BOOK SUMMARY'}
-                        </span>
-                        <div className="font-bold text-sm mb-0.5" style={{ color: NAVY }}>{rec.title}</div>
-                        <div className="text-xs text-gray-500">{rec.desc}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Upcoming Events */}
-              <div className="rounded-xl border-2 border-gray-300 overflow-hidden bg-white">
-                <div className="px-5 py-3 border-b-2 border-gray-300 flex justify-between items-center">
-                  <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: NAVY }}>Upcoming Events</h2>
-                  <a onClick={() => onNavigate('events')} className="text-xs font-semibold cursor-pointer hover:underline" style={{ color: TEAL }}>View calendar →</a>
-                </div>
-                <div className="p-4 space-y-3">
-                  {events.map((event, index) => (
-                    <div key={index} className="flex gap-3">
-                      <div className="w-12 h-12 rounded-lg flex flex-col items-center justify-center flex-shrink-0" style={{ background: NAVY }}>
-                        <div className="text-lg font-bold text-white leading-none">{event.day}</div>
-                        <div className="text-[10px] font-medium text-gray-300">{event.month}</div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-bold text-sm" style={{ color: NAVY }}>{event.title}</div>
-                        <div className="text-xs text-gray-500 mb-1">{event.meta}</div>
-                        <span className={`inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded ${event.tagColor}`}>{event.tag}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* ==========================================
-                RIGHT SIDEBAR
-                ========================================== */}
-            <div className="w-64 space-y-4 flex-shrink-0">
-              {/* Quick Actions */}
-              <div className="rounded-xl border-2 border-gray-300 overflow-hidden bg-white">
-                <div className="px-4 py-3 border-b-2 border-gray-300">
-                  <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: NAVY }}>Quick Actions</h2>
-                </div>
-                <div className="p-3 space-y-2">
-                  {[
-                    { icon: '🚀', title: 'Getting Started', desc: 'Complete your onboarding', route: 'getting-started', bg: TEAL },
-                    { icon: '📋', title: 'Constraint Assessment', desc: 'Find your ONE Thing', route: 'constraint-assessment', bg: '#8b5cf6' },
-                    { icon: '📅', title: 'Attend a Webinar', desc: 'Join live sessions', route: 'events', bg: '#f59e0b' }
-                  ].map((action, i) => (
-                    <button key={i} onClick={() => onNavigate(action.route)} className="w-full text-left px-3 py-2.5 rounded-lg text-sm hover:bg-[#e6f7f9] transition flex items-center gap-3 border border-transparent hover:border-[#00a0b0]">
-                      <span className="w-8 h-8 rounded-lg flex items-center justify-center text-white" style={{ background: action.bg }}>{action.icon}</span>
-                      <div>
-                        <div className="font-semibold" style={{ color: NAVY }}>{action.title}</div>
-                        <div className="text-[10px] text-gray-500">{action.desc}</div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Ask the Professor Tracker */}
-              <div className="rounded-xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #1a365d 0%, #0f1f38 100%)' }}>
-                <div className="p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-xl">🎓</span>
-                    <div>
-                      <span className="font-bold text-sm text-white">Ask the Professor</span>
-                      <div className="text-[10px] text-gray-400">AI-powered guidance</div>
-                    </div>
-                  </div>
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="text-gray-400">Sessions this month</span>
-                    <span className="font-bold text-white">
-                      {usageData.professor_sessions_this_month} of {tierKey === 'premium' ? '∞' : limits.professor}
-                    </span>
-                  </div>
-                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.2)' }}>
-                    <div className="h-full rounded-full transition-all duration-500" style={{ background: 'linear-gradient(90deg, #f97316, #fbbf24)', width: tierKey === 'premium' ? '10%' : `${Math.min((usageData.professor_sessions_this_month / limits.professor) * 100, 100)}%` }} />
-                  </div>
-                  <button onClick={handleStartProfessor} className="w-full mt-3 py-2 rounded-lg text-sm font-semibold text-white transition hover:opacity-90" style={{ background: TEAL }}>
-                    Start Session →
-                  </button>
-                </div>
-              </div>
-
-              {/* Recent Activity */}
-              <div className="rounded-xl border-2 border-gray-300 overflow-hidden bg-white">
-                <div className="px-4 py-3 border-b-2 border-gray-300">
-                  <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: NAVY }}>Recent Activity</h2>
-                </div>
-                <div className="p-3 space-y-3">
-                  {recentActivity.length > 0 ? (
-                    recentActivity.map((activity, index) => {
-                      const formatted = formatActivity(activity);
-                      return (
-                        <div key={index} className="flex items-start gap-2">
-                          <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: formatted.color }} />
-                          <div>
-                            <div className="text-xs text-gray-700">{formatted.text}</div>
-                            <div className="text-[10px] text-gray-400">{formatted.time}</div>
-                          </div>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <div className="text-xs text-gray-400 text-center py-2">No recent activity yet</div>
-                  )}
-                </div>
-              </div>
-
-              {/* Report Downloads Tracker */}
-              <div className="rounded-xl border-2 overflow-hidden" style={{ background: TEAL_LIGHT, borderColor: TEAL }}>
-                <div className="p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-base">📥</span>
-                    <span className="font-bold text-sm" style={{ color: NAVY }}>Report Downloads</span>
-                  </div>
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="text-gray-600">Remaining</span>
-                    <span className="font-bold" style={{ color: NAVY }}>
-                      {Math.max(limits.downloads - usageData.downloads_this_month, 0)} of {limits.downloads}
-                    </span>
-                  </div>
-                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(0,160,176,0.2)' }}>
-                    <div className="h-full rounded-full transition-all duration-500" style={{ background: TEAL, width: `${Math.max(((limits.downloads - usageData.downloads_this_month) / limits.downloads) * 100, 0)}%` }} />
-                  </div>
-                  <p className="text-[10px] text-gray-500 mt-2">
-                    Resets {getResetDate()} • <a href="#" onClick={() => onNavigate('pricing')} className="underline" style={{ color: TEAL }}>Need more?</a>
-                  </p>
-                </div>
-              </div>
-
-              {/* Tools This Month */}
-              <div className="rounded-xl border-2 border-gray-300 overflow-hidden bg-white">
-                <div className="p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-base">🛠️</span>
-                    <span className="font-bold text-sm" style={{ color: NAVY }}>Tools This Month</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="text-center p-2 bg-gray-50 rounded-lg">
-                      <div className="text-2xl font-bold" style={{ color: NAVY }}>{usageData.tools_used_this_month}</div>
-                      <div className="text-[10px] text-gray-500">Started</div>
-                    </div>
-                    <div className="text-center p-2 bg-gray-50 rounded-lg">
-                      <div className="text-2xl font-bold" style={{ color: TEAL }}>{usageData.tools_completed_this_month}</div>
-                      <div className="text-[10px] text-gray-500">Completed</div>
-                    </div>
-                  </div>
-                </div>
+              {/* Ask the Professor Card */}
+              <div
+                style={styles.professorCard}
+                onClick={handleAskProfessor}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <div style={styles.professorIcon}>🎓</div>
+                <div style={styles.professorTitle}>Ask the Professor</div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* ==========================================
-          AI CHATBOT
-          ========================================== */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <button onClick={() => setShowAIChat(!showAIChat)} className="w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white hover:scale-105 transition-transform" style={{ background: 'linear-gradient(135deg, #1a365d, #00a0b0)' }}>
-          <span className="text-2xl">💬</span>
-        </button>
-
-        {showAIChat && (
-          <div className="absolute bottom-16 right-0 w-80 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
-            <div className="px-4 py-3 flex items-center gap-3" style={{ background: 'linear-gradient(135deg, #1a365d, #0f1f38)' }}>
-              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: TEAL }}>
-                <span className="text-xl">💬</span>
-              </div>
-              <div className="flex-1">
-                <div className="font-bold text-white text-sm">AI Assistant</div>
-                <div className="text-xs text-gray-300">Here to help you</div>
-              </div>
-              <button onClick={() => setShowAIChat(false)} className="text-gray-400 hover:text-white">✕</button>
-            </div>
-
-            <div className="p-4 h-64 overflow-y-auto bg-gray-50">
-              <div className="flex gap-2 mb-3">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: TEAL }}>
-                  <span className="text-sm">💬</span>
-                </div>
-                <div className="bg-white rounded-xl rounded-tl-none p-3 shadow-sm max-w-[85%]">
-                  <p className="text-sm text-gray-700">
-                    Hi{user?.email ? ` ${user.email.split('@')[0]}` : ''}! 👋 I'm here to help you with The Nonprofit Edge. What would you like to explore today?
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-3 border-t border-gray-200">
-              <div className="flex gap-2">
-                <input type="text" value={aiMessage} onChange={(e) => setAiMessage(e.target.value)} placeholder="Ask me anything..." className="flex-1 px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:border-[#00a0b0]" />
-                <button className="w-10 h-10 rounded-lg flex items-center justify-center text-white" style={{ background: TEAL }}>→</button>
-              </div>
-              <div className="flex gap-1 mt-2 flex-wrap">
-                <button className="text-[10px] px-2 py-1 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">Where do I start?</button>
-                <button className="text-[10px] px-2 py-1 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">Show me templates</button>
-              </div>
-            </div>
+        {/* Recommended For You */}
+        <div style={styles.sectionCard}>
+          <div style={styles.sectionHeader}>
+            <span style={styles.sectionHeaderTitle}>Recommended For You</span>
+            <span
+              style={styles.sectionHeaderLink}
+              onClick={() => handleNavigate('/templates')}
+            >
+              See all →
+            </span>
           </div>
-        )}
-      </div>
-
-      {/* ==========================================
-          AVATAR MODAL
-          ========================================== */}
-      {showAvatarModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="font-bold text-lg" style={{ color: NAVY }}>Choose Your Avatar</h3>
-              <p className="text-sm text-gray-500">Select an image or upload your own</p>
-            </div>
-            <div className="p-6">
-              <div className="text-center mb-6">
-                <div className="w-20 h-20 rounded-full mx-auto flex items-center justify-center text-white text-2xl font-bold" style={{ background: NAVY }}>
-                  {user?.email?.charAt(0).toUpperCase() || 'U'}
+          <div style={styles.sectionBody}>
+            <div style={styles.recommendationsGrid}>
+              {RECOMMENDATIONS.map((rec, index) => (
+                <div
+                  key={index}
+                  style={styles.recCard}
+                  onClick={() => handleDownload(rec.title)}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = COLORS.gray100;
+                    e.currentTarget.style.borderColor = '#cbd5e1';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = COLORS.gray50;
+                    e.currentTarget.style.borderColor = COLORS.gray200;
+                  }}
+                >
+                  <span
+                    style={{
+                      ...styles.recBadge,
+                      ...(rec.type === 'template' ? styles.recBadgeTemplate : styles.recBadgePlaybook),
+                    }}
+                  >
+                    {rec.type === 'template' ? '📄 Template' : '📘 Playbook'}
+                  </span>
+                  <div style={styles.recTitle}>{rec.title}</div>
+                  <div style={styles.recDesc}>{rec.desc}</div>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">Current</p>
-              </div>
-
-              <p className="text-sm font-semibold text-gray-700 mb-3">Choose a color for your initials:</p>
-              <div className="flex gap-2 mb-6">
-                {avatarColors.map((color, i) => (
-                  <div key={i} className="w-10 h-10 rounded-full cursor-pointer hover:scale-110 transition" style={{ background: color }} />
-                ))}
-              </div>
-
-              <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-[#00a0b0] transition cursor-pointer">
-                <span className="text-2xl">📷</span>
-                <p className="text-sm text-gray-600 mt-1">Upload your own photo</p>
-                <p className="text-xs text-gray-400">JPG, PNG up to 2MB</p>
-              </div>
-            </div>
-            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
-              <button onClick={() => setShowAvatarModal(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
-              <button onClick={() => setShowAvatarModal(false)} className="px-4 py-2 text-sm font-semibold text-white rounded-lg" style={{ background: TEAL }}>Save</button>
+              ))}
             </div>
           </div>
         </div>
-      )}
-
-      {/* Loading Overlay */}
-      {isLoading && (
-        <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-40 pointer-events-none">
-          <div className="bg-white rounded-xl p-4 shadow-xl flex items-center gap-3">
-            <div className="w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
-            <span className="text-sm font-medium text-gray-700">Loading...</span>
-          </div>
-        </div>
-      )}
+      </main>
     </div>
   );
 };
