@@ -1,4 +1,9 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
+
+// ============================================
+// SUPABASE CLIENT - SINGLETON PATTERN
+// Fixes "Multiple GoTrueClient instances" error
+// ============================================
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -7,7 +12,24 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Missing Supabase environment variables')
 }
 
-export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '')
+// ✅ FIX: Use singleton pattern to prevent multiple instances
+let supabaseInstance: SupabaseClient | null = null
+
+export const supabase = (() => {
+  if (supabaseInstance) {
+    return supabaseInstance
+  }
+  
+  supabaseInstance = createClient(supabaseUrl || '', supabaseAnonKey || '', {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,  // Important for magic links & password reset
+    }
+  })
+  
+  return supabaseInstance
+})()
 
 // ==========================================
 // TYPES
