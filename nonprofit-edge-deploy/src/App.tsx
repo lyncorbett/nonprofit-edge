@@ -56,7 +56,9 @@ import ScenarioPlannerLanding from './components/ScenarioPlannerLanding';
 import BoardAssessmentLanding from './BoardAssessmentLanding';
 import CEOEvaluationLanding from './CEOEvaluationLanding';
 import StrategicPlanCheckupLanding from './StrategicPlanCheckupLanding';
+import GrantReviewLanding from './GrantReviewLanding';
 import CertificationsLanding from './CertificationsLanding';
+import WhyWeExist from './components/WhyWeExist';
 
 // Tracking utilities
 import { 
@@ -497,6 +499,9 @@ const App: React.FC = () => {
       case '/reset-password':
         return <ResetPassword onNavigate={navigate} />;
 
+      case '/why-we-exist':
+        return <WhyWeExist onNavigate={navigate} />;
+
       // ========================================
       // TOOL LANDING PAGES (Public)
       // ========================================
@@ -514,7 +519,7 @@ const App: React.FC = () => {
         return <ScenarioPlannerLanding onNavigate={navigate} onGetStarted={() => navigate('/scenario-planner/use')} />;
       
       case '/grant-review':
-        return <ScenarioPlannerLanding onNavigate={navigate} onGetStarted={() => navigate('/grant-review/use')} />;
+        return <GrantReviewLanding onNavigate={navigate} onGetStarted={() => navigate('/grant-review/use')} />;
       
       case '/ask-the-professor':
         return <ScenarioPlannerLanding onNavigate={navigate} onGetStarted={handleStartProfessor} />;
