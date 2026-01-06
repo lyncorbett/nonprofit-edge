@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 // ============================================
 // PLATFORM ADMIN DASHBOARD
 // Brand Colors: Navy #0D2C54 | Teal #0097A9
+// UPDATED: Added "Add User" functionality
 // ============================================
 
 interface AdminDashboardProps {
@@ -18,6 +19,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   const [events, setEvents] = useState<any[]>([])
   const [quotes, setQuotes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [stats, setStats] = useState({
     totalOrgs: 0,
     totalUsers: 0,
@@ -36,25 +38,31 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
 
   const loadData = async () => {
     setLoading(true)
+    setError(null)
     try {
       // Load organizations
-      const { data: orgsData } = await supabase.from('organizations').select('*').order('created_at', { ascending: false })
+      const { data: orgsData, error: orgsError } = await supabase.from('organizations').select('*').order('created_at', { ascending: false })
+      if (orgsError) console.error('Orgs error:', orgsError)
       setOrganizations(orgsData || [])
 
       // Load users with org info
-      const { data: usersData } = await supabase.from('users').select('*, organization:organizations(name, tier)').order('created_at', { ascending: false })
+      const { data: usersData, error: usersError } = await supabase.from('users').select('*, organization:organizations(name, tier)').order('created_at', { ascending: false })
+      if (usersError) console.error('Users error:', usersError)
       setUsers(usersData || [])
 
       // Load site content
-      const { data: contentData } = await supabase.from('site_content').select('*').order('category')
+      const { data: contentData, error: contentError } = await supabase.from('site_content').select('*').order('category')
+      if (contentError) console.error('Content error:', contentError)
       setContent(contentData || [])
 
       // Load events
-      const { data: eventsData } = await supabase.from('events').select('*').order('event_date', { ascending: true })
+      const { data: eventsData, error: eventsError } = await supabase.from('events').select('*').order('event_date', { ascending: true })
+      if (eventsError) console.error('Events error:', eventsError)
       setEvents(eventsData || [])
 
       // Load quotes
-      const { data: quotesData } = await supabase.from('daily_quotes').select('*').order('created_at', { ascending: false })
+      const { data: quotesData, error: quotesError } = await supabase.from('daily_quotes').select('*').order('created_at', { ascending: false })
+      if (quotesError) console.error('Quotes error:', quotesError)
       setQuotes(quotesData || [])
 
       // Load usage stats
@@ -79,8 +87,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
         atRiskUsers,
         usersAtLimit: 0,
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading admin data:', error)
+      setError(error.message || 'Failed to load data')
     } finally {
       setLoading(false)
     }
@@ -90,20 +99,34 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   const handleSaveOrg = async (org: any) => {
     setSaving(true)
     try {
-      const { error } = await supabase.from('organizations').update({
-        name: org.name,
-        tier: org.tier,
-        seats_total: org.seats_total,
-        monthly_downloads_limit: org.monthly_downloads_limit,
-        monthly_professor_limit: org.monthly_professor_limit,
-        subscription_status: org.subscription_status,
-      }).eq('id', org.id)
-      if (error) throw error
+      if (org.id) {
+        // Update existing
+        const { error } = await supabase.from('organizations').update({
+          name: org.name,
+          tier: org.tier,
+          seats_total: org.seats_total,
+          monthly_downloads_limit: org.monthly_downloads_limit,
+          monthly_professor_limit: org.monthly_professor_limit,
+          subscription_status: org.subscription_status,
+        }).eq('id', org.id)
+        if (error) throw error
+      } else {
+        // Create new organization
+        const { error } = await supabase.from('organizations').insert([{
+          name: org.name,
+          tier: org.tier || 'starter',
+          seats_total: org.seats_total || 1,
+          monthly_downloads_limit: org.monthly_downloads_limit || 10,
+          monthly_professor_limit: org.monthly_professor_limit || 100,
+          subscription_status: org.subscription_status || 'active',
+        }])
+        if (error) throw error
+      }
       await loadData()
       setEditModal({ type: null, data: null })
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving org:', error)
-      alert('Failed to save organization')
+      alert('Failed to save organization: ' + error.message)
     } finally {
       setSaving(false)
     }
@@ -112,18 +135,33 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   const handleSaveUser = async (user: any) => {
     setSaving(true)
     try {
-      const { error } = await supabase.from('users').update({
-        full_name: user.full_name,
-        email: user.email,
-        role: user.role,
-        is_active: user.is_active,
-      }).eq('id', user.id)
-      if (error) throw error
+      if (user.id) {
+        // Update existing user
+        const { error } = await supabase.from('users').update({
+          full_name: user.full_name,
+          email: user.email,
+          role: user.role,
+          is_active: user.is_active,
+          organization_id: user.organization_id,
+        }).eq('id', user.id)
+        if (error) throw error
+      } else {
+        // Create new user - First create auth user, then profile
+        // For now, just insert into users table (they'll need to sign up separately)
+        const { error } = await supabase.from('users').insert([{
+          full_name: user.full_name,
+          email: user.email,
+          role: user.role || 'member',
+          is_active: user.is_active !== false,
+          organization_id: user.organization_id,
+        }])
+        if (error) throw error
+      }
       await loadData()
       setEditModal({ type: null, data: null })
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving user:', error)
-      alert('Failed to save user')
+      alert('Failed to save user: ' + error.message)
     } finally {
       setSaving(false)
     }
@@ -139,9 +177,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
       if (error) throw error
       await loadData()
       setEditModal({ type: null, data: null })
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving content:', error)
-      alert('Failed to save content')
+      alert('Failed to save content: ' + error.message)
     } finally {
       setSaving(false)
     }
@@ -182,9 +220,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
       }
       await loadData()
       setEditModal({ type: null, data: null })
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving event:', error)
-      alert('Failed to save event')
+      alert('Failed to save event: ' + error.message)
     } finally {
       setSaving(false)
     }
@@ -214,9 +252,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
       }
       await loadData()
       setEditModal({ type: null, data: null })
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving quote:', error)
-      alert('Failed to save quote')
+      alert('Failed to save quote: ' + error.message)
     } finally {
       setSaving(false)
     }
@@ -228,9 +266,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
       const { error } = await supabase.from(type).delete().eq('id', id)
       if (error) throw error
       await loadData()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting:', error)
-      alert('Failed to delete')
+      alert('Failed to delete: ' + error.message)
     }
   }
 
@@ -242,10 +280,21 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   const getTierBadge = (tier: string) => {
     const colors: Record<string, string> = {
       starter: 'bg-gray-100 text-gray-700',
+      essential: 'bg-gray-100 text-gray-700',
       professional: 'bg-[#e6f9fa] text-[#0097A9]',
+      premium: 'bg-purple-100 text-purple-700',
       enterprise: 'bg-purple-100 text-purple-700',
     }
     return colors[tier] || colors.starter
+  }
+
+  const getRoleBadge = (role: string) => {
+    const colors: Record<string, string> = {
+      owner: 'bg-purple-100 text-purple-700',
+      admin: 'bg-blue-100 text-blue-700',
+      member: 'bg-gray-100 text-gray-700',
+    }
+    return colors[role] || colors.member
   }
 
   if (loading) {
@@ -280,6 +329,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
           </div>
         </div>
       </div>
+
+      {/* Error Banner */}
+      {error && (
+        <div className="bg-red-50 border-b border-red-200 px-6 py-3">
+          <div className="max-w-7xl mx-auto text-red-700 text-sm">
+            ⚠️ {error}
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="bg-white border-b border-gray-200">
@@ -334,17 +392,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
               <div className="bg-white rounded-xl border border-gray-200 p-6">
                 <h3 className="font-bold text-[#0D2C54] mb-4">Quick Actions</h3>
                 <div className="space-y-3">
-                  <button onClick={() => setActiveTab('content')} className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition flex items-center gap-3">
-                    <span>✏️</span>
-                    <span className="text-sm font-medium">Edit Site Content</span>
+                  <button onClick={() => { setActiveTab('users'); setEditModal({ type: 'user', data: { full_name: '', email: '', role: 'member', is_active: true, organization_id: null } }) }} className="w-full text-left px-4 py-3 bg-[#e6f9fa] hover:bg-[#d0f0f4] rounded-lg transition flex items-center gap-3">
+                    <span>👤</span>
+                    <span className="text-sm font-medium text-[#0097A9]">Add New User</span>
+                  </button>
+                  <button onClick={() => { setActiveTab('organizations'); setEditModal({ type: 'org', data: { name: '', tier: 'starter', seats_total: 1, monthly_downloads_limit: 10, monthly_professor_limit: 100, subscription_status: 'active' } }) }} className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition flex items-center gap-3">
+                    <span>🏢</span>
+                    <span className="text-sm font-medium">Add Organization</span>
                   </button>
                   <button onClick={() => setActiveTab('events')} className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition flex items-center gap-3">
                     <span>📅</span>
                     <span className="text-sm font-medium">Manage Events</span>
-                  </button>
-                  <button onClick={() => setActiveTab('quotes')} className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition flex items-center gap-3">
-                    <span>💡</span>
-                    <span className="text-sm font-medium">Update Daily Quote</span>
                   </button>
                 </div>
               </div>
@@ -364,22 +422,26 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                       <span className={`text-xs font-semibold px-2 py-1 rounded-full capitalize ${getTierBadge(org.tier)}`}>{org.tier}</span>
                     </div>
                   ))}
+                  {organizations.length === 0 && <div className="px-6 py-4 text-sm text-gray-400">No organizations yet</div>}
                 </div>
               </div>
 
-              {/* Upcoming Events */}
+              {/* Recent Users */}
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-200">
-                  <h3 className="font-bold text-[#0D2C54]">Upcoming Events</h3>
+                  <h3 className="font-bold text-[#0D2C54]">Recent Users</h3>
                 </div>
                 <div className="divide-y divide-gray-100">
-                  {events.filter(e => e.is_active).slice(0, 4).map(event => (
-                    <div key={event.id} className="px-6 py-3">
-                      <div className="font-medium text-[#0D2C54] text-sm">{event.title}</div>
-                      <div className="text-xs text-gray-400">{formatDate(event.event_date)}</div>
+                  {users.slice(0, 4).map(user => (
+                    <div key={user.id} className="px-6 py-3 flex items-center justify-between">
+                      <div>
+                        <div className="font-medium text-[#0D2C54] text-sm">{user.full_name || user.email}</div>
+                        <div className="text-xs text-gray-400">{user.email}</div>
+                      </div>
+                      <span className={`text-xs font-semibold px-2 py-1 rounded-full capitalize ${getRoleBadge(user.role)}`}>{user.role}</span>
                     </div>
                   ))}
-                  {events.length === 0 && <div className="px-6 py-4 text-sm text-gray-400">No events yet</div>}
+                  {users.length === 0 && <div className="px-6 py-4 text-sm text-gray-400">No users yet</div>}
                 </div>
               </div>
             </div>
@@ -389,8 +451,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
         {/* Organizations Tab */}
         {activeTab === 'organizations' && (
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
               <h2 className="font-bold text-[#0D2C54]">All Organizations ({organizations.length})</h2>
+              <button onClick={() => setEditModal({ type: 'org', data: { name: '', tier: 'starter', seats_total: 1, monthly_downloads_limit: 10, monthly_professor_limit: 100, subscription_status: 'active' } })} className="px-4 py-2 bg-[#0097A9] text-white rounded-lg text-sm font-medium hover:bg-[#007d8a] transition">+ Add Organization</button>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -412,22 +475,30 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                       <td className="px-6 py-4 text-sm text-gray-600">{org.seats_total}</td>
                       <td className="px-6 py-4"><span className={`text-xs font-semibold px-2 py-1 rounded-full capitalize ${org.subscription_status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{org.subscription_status}</span></td>
                       <td className="px-6 py-4 text-sm text-gray-500">{formatDate(org.created_at)}</td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-4 text-right space-x-3">
                         <button onClick={() => setEditModal({ type: 'org', data: { ...org } })} className="text-[#0097A9] hover:underline text-sm">Edit</button>
+                        <button onClick={() => handleDelete('organizations', org.id)} className="text-red-500 hover:underline text-sm">Delete</button>
                       </td>
                     </tr>
                   ))}
+                  {organizations.length === 0 && (
+                    <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-500">No organizations yet. Add your first one!</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>
           </div>
         )}
 
-        {/* Users Tab */}
+        {/* Users Tab - UPDATED WITH ADD USER BUTTON */}
         {activeTab === 'users' && (
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="font-bold text-[#0D2C54]">All Users ({users.length})</h2>
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h2 className="font-bold text-[#0D2C54]">All Users ({users.length})</h2>
+                <p className="text-sm text-gray-500 mt-1">Manage team members and their access levels.</p>
+              </div>
+              <button onClick={() => setEditModal({ type: 'user', data: { full_name: '', email: '', role: 'member', is_active: true, organization_id: organizations[0]?.id || null } })} className="px-4 py-2 bg-[#0097A9] text-white rounded-lg text-sm font-medium hover:bg-[#007d8a] transition">+ Add User</button>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -445,18 +516,22 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                   {users.map(user => (
                     <tr key={user.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
-                        <div className="font-medium text-[#0D2C54]">{user.full_name}</div>
+                        <div className="font-medium text-[#0D2C54]">{user.full_name || 'No name'}</div>
                         <div className="text-sm text-gray-500">{user.email}</div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">{user.organization?.name || 'N/A'}</td>
-                      <td className="px-6 py-4"><span className="text-xs font-semibold px-2 py-1 rounded-full capitalize bg-gray-100 text-gray-700">{user.role}</span></td>
+                      <td className="px-6 py-4"><span className={`text-xs font-semibold px-2 py-1 rounded-full capitalize ${getRoleBadge(user.role)}`}>{user.role}</span></td>
                       <td className="px-6 py-4"><span className={`text-xs font-semibold px-2 py-1 rounded-full ${user.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{user.is_active ? 'Active' : 'Inactive'}</span></td>
                       <td className="px-6 py-4 text-sm text-gray-500">{formatDate(user.last_login)}</td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-4 text-right space-x-3">
                         <button onClick={() => setEditModal({ type: 'user', data: { ...user } })} className="text-[#0097A9] hover:underline text-sm">Edit</button>
+                        <button onClick={() => handleDelete('users', user.id)} className="text-red-500 hover:underline text-sm">Delete</button>
                       </td>
                     </tr>
                   ))}
+                  {users.length === 0 && (
+                    <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-500">No users found. Click "+ Add User" to add your first team member.</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -577,8 +652,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
           <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
               <h3 className="font-bold text-[#0D2C54]">
-                {editModal.type === 'org' && 'Edit Organization'}
-                {editModal.type === 'user' && 'Edit User'}
+                {editModal.type === 'org' && (editModal.data.id ? 'Edit Organization' : 'Add Organization')}
+                {editModal.type === 'user' && (editModal.data.id ? 'Edit User' : 'Add User')}
                 {editModal.type === 'content' && 'Edit Content'}
                 {editModal.type === 'event' && (editModal.data.id ? 'Edit Event' : 'Add Event')}
                 {editModal.type === 'quote' && (editModal.data.id ? 'Edit Quote' : 'Add Quote')}
@@ -590,15 +665,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
               {editModal.type === 'org' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                    <input type="text" value={editModal.data.name} onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, name: e.target.value } })} className="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#0097A9]" />
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Organization Name *</label>
+                    <input type="text" value={editModal.data.name} onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, name: e.target.value } })} className="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#0097A9]" placeholder="Acme Nonprofit" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Tier</label>
                     <select value={editModal.data.tier} onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, tier: e.target.value } })} className="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#0097A9]">
-                      <option value="starter">Starter ($97/mo)</option>
-                      <option value="professional">Professional ($297/mo)</option>
-                      <option value="enterprise">Enterprise ($797/mo)</option>
+                      <option value="starter">Starter</option>
+                      <option value="essential">Essential ($79/mo)</option>
+                      <option value="professional">Professional ($159/mo)</option>
+                      <option value="premium">Premium ($329/mo)</option>
+                      <option value="enterprise">Enterprise (Custom)</option>
                     </select>
                   </div>
                   <div className="grid grid-cols-3 gap-4">
@@ -607,11 +684,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                       <input type="number" value={editModal.data.seats_total} onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, seats_total: parseInt(e.target.value) } })} className="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#0097A9]" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Downloads</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Downloads/mo</label>
                       <input type="number" value={editModal.data.monthly_downloads_limit} onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, monthly_downloads_limit: parseInt(e.target.value) } })} className="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#0097A9]" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Sessions</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Sessions/mo</label>
                       <input type="number" value={editModal.data.monthly_professor_limit} onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, monthly_professor_limit: parseInt(e.target.value) } })} className="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#0097A9]" />
                     </div>
                   </div>
@@ -627,29 +704,44 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                 </>
               )}
 
-              {/* User Form */}
+              {/* User Form - UPDATED */}
               {editModal.type === 'user' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                    <input type="text" value={editModal.data.full_name} onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, full_name: e.target.value } })} className="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#0097A9]" />
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                    <input type="text" value={editModal.data.full_name} onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, full_name: e.target.value } })} className="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#0097A9]" placeholder="Jane Doe" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input type="email" value={editModal.data.email} onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, email: e.target.value } })} className="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#0097A9]" />
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                    <input type="email" value={editModal.data.email} onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, email: e.target.value } })} className="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#0097A9]" placeholder="jane@example.com" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Organization</label>
+                    <select value={editModal.data.organization_id || ''} onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, organization_id: e.target.value || null } })} className="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#0097A9]">
+                      <option value="">-- Select Organization --</option>
+                      {organizations.map(org => (
+                        <option key={org.id} value={org.id}>{org.name}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
                     <select value={editModal.data.role} onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, role: e.target.value } })} className="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#0097A9]">
-                      <option value="owner">Owner</option>
-                      <option value="admin">Admin</option>
                       <option value="member">Member</option>
+                      <option value="admin">Admin</option>
+                      <option value="owner">Owner</option>
                     </select>
+                    <p className="text-xs text-gray-400 mt-1">Owner: Full access | Admin: Manage team | Member: Standard access</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <input type="checkbox" id="is_active" checked={editModal.data.is_active} onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, is_active: e.target.checked } })} className="rounded border-gray-300" />
                     <label htmlFor="is_active" className="text-sm text-gray-700">Active User</label>
                   </div>
+                  {!editModal.data.id && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">
+                      💡 The user will need to sign up with this email to set their password and access the platform.
+                    </div>
+                  )}
                 </>
               )}
 
