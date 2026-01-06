@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 
-const BoardAssessmentLanding: React.FC = () => {
+interface BoardAssessmentLandingProps {
+  onNavigate?: (route: string) => void;
+  onGetStarted?: () => void;
+}
+
+const BoardAssessmentLanding: React.FC<BoardAssessmentLandingProps> = ({ onNavigate, onGetStarted }) => {
   const [currentScreen, setCurrentScreen] = useState(0);
   const screens = ['screen1', 'screen2', 'screen3', 'screen4'];
 
@@ -10,6 +15,14 @@ const BoardAssessmentLanding: React.FC = () => {
     }, 4000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleGetStarted = () => {
+    if (onGetStarted) {
+      onGetStarted();
+    } else if (onNavigate) {
+      onNavigate('/signup');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white font-sans">
@@ -27,16 +40,20 @@ const BoardAssessmentLanding: React.FC = () => {
               Transform underperforming boards into engaged, skilled partners who advance your mission — not just approve minutes.
             </p>
             <div className="flex flex-wrap gap-4">
-              <a href="/signup" className="inline-flex items-center justify-center px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-all">
+              <button 
+                onClick={handleGetStarted}
+                className="inline-flex items-center justify-center px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-all"
+              >
                 Start Your Free Trial
-              </a>
+              </button>
               <a href="/samples/board-assessment-report.pdf" className="inline-flex items-center justify-center px-6 py-3 border-2 border-[#0D2C54] text-[#0D2C54] font-semibold rounded-lg hover:bg-[#0D2C54] hover:text-white transition-all">
                 View Sample Report
               </a>
             </div>
           </div>
+          {/* Hero Image - FIXED PATH */}
           <div className="rounded-xl overflow-hidden shadow-2xl">
-            <img src="/images/board-meeting.jpg" alt="Engaged board meeting" className="w-full h-auto" />
+            <img src="/board-hero.jpg" alt="Engaged board meeting" className="w-full h-auto" />
           </div>
         </div>
       </section>
@@ -47,10 +64,11 @@ const BoardAssessmentLanding: React.FC = () => {
           <h2 className="text-3xl lg:text-4xl font-bold text-[#0D2C54] text-center mb-4">Board Dysfunction Costs You Every Month</h2>
           <p className="text-lg text-gray-600 text-center max-w-2xl mx-auto mb-12">Half your board shows up. The other half just says yes. And you're left doing all the work.</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Cards - FIXED PATHS */}
             {[
-              { img: '/images/board-disengaged.jpg', title: 'Disengaged Members', desc: 'Half your board shows up. The other half just nods along. Meetings drag without decisions.' },
-              { img: '/images/board-skills.jpg', title: 'Missing Skills', desc: 'You need marketing expertise but have three lawyers. Major decisions lack diverse input.' },
-              { img: '/images/board-fundraising.jpg', title: 'Fundraising Failures', desc: 'Board gives $500/year per person. "Give or get" exists on paper only.' },
+              { img: '/cert-governance.jpg', title: 'Disengaged Members', desc: 'Half your board shows up. The other half just nods along. Meetings drag without decisions.' },
+              { img: '/cert-leadership.jpg', title: 'Missing Skills', desc: 'You need marketing expertise but have three lawyers. Major decisions lack diverse input.' },
+              { img: '/tool-grant.jpg', title: 'Fundraising Failures', desc: 'Board gives $500/year per person. "Give or get" exists on paper only.' },
             ].map((card, i) => (
               <div key={i} className="relative rounded-xl overflow-hidden min-h-[320px] flex flex-col justify-end">
                 <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${card.img})` }} />
@@ -207,7 +225,12 @@ const BoardAssessmentLanding: React.FC = () => {
           <h2 className="text-3xl lg:text-4xl font-bold text-[#0D2C54] mb-4">Your Board Can Be Your Greatest Asset</h2>
           <p className="text-lg text-gray-600 mb-8">Stop settling for dysfunction. Build the board your mission deserves.</p>
           <div className="flex flex-wrap gap-4 justify-center">
-            <a href="/signup" className="inline-flex items-center justify-center px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-all">Start Your Free Trial</a>
+            <button 
+              onClick={handleGetStarted}
+              className="inline-flex items-center justify-center px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-all"
+            >
+              Start Your Free Trial
+            </button>
             <a href="/samples/board-assessment-report.pdf" className="inline-flex items-center justify-center px-6 py-3 border-2 border-[#0D2C54] text-[#0D2C54] font-semibold rounded-lg hover:bg-[#0D2C54] hover:text-white transition-all">View Sample Report</a>
           </div>
         </div>
