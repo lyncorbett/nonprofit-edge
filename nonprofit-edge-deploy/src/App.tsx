@@ -1,423 +1,729 @@
 /**
  * THE NONPROFIT EDGE - App.tsx
- * Clean version that imports Homepage component
+ * Complete Routing with Usage Tracking Integration
+ * 
+ * Route Pattern:
+ *   /tool-name         → Landing page (public, marketing)
+ *   /tool-name/use     → Actual tool (requires login, tracked)
+ * 
+ * All tools receive tracking props to connect with Dashboard counters
  */
 
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
-import { useState, useEffect, Component, ErrorInfo, ReactNode } from 'react'
-import { createClient } from '@supabase/supabase-js'
-import Homepage from './components/Homepage'
+import React, { useState, useEffect } from 'react';
 
-const TEAL = '#0097A9'
-const NAVY = '#0D2C54'
+// ============================================
+// COMPONENT IMPORTS
+// ============================================
 
-// Initialize Supabase
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
-const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null
+// Dashboard & Core Components
+import RealDashboard from './components/Dashboard';
+import ResourceLibrary from './components/ResourceLibrary';
+import EventsCalendar from './components/EventsCalendar';
+import EnhancedOwnerDashboard from './components/EnhancedOwnerDashboard';
+import MarketingDashboard from './components/MarketingDashboard';
+import LinkManager from './components/LinkManager';
+import TeamAccessManager from './components/TeamAccessManager';
+import ContentManager from './components/ContentManager';
+import AdminDashboard from './components/AdminDashboard';
+import PlatformOwnerDashboard from './components/PlatformOwnerDashboard';
 
-// Error Boundary
-class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: Error | null }> {
-  constructor(props: { children: ReactNode }) {
-    super(props)
-    this.state = { hasError: false, error: null }
-  }
+// Auth Components
+import Login from './components/Login';
+import SignUp from './components/SignUp';
+import SignUpSuccess from './components/SignUpSuccess';
+// import SignupFlow from './components/SignupFlow';  // COMMENTED OUT - causes Router context error
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error }
-  }
+// UI Components
+import Homepage from './components/Homepage';
+// import Sidebar from './components/Sidebar';  // COMMENTED OUT - causes Router context error
+// import ProductTour from './components/ProductTour';  // COMMENTED OUT - not used directly
+// import WelcomeModal from './components/WelcomeModal';  // COMMENTED OUT - not used directly
+// import AIGuideChatbot from './components/AIGuideChatbot';  // COMMENTED OUT - not used directly
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo)
-  }
+// Tool Components (Actual Tools)
+import StrategicPlanCheckup from './StrategicPlanCheckup';
+import CEOEvaluation from './CEOEvaluation';
+import BoardAssessment from './BoardAssessment';
+import GrantReview from './GrantReview';
+import ScenarioPlanner from './ScenarioPlanner';
+import AskTheProfessor from './AskTheProfessor';
+import AISummary from './AISummary';
 
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div style={{ padding: '40px', textAlign: 'center', fontFamily: 'system-ui, sans-serif' }}>
-          <h1 style={{ color: '#dc2626', marginBottom: '16px' }}>Something went wrong</h1>
-          <p style={{ color: '#666', marginBottom: '24px' }}>{this.state.error?.message || 'Unknown error'}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            style={{ 
-              background: TEAL, 
-              color: 'white', 
-              border: 'none', 
-              padding: '12px 24px', 
-              borderRadius: '8px', 
-              cursor: 'pointer',
-              fontSize: '16px'
-            }}
-          >
-            Reload Page
-          </button>
-        </div>
-      )
-    }
-    return this.props.children
-  }
+// Landing Page Components
+import ScenarioPlannerLanding from './components/ScenarioPlannerLanding';
+import BoardAssessmentLanding from './BoardAssessmentLanding';
+import CEOEvaluationLanding from './CEOEvaluationLanding';
+import StrategicPlanCheckupLanding from './StrategicPlanCheckupLanding';
+import GrantReviewLanding from './GrantReviewLanding';
+import CertificationsLanding from './CertificationsLanding';
+// import WhyWeExist from './components/WhyWeExist'; // COMMENTED - file doesn't exist
+
+// Tracking utilities
+import { 
+  trackToolStart, 
+  trackToolComplete, 
+  trackDownload, 
+  trackProfessorSession,
+  TIER_LIMITS 
+} from './lib/tracking';
+
+// ============================================
+// TYPES
+// ============================================
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  full_name?: string;
+  role: 'owner' | 'admin' | 'member';
+  organization_id: string;
+  avatar_url?: string | null;
+  profile_photo?: string | null;
+  created_at?: string;
 }
 
-// Login Component
-const Login = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!supabase) { 
-      setError('Database not configured') 
-      return 
-    }
-    setLoading(true)
-    setError('')
-    
-    try {
-      const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
-      if (authError) throw authError
-      onNavigate('dashboard')
-    } catch (err: any) {
-      setError(err.message || 'Login failed')
-    }
-    setLoading(false)
-  }
-
-  return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', padding: '20px' }}>
-      <div style={{ background: 'white', padding: '40px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <img src="/logo.svg" alt="The Nonprofit Edge" style={{ width: '180px', marginBottom: '16px' }} onError={(e) => { (e.target as HTMLImageElement).src = '/logo.jpg' }} />
-          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: NAVY }}>Welcome Back</h1>
-        </div>
-        
-        {error && <div style={{ background: '#fef2f2', color: '#dc2626', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' }}>{error}</div>}
-        
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 500, color: '#374151' }}>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '16px', boxSizing: 'border-box' }}
-            />
-          </div>
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 500, color: '#374151' }}>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '16px', boxSizing: 'border-box' }}
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            style={{ width: '100%', padding: '14px', background: TEAL, color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
-        
-        <div style={{ marginTop: '24px', textAlign: 'center' }}>
-          <button onClick={() => onNavigate('')} style={{ background: 'none', border: 'none', color: TEAL, cursor: 'pointer', fontSize: '14px' }}>
-            ← Back to Home
-          </button>
-        </div>
-      </div>
-    </div>
-  )
+interface Organization {
+  id: string;
+  name: string;
+  tier: 'essential' | 'professional' | 'premium';
+  logo_url?: string | null;
 }
 
-// Signup Component
-const Signup = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [orgName, setOrgName] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!supabase) { 
-      setError('Database not configured') 
-      return 
-    }
-    setLoading(true)
-    setError('')
-    
-    try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({ email, password })
-      if (authError) throw authError
-      
-      if (authData.user) {
-        await supabase.from('users').insert({
-          id: authData.user.id,
-          email,
-          organization_name: orgName,
-          role: 'user'
-        })
-      }
-      
-      onNavigate('dashboard')
-    } catch (err: any) {
-      setError(err.message || 'Signup failed')
-    }
-    setLoading(false)
-  }
-
-  return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', padding: '20px' }}>
-      <div style={{ background: 'white', padding: '40px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <img src="/logo.svg" alt="The Nonprofit Edge" style={{ width: '180px', marginBottom: '16px' }} onError={(e) => { (e.target as HTMLImageElement).src = '/logo.jpg' }} />
-          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: NAVY }}>Start Your Free Trial</h1>
-        </div>
-        
-        {error && <div style={{ background: '#fef2f2', color: '#dc2626', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' }}>{error}</div>}
-        
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 500, color: '#374151' }}>Organization Name</label>
-            <input
-              type="text"
-              value={orgName}
-              onChange={(e) => setOrgName(e.target.value)}
-              required
-              style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '16px', boxSizing: 'border-box' }}
-            />
-          </div>
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 500, color: '#374151' }}>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '16px', boxSizing: 'border-box' }}
-            />
-          </div>
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 500, color: '#374151' }}>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '16px', boxSizing: 'border-box' }}
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            style={{ width: '100%', padding: '14px', background: TEAL, color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
-          >
-            {loading ? 'Creating Account...' : 'Create Account'}
-          </button>
-        </form>
-        
-        <div style={{ marginTop: '24px', textAlign: 'center' }}>
-          <span style={{ color: '#666', fontSize: '14px' }}>Already have an account? </span>
-          <button onClick={() => onNavigate('login')} style={{ background: 'none', border: 'none', color: TEAL, cursor: 'pointer', fontSize: '14px', fontWeight: 600 }}>
-            Sign In
-          </button>
-        </div>
-      </div>
-    </div>
-  )
+interface UsageData {
+  tools_started: number;
+  tools_completed: number;
+  tools_used_this_month: number;
+  downloads_this_month: number;
+  professor_sessions_this_month: number;
+  report_downloads: number;
 }
 
-// Dashboard Component
-const Dashboard = ({ user, onNavigate, onLogout }: { user: any; onNavigate: (page: string) => void; onLogout: () => void }) => {
-  return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
-      <header style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <img src="/logo.svg" alt="The Nonprofit Edge" style={{ width: '150px' }} onError={(e) => { (e.target as HTMLImageElement).src = '/logo.jpg' }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <span style={{ color: '#666' }}>{user?.email}</span>
-          {(user?.role === 'admin' || user?.role === 'owner') && (
-            <button onClick={() => onNavigate('admin')} style={{ background: NAVY, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer' }}>Admin</button>
-          )}
-          <button onClick={onLogout} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer' }}>Logout</button>
-        </div>
-      </header>
-      
-      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 24px' }}>
-        <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: NAVY, marginBottom: '8px' }}>Welcome to The Nonprofit Edge</h1>
-        <p style={{ color: '#666', marginBottom: '32px' }}>Access your strategic tools and resources</p>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
-          {[
-            { title: 'Strategic Plan Check-Up', desc: 'Analyze your strategic plan', icon: '📋' },
-            { title: 'Board Assessment', desc: 'Evaluate board effectiveness', icon: '👥' },
-            { title: 'Grant Review', desc: 'Get feedback on grant proposals', icon: '💰' },
-            { title: 'Scenario Planner', desc: 'Plan for different futures', icon: '🔮' },
-          ].map((tool, i) => (
-            <div key={i} style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', cursor: 'pointer' }}>
-              <div style={{ fontSize: '32px', marginBottom: '12px' }}>{tool.icon}</div>
-              <h3 style={{ fontSize: '18px', fontWeight: 600, color: NAVY, marginBottom: '8px' }}>{tool.title}</h3>
-              <p style={{ color: '#666', fontSize: '14px' }}>{tool.desc}</p>
-            </div>
-          ))}
-        </div>
-      </main>
-    </div>
-  )
+interface ToolSession {
+  id: string;
+  tool_type: string;
+  started_at: string;
 }
 
-// Admin Component
-const Admin = ({ onBack, onNavigate }: { onBack: () => void; onNavigate: (page: string) => void }) => {
-  return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
-      <header style={{ background: NAVY, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h1 style={{ color: 'white', fontSize: '20px', fontWeight: 600 }}>Admin Dashboard</h1>
-        <button onClick={onBack} style={{ background: 'white', color: NAVY, border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer' }}>Back to Dashboard</button>
-      </header>
-      
-      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 24px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px' }}>
-          {[
-            { title: 'Owner Dashboard', route: 'owner-dashboard' },
-            { title: 'Marketing Analytics', route: 'marketing' },
-            { title: 'Link Manager', route: 'link-manager' },
-          ].map((item, i) => (
-            <button
-              key={i}
-              onClick={() => onNavigate(item.route)}
-              style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', cursor: 'pointer', border: '2px solid transparent', textAlign: 'left' }}
-            >
-              <h3 style={{ fontSize: '18px', fontWeight: 600, color: NAVY }}>{item.title}</h3>
-            </button>
-          ))}
-        </div>
-      </main>
-    </div>
-  )
-}
+// ============================================
+// BRAND COLORS
+// ============================================
 
-// Coming Soon Component
-const ComingSoon = ({ title, onBack }: { title: string; onBack: () => void }) => (
-  <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
-    <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: NAVY, marginBottom: '16px' }}>{title}</h1>
-    <p style={{ color: '#666', marginBottom: '24px' }}>Coming Soon</p>
-    <button onClick={onBack} style={{ background: TEAL, color: 'white', border: 'none', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer' }}>Go Back</button>
-  </div>
-)
+const NAVY = '#0D2C54';
+const TEAL = '#0097A9';
 
-// WhyWeExist Component
-const WhyWeExist = ({ onNavigate }: { onNavigate: (page: string) => void }) => (
-  <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
-    <header style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '16px 24px' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <button onClick={() => onNavigate('')} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-          <img src="/logo.svg" alt="The Nonprofit Edge" style={{ width: '150px' }} onError={(e) => { (e.target as HTMLImageElement).src = '/logo.jpg' }} />
-        </button>
-        <button onClick={() => onNavigate('login')} style={{ background: TEAL, color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Sign In</button>
-      </div>
-    </header>
-    
-    <main style={{ maxWidth: '800px', margin: '0 auto', padding: '60px 24px' }}>
-      <h1 style={{ fontSize: '36px', fontWeight: 'bold', color: NAVY, marginBottom: '24px' }}>Why We Exist</h1>
-      <p style={{ fontSize: '18px', color: '#4b5563', lineHeight: 1.8, marginBottom: '24px' }}>
-        After 15+ years working with nonprofit leaders, we saw the same pattern: brilliant missions held back by outdated tools and reactive strategies.
-      </p>
-      <p style={{ fontSize: '18px', color: '#4b5563', lineHeight: 1.8, marginBottom: '24px' }}>
-        The Nonprofit Edge was built to change that—giving every organization access to the strategic frameworks that have helped secure over $100 million in funding.
-      </p>
-      <button onClick={() => onNavigate('')} style={{ background: TEAL, color: 'white', border: 'none', padding: '14px 28px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '16px' }}>
-        ← Back to Home
-      </button>
-    </main>
-  </div>
-)
+// ============================================
+// LOGO COMPONENT
+// ============================================
 
-// App Content with Routes
-function AppContent() {
-  const navigate = useNavigate()
-  const [user, setUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+const Logo = ({ width = 180 }: { width?: number }) => (
+  <svg width={width} height={width * 0.4} viewBox="250 270 500 220">
+    <g>
+      <path fill="#0D2C54" d="M438.46,469.14c-18.16,14.03-40.93,22.38-65.64,22.38c-30.79,0-58.55-12.94-78.16-33.69c2.85,0.46,5.7,0.81,8.57,1.06c9.13,0.79,17.9,0.49,26.26-0.63c12.72,7.44,27.53,11.71,43.33,11.71c17.17,0,33.17-5.03,46.59-13.71C422.94,460.11,428.93,465.14,438.46,469.14z"/>
+      <path fill="#0D2C54" d="M294.86,420.29c-8.64,2.53-16.05,3.61-21.74,4.02c-5.05-12.44-7.82-26.05-7.82-40.31c0-59.37,48.14-107.52,107.52-107.52c25.62,0,49.15,8.96,67.62,23.94c-9.33,2.92-16.19,7.85-20.47,11.69c-13.54-8.9-29.74-14.08-47.15-14.08c-47.48,0-85.97,38.49-85.97,85.97C286.85,396.97,289.72,409.27,294.86,420.29z"/>
+      <path fill="#0097A9" d="M258.67,434.74c0,0,61.28,14.58,121.38-60.61l-18.3-13.11l72.86-22.42l0.39,71.06l-18.78-13.01C416.22,396.64,340.29,479.82,258.67,434.74z"/>
+      <g>
+        <path fill="#0D2C54" d="M491.43,298.55v7.98h-9.88v32.91h-9.08v-32.91h-9.88v-7.98H491.43z"/>
+        <path fill="#0D2C54" d="M528.3,298.55v40.89h-9.08V322.6h-14.13v16.83H496v-40.89h9.08v16.02h14.13v-16.02H528.3z"/>
+        <path fill="#0D2C54" d="M543.91,306.53v8.27h12.17v7.69h-12.17v8.97h13.76v7.98h-22.84v-40.89h22.84v7.98H543.91z"/>
+      </g>
+      <g>
+        <path fill="#0097A9" d="M495.94,392.68h-9.08l-15.19-25.22v25.22h-9.08v-40.89h9.08l15.19,25.34v-25.34h9.08V392.68z"/>
+        <path fill="#0097A9" d="M510.53,390.41c-2.92-1.79-5.24-4.28-6.96-7.48c-1.72-3.2-2.58-6.8-2.58-10.8c0-4,0.86-7.59,2.58-10.78c1.72-3.18,4.04-5.67,6.96-7.46c2.92-1.79,6.14-2.68,9.64-2.68c3.51,0,6.72,0.89,9.64,2.68c2.92,1.79,5.22,4.27,6.91,7.46c1.68,3.18,2.52,6.78,2.52,10.78c0,4-0.85,7.6-2.55,10.8c-1.7,3.2-4,5.7-6.91,7.48c-2.9,1.79-6.11,2.68-9.62,2.68C516.66,393.09,513.45,392.19,510.53,390.41z"/>
+        <path fill="#0097A9" d="M577.65,392.68h-9.08l-15.19-25.22v25.22h-9.08v-40.89h9.08l15.19,25.34v-25.34h9.08V392.68z"/>
+      </g>
+      <g>
+        <path fill="#0D2C54" d="M476.97,418.87v13.1h19.27v12.18h-19.27v14.21h21.8v12.64h-36.19v-64.78h36.19v12.64H476.97z"/>
+        <path fill="#0D2C54" d="M546.58,410.29c4.66,2.71,8.26,6.51,10.82,11.4c2.55,4.89,3.83,10.54,3.83,16.93c0,6.34-1.28,11.97-3.83,16.89c-2.55,4.92-6.17,8.74-10.86,11.44c-4.69,2.71-10.11,4.06-16.29,4.06h-22.14v-64.78h22.14C536.48,406.23,541.92,407.58,546.58,410.29z"/>
+        <path fill="#0D2C54" d="M608.53,426.71c-1.07-2.15-2.6-3.8-4.59-4.94c-1.99-1.14-4.33-1.71-7.03-1.71c-4.66,0-8.39,1.68-11.19,5.03c-2.81,3.35-4.21,7.83-4.21,13.43c0,5.97,1.47,10.63,4.42,13.98c2.95,3.35,7,5.03,12.16,5.03c3.54,0,6.52-0.98,8.96-2.95c2.44-1.97,4.22-4.8,5.34-8.49h-18.26v-11.63h31.31v14.67c-1.07,3.94-2.88,7.6-5.43,10.98c-2.55,3.38-5.79,6.12-9.72,8.21c-3.93,2.09-8.36,3.14-13.3,3.14c-5.84,0-11.04-1.4-15.61-4.2c-4.57-2.8-8.14-6.69-10.69-11.67c-2.55-4.98-3.83-10.67-3.83-17.07c0-6.4,1.28-12.1,3.83-17.12c2.55-5.01,6.1-8.92,10.65-11.72c4.55-2.8,9.73-4.2,15.57-4.2c7.07,0,13.03,1.88,17.89,5.63c4.85,3.75,8.07,8.95,9.64,15.6H608.53z"/>
+        <path fill="#0D2C54" d="M647.83,418.87v13.1h19.27v12.18h-19.27v14.21h21.8v12.64h-36.19v-64.78h36.19v12.64H647.83z"/>
+      </g>
+    </g>
+  </svg>
+);
+
+// ============================================
+// MAIN APP COMPONENT
+// ============================================
+
+const App: React.FC = () => {
+  // ==========================================
+  // STATE
+  // ==========================================
+  
+  const [currentRoute, setCurrentRoute] = useState<string>(window.location.pathname);
+  const [user, setUser] = useState<User | null>(null);
+  const [organization, setOrganization] = useState<Organization | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentSession, setCurrentSession] = useState<ToolSession | null>(null);
+  
+  // Usage tracking state
+  const [usage, setUsage] = useState<UsageData>({
+    tools_started: 0,
+    tools_completed: 0,
+    tools_used_this_month: 0,
+    downloads_this_month: 0,
+    professor_sessions_this_month: 0,
+    report_downloads: 0,
+  });
+
+  // ==========================================
+  // INITIALIZATION
+  // ==========================================
 
   useEffect(() => {
-    const init = async () => {
-      if (!supabase) { 
-        setLoading(false) 
-        return 
-      }
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session?.user) {
-          const { data } = await supabase.from('users').select('*').eq('id', session.user.id).single()
-          setUser(data || { id: session.user.id, email: session.user.email })
-        }
-      } catch (e) { 
-        console.error('Session error:', e) 
-      }
-      setLoading(false)
-    }
-    init()
+    // Handle browser navigation
+    const handlePopState = () => {
+      setCurrentRoute(window.location.pathname);
+    };
+    window.addEventListener('popstate', handlePopState);
 
-    if (supabase) {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-        if (session?.user) {
-          const { data } = await supabase.from('users').select('*').eq('id', session.user.id).single()
-          setUser(data || { id: session.user.id, email: session.user.email })
-        } else {
-          setUser(null)
-        }
-      })
-      return () => subscription.unsubscribe()
+    // Check for saved user
+    try {
+      const savedUser = localStorage.getItem('nonprofit_edge_user');
+      const savedOrg = localStorage.getItem('nonprofit_edge_org');
+      const savedUsage = localStorage.getItem('nonprofit_edge_usage');
+      
+      if (savedUser) {
+        setUser(JSON.parse(savedUser));
+      }
+      if (savedOrg) {
+        setOrganization(JSON.parse(savedOrg));
+      }
+      if (savedUsage) {
+        setUsage(JSON.parse(savedUsage));
+      }
+    } catch (e) {
+      console.error('Error loading saved data:', e);
     }
-  }, [])
+    
+    setIsLoading(false);
 
-  const handleLogout = async () => {
-    if (supabase) await supabase.auth.signOut()
-    setUser(null)
-    navigate('/login')
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Save usage to localStorage when it changes
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('nonprofit_edge_usage', JSON.stringify(usage));
+    }
+  }, [usage, user]);
+
+  // ==========================================
+  // NAVIGATION
+  // ==========================================
+
+  const navigate = (route: string) => {
+    setCurrentRoute(route);
+    window.history.pushState({}, '', route);
+    window.scrollTo(0, 0);
+  };
+
+  // ==========================================
+  // AUTH HANDLERS
+  // ==========================================
+
+  const handleLogin = (email: string) => {
+    const newUser: User = {
+      id: 'user_' + Date.now(),
+      email: email,
+      name: email.split('@')[0],
+      full_name: email.split('@')[0],
+      role: email.includes('owner') ? 'owner' : 'member',
+      organization_id: 'org_1',
+      created_at: new Date().toISOString(),
+    };
+    
+    const newOrg: Organization = {
+      id: 'org_1',
+      name: 'Your Organization',
+      tier: 'professional',
+    };
+    
+    setUser(newUser);
+    setOrganization(newOrg);
+    localStorage.setItem('nonprofit_edge_user', JSON.stringify(newUser));
+    localStorage.setItem('nonprofit_edge_org', JSON.stringify(newOrg));
+    navigate('/dashboard');
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setOrganization(null);
+    setCurrentSession(null);
+    localStorage.removeItem('nonprofit_edge_user');
+    localStorage.removeItem('nonprofit_edge_org');
+    localStorage.removeItem('nonprofit_edge_usage');
+    navigate('/');
+  };
+
+  // ==========================================
+  // TRACKING HANDLERS (Connect to Dashboard)
+  // ==========================================
+
+  const handleToolStart = async (toolId: string, toolName: string): Promise<string | null> => {
+    if (!user || !organization) return null;
+
+    const sessionId = `session_${Date.now()}`;
+    const session: ToolSession = {
+      id: sessionId,
+      tool_type: toolId,
+      started_at: new Date().toISOString(),
+    };
+    setCurrentSession(session);
+
+    console.log(`Tool opened: ${toolName} (Session: ${sessionId})`);
+    return sessionId;
+  };
+
+  const handleToolComplete = async (sessionId: string, toolName: string, score?: number) => {
+    if (!user || !organization) return;
+
+    setUsage(prev => ({
+      ...prev,
+      tools_started: prev.tools_started + 1,
+      tools_completed: prev.tools_completed + 1,
+      tools_used_this_month: prev.tools_used_this_month + 1,
+    }));
+
+    setCurrentSession(null);
+    console.log(`Tool COMPLETED: ${toolName} (Score: ${score || 'N/A'}) - Counters updated!`);
+  };
+
+  const handleDownload = async (resourceName: string, resourceType: 'report' | 'template' = 'report') => {
+    if (!user || !organization) return;
+
+    const tier = organization.tier;
+    const limits = TIER_LIMITS[tier] || TIER_LIMITS.essential;
+
+    if (usage.downloads_this_month >= limits.downloads) {
+      alert(`You've reached your monthly download limit (${limits.downloads}). Upgrade for more.`);
+      return;
+    }
+
+    setUsage(prev => ({
+      ...prev,
+      downloads_this_month: prev.downloads_this_month + 1,
+      report_downloads: prev.report_downloads + 1,
+    }));
+
+    console.log(`Download tracked: ${resourceName}`);
+  };
+
+  const handleStartProfessor = async () => {
+    if (!user || !organization) {
+      navigate('/login');
+      return;
+    }
+
+    const tier = organization.tier;
+    const limits = TIER_LIMITS[tier] || TIER_LIMITS.essential;
+
+    if (tier !== 'premium' && usage.professor_sessions_this_month >= limits.professor) {
+      alert(`You've reached your monthly limit (${limits.professor}). Upgrade for more.`);
+      return;
+    }
+
+    setUsage(prev => ({
+      ...prev,
+      professor_sessions_this_month: prev.professor_sessions_this_month + 1,
+    }));
+
+    navigate('/ask-the-professor/use');
+  };
+
+  // ==========================================
+  // TOOL PAGE WRAPPER (with tracking)
+  // ==========================================
+
+  interface ToolWrapperProps {
+    toolId: string;
+    toolName: string;
+    children: React.ReactNode;
   }
 
-  const nav = (page: string) => navigate(`/${page}`)
+  const ToolPageWrapper: React.FC<ToolWrapperProps> = ({ toolId, toolName, children }) => {
+    const [sessionId, setSessionId] = useState<string | null>(null);
 
-  if (loading) {
+    useEffect(() => {
+      handleToolStart(toolId, toolName).then(id => setSessionId(id));
+    }, [toolId, toolName]);
+
+    const onComplete = (score?: number) => {
+      if (sessionId) {
+        handleToolComplete(sessionId, toolName, score);
+      }
+    };
+
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ width: '40px', height: '40px', border: '4px solid #e5e7eb', borderTopColor: TEAL, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }}></div>
-          <p style={{ color: '#666' }}>Loading...</p>
-        </div>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: 'system-ui, sans-serif' }}>
+        <header style={{ 
+          background: 'white', 
+          padding: '12px 32px', 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          borderBottom: '1px solid #e2e8f0' 
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <Logo width={140} />
+            <span style={{ color: '#cbd5e1' }}>|</span>
+            <span style={{ color: NAVY, fontWeight: 600 }}>{toolName}</span>
+          </div>
+          <button 
+            onClick={() => navigate('/dashboard')} 
+            style={{ 
+              padding: '8px 16px', 
+              background: '#f1f5f9', 
+              color: '#475569', 
+              border: 'none', 
+              borderRadius: '6px', 
+              cursor: 'pointer' 
+            }}
+          >
+            ← Back to Dashboard
+          </button>
+        </header>
+        {React.Children.map(children, child => {
+          if (React.isValidElement(child)) {
+            return React.cloneElement(child, { 
+              onComplete, 
+              sessionId,
+              onBack: () => navigate('/dashboard')
+            } as any);
+          }
+          return child;
+        })}
       </div>
-    )
+    );
+  };
+
+  // ==========================================
+  // AUTH GUARD
+  // ==========================================
+
+  const requireAuth = (component: React.ReactNode): React.ReactNode => {
+    if (!user) {
+      navigate('/login');
+      return null;
+    }
+    return component;
+  };
+
+  // ==========================================
+  // LOADING STATE
+  // ==========================================
+
+  if (isLoading) {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        background: '#f8fafc' 
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <Logo width={200} />
+          <p style={{ color: '#64748b', marginTop: '16px' }}>Loading...</p>
+        </div>
+      </div>
+    );
   }
 
-  return (
-    <Routes>
-      <Route path="/" element={<Homepage onNavigate={nav} />} />
-      <Route path="/login" element={<Login onNavigate={nav} />} />
-      <Route path="/signup" element={<Signup onNavigate={nav} />} />
-      <Route path="/why-we-exist" element={<WhyWeExist onNavigate={nav} />} />
-      <Route path="/dashboard" element={user ? <Dashboard user={user} onNavigate={nav} onLogout={handleLogout} /> : <Navigate to="/login" />} />
-      <Route path="/admin" element={user?.role === 'admin' || user?.role === 'owner' ? <Admin onBack={() => navigate('/dashboard')} onNavigate={nav} /> : <Navigate to="/dashboard" />} />
-      <Route path="/owner-dashboard" element={<ComingSoon title="Owner Dashboard" onBack={() => navigate('/admin')} />} />
-      <Route path="/marketing" element={<ComingSoon title="Marketing Analytics" onBack={() => navigate('/admin')} />} />
-      <Route path="/link-manager" element={<ComingSoon title="Link Manager" onBack={() => navigate('/admin')} />} />
-      <Route path="*" element={<Navigate to="/" />} />
-    </Routes>
-  )
-}
+  // ==========================================
+  // ROUTE MAPPING HELPER
+  // ==========================================
 
-// Main App Export
-export default function App() {
-  return (
-    <ErrorBoundary>
-      <Router>
-        <AppContent />
-      </Router>
-    </ErrorBoundary>
-  )
-}
+  const mapDashboardNavigation = (page: string): string => {
+    const routeMap: Record<string, string> = {
+      'dashboard': '/dashboard',
+      'library': '/resources',
+      'events': '/events',
+      'team': '/team',
+      'reports': '/reports',
+      'settings': '/settings',
+      'templates': '/templates',
+      'book-summaries': '/book-summaries',
+      'certifications': '/certifications',
+      'pricing': '/pricing',
+      'constraint-assessment': '/constraint-assessment',
+      'getting-started': '/getting-started',
+      'strategic-checkup': '/strategic-plan-checkup/use',
+      'ceo-evaluation': '/ceo-evaluation/use',
+      'board-assessment': '/board-assessment/use',
+      'scenario-planner': '/scenario-planner/use',
+      'grant-review': '/grant-review/use',
+      'content-manager': '/admin/content',
+      'platform-admin': '/admin/platform',
+      'owner-dashboard': '/admin/owner',
+      'enhanced-owner': '/admin/enhanced',
+      'marketing': '/admin/marketing',
+      'link-manager': '/admin/links',
+      'team-access': '/admin/team',
+      'homepage-editor': '/admin/homepage',
+    };
+    return routeMap[page] || `/${page}`;
+  };
+
+  // ==========================================
+  // ROUTING
+  // ==========================================
+
+  const renderRoute = (): React.ReactNode => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlSessionId = urlParams.get('session');
+
+    switch (currentRoute) {
+      // ========================================
+      // PUBLIC ROUTES
+      // ========================================
+      
+      case '/':
+        return <Homepage onNavigate={navigate} />;
+      
+      case '/login':
+        return <Login onLogin={handleLogin} onNavigate={navigate} />;
+      
+      case '/signup':
+        return <SignUp onSignUp={handleLogin} onNavigate={navigate} />;
+      
+      case '/signup/success':
+        return <SignUpSuccess onNavigate={navigate} />;
+      
+      case '/forgot-password':
+        return <ForgotPassword onNavigate={navigate} />;
+      
+      case '/reset-password':
+        return <ResetPassword onNavigate={navigate} />;
+
+      // case '/why-we-exist':
+      //   return <WhyWeExist onNavigate={navigate} />; // COMMENTED - component doesn't exist
+
+      // ========================================
+      // TOOL LANDING PAGES (Public)
+      // ========================================
+      
+      case '/strategic-plan-checkup':
+        return <StrategicPlanCheckupLanding onNavigate={navigate} onGetStarted={() => navigate('/strategic-plan-checkup/use')} />;
+      
+      case '/board-assessment':
+        return <BoardAssessmentLanding onNavigate={navigate} onGetStarted={() => navigate('/board-assessment/use')} />;
+      
+      case '/ceo-evaluation':
+        return <CEOEvaluationLanding onNavigate={navigate} onGetStarted={() => navigate('/ceo-evaluation/use')} />;
+      
+      case '/scenario-planner':
+        return <ScenarioPlannerLanding onNavigate={navigate} onGetStarted={() => navigate('/scenario-planner/use')} />;
+      
+      case '/grant-review':
+        return <GrantReviewLanding onNavigate={navigate} onGetStarted={() => navigate('/grant-review/use')} />;
+      
+      case '/ask-the-professor':
+        return <ScenarioPlannerLanding onNavigate={navigate} onGetStarted={handleStartProfessor} />;
+      
+      case '/certifications':
+        return <CertificationsLanding onNavigate={navigate} />;
+
+      // ========================================
+      // TOOL PAGES (Require Auth, Tracked)
+      // ========================================
+      
+      case '/strategic-plan-checkup/use':
+        return requireAuth(
+          <ToolPageWrapper toolId="strategic-checkup" toolName="Strategic Plan Check-Up">
+            <StrategicPlanCheckup />
+          </ToolPageWrapper>
+        );
+      
+      case '/board-assessment/use':
+        return requireAuth(
+          <ToolPageWrapper toolId="board-assessment" toolName="Board Assessment">
+            <BoardAssessment />
+          </ToolPageWrapper>
+        );
+      
+      case '/ceo-evaluation/use':
+        return requireAuth(
+          <ToolPageWrapper toolId="ceo-evaluation" toolName="CEO Evaluation">
+            <CEOEvaluation />
+          </ToolPageWrapper>
+        );
+      
+      case '/scenario-planner/use':
+        return requireAuth(
+          <ToolPageWrapper toolId="scenario-planner" toolName="PIVOT Scenario Planner">
+            <ScenarioPlanner />
+          </ToolPageWrapper>
+        );
+      
+      case '/grant-review/use':
+        return requireAuth(
+          <ToolPageWrapper toolId="grant-review" toolName="Grant/RFP Review">
+            <GrantReview />
+          </ToolPageWrapper>
+        );
+      
+      case '/ask-the-professor/use':
+        return requireAuth(
+          <ToolPageWrapper toolId="ask-professor" toolName="Ask The Professor">
+            <AskTheProfessor />
+          </ToolPageWrapper>
+        );
+      
+      case '/ai-summary/use':
+        return requireAuth(
+          <ToolPageWrapper toolId="ai-summary" toolName="AI Summary">
+            <AISummary />
+          </ToolPageWrapper>
+        );
+
+      // ========================================
+      // DASHBOARD & MAIN APP (Require Auth)
+      // ========================================
+      
+      case '/dashboard':
+        if (!user || !organization) {
+          navigate('/login');
+          return null;
+        }
+        return (
+          <RealDashboard 
+            user={{
+              ...user,
+              full_name: user.name,
+              avatar_url: null,
+              profile_photo: null,
+              created_at: user.created_at || new Date().toISOString(),
+            }}
+            organization={organization}
+            usage={usage}
+            teamCount={1}
+            onNavigate={(page: string) => navigate(mapDashboardNavigation(page))}
+            onDownload={handleDownload}
+            onStartProfessor={handleStartProfessor}
+            onLogout={handleLogout}
+          />
+        );
+
+      case '/resources':
+        return requireAuth(
+          <ResourceLibrary 
+            user={{ ...user!, full_name: user!.name }}
+            organization={organization!}
+            onNavigate={(page: string) => navigate(mapDashboardNavigation(page))}
+            onLogout={handleLogout}
+          />
+        );
+
+      case '/events':
+        return requireAuth(
+          <EventsCalendar 
+            user={{ ...user!, full_name: user!.name }}
+            organization={organization!}
+            onNavigate={(page: string) => navigate(mapDashboardNavigation(page))}
+            onLogout={handleLogout}
+          />
+        );
+
+      // ========================================
+      // ADMIN ROUTES
+      // ========================================
+
+      case '/admin':
+      case '/admin/owner':
+      case '/admin/enhanced':
+        return requireAuth(
+          <EnhancedOwnerDashboard onNavigate={(page: string) => navigate(`/${page}`)} />
+        );
+
+      case '/admin/marketing':
+        return requireAuth(<MarketingDashboard />);
+
+      case '/admin/links':
+        return requireAuth(<LinkManager />);
+
+      case '/admin/team':
+        return requireAuth(<TeamAccessManager />);
+
+      case '/admin/content':
+        return requireAuth(<ContentManager />);
+
+      case '/admin/platform':
+        return requireAuth(<AdminDashboard />);
+
+      // ========================================
+      // LEGACY ROUTE REDIRECTS
+      // ========================================
+
+      case '/tools/strategic-plan':
+        navigate('/strategic-plan-checkup/use');
+        return null;
+      
+      case '/tools/board-assessment':
+        navigate('/board-assessment/use');
+        return null;
+      
+      case '/tools/ceo-evaluation':
+        navigate('/ceo-evaluation/use');
+        return null;
+      
+      case '/tools/scenario-planner':
+        navigate('/scenario-planner/use');
+        return null;
+      
+      case '/tools/grant-review':
+        navigate('/grant-review/use');
+        return null;
+      
+      case '/tools/ask-professor':
+        navigate('/ask-the-professor/use');
+        return null;
+      
+      case '/tools/ai-summary':
+        navigate('/ai-summary/use');
+        return null;
+
+      case '/tools/scenario-planner/info':
+        navigate('/scenario-planner');
+        return null;
+
+      case '/owner':
+        navigate('/admin/owner');
+        return null;
+
+      case '/owner/enhanced':
+        navigate('/admin/enhanced');
+        return null;
+
+      case '/owner/marketing':
+        navigate('/admin/marketing');
+        return null;
+
+      case '/owner/links':
+        navigate('/admin/links');
+        return null;
+
+      case '/owner/team':
+        navigate('/admin/team');
+        return null;
+
+      // ========================================
+      // DEFAULT / 404
+      // ========================================
+      
+      default:
+        if (currentRoute.startsWith('/tools/')) {
+          navigate('/dashboard');
+          return null;
+        }
+        return <Homepage onNavigate={navigate} />;
+    }
+  };
+
+  return <>{renderRoute()}</>;
+};
+
+export default App;
