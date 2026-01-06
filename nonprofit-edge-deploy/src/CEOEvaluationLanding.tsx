@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 
-const CEOEvaluationLanding: React.FC = () => {
+interface CEOEvaluationLandingProps {
+  onNavigate?: (route: string) => void;
+  onGetStarted?: () => void;
+}
+
+const CEOEvaluationLanding: React.FC<CEOEvaluationLandingProps> = ({ onNavigate, onGetStarted }) => {
   const [currentScreen, setCurrentScreen] = useState(0);
   const screens = ['screen1', 'screen2', 'screen3', 'screen4'];
 
@@ -10,6 +15,14 @@ const CEOEvaluationLanding: React.FC = () => {
     }, 4000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleGetStarted = () => {
+    if (onGetStarted) {
+      onGetStarted();
+    } else if (onNavigate) {
+      onNavigate('/signup');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white font-sans">
@@ -27,16 +40,20 @@ const CEOEvaluationLanding: React.FC = () => {
               A structured, fair, and growth-focused evaluation process that strengthens the board-CEO relationship.
             </p>
             <div className="flex flex-wrap gap-4">
-              <a href="/signup" className="inline-flex items-center justify-center px-6 py-3 bg-[#0D2C54] text-white font-semibold rounded-lg hover:bg-[#0a2040] transition-all">
+              <button 
+                onClick={handleGetStarted}
+                className="inline-flex items-center justify-center px-6 py-3 bg-[#0D2C54] text-white font-semibold rounded-lg hover:bg-[#0a2040] transition-all"
+              >
                 Start Your Free Trial
-              </a>
+              </button>
               <a href="/samples/ceo-evaluation-report.pdf" className="inline-flex items-center justify-center px-6 py-3 border-2 border-[#0D2C54] text-[#0D2C54] font-semibold rounded-lg hover:bg-[#0D2C54] hover:text-white transition-all">
                 View Sample Report
               </a>
             </div>
           </div>
+          {/* Hero Image - FIXED PATH */}
           <div className="rounded-xl overflow-hidden shadow-2xl">
-            <img src="/images/ceo-celebration.jpg" alt="Celebrating leadership success" className="w-full h-auto" />
+            <img src="/ceo-hero.jpg" alt="Celebrating leadership success" className="w-full h-auto" />
           </div>
         </div>
       </section>
@@ -56,10 +73,11 @@ const CEOEvaluationLanding: React.FC = () => {
           <h2 className="text-3xl lg:text-4xl font-bold text-[#0D2C54] text-center mb-4">Why CEO Evaluations Go Wrong</h2>
           <p className="text-lg text-gray-600 text-center max-w-2xl mx-auto mb-12">Good intentions, poor execution.</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Cards - FIXED PATHS */}
             {[
-              { img: '/images/ceo-no-criteria.jpg', title: 'No Clear Criteria', desc: "Evaluation based on vibes, not goals. The CEO doesn't know what 'success' looks like." },
-              { img: '/images/ceo-surprise.jpg', title: 'Surprise Feedback', desc: 'Issues raised in annual review that were never discussed during the year.' },
-              { img: '/images/ceo-skipped.jpg', title: 'Skipped Entirely', desc: "Things are going fine — but often they aren't. Boards avoid the conversation altogether." },
+              { img: '/ceo-evaluation.jpg', title: 'No Clear Criteria', desc: "Evaluation based on vibes, not goals. The CEO doesn't know what 'success' looks like." },
+              { img: '/cert-consultant.jpg', title: 'Surprise Feedback', desc: 'Issues raised in annual review that were never discussed during the year.' },
+              { img: '/tool-strategic.jpg', title: 'Skipped Entirely', desc: "Things are going fine — but often they aren't. Boards avoid the conversation altogether." },
             ].map((card, i) => (
               <div key={i} className="relative rounded-xl overflow-hidden min-h-[320px] flex flex-col justify-end">
                 <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${card.img})` }} />
@@ -214,7 +232,12 @@ const CEOEvaluationLanding: React.FC = () => {
           <h2 className="text-3xl lg:text-4xl font-bold text-[#0D2C54] mb-4">Ready for Better Conversations?</h2>
           <p className="text-lg text-gray-600 mb-8">Build a CEO evaluation process that actually strengthens leadership.</p>
           <div className="flex flex-wrap gap-4 justify-center">
-            <a href="/signup" className="inline-flex items-center justify-center px-6 py-3 bg-[#0D2C54] text-white font-semibold rounded-lg hover:bg-[#0a2040] transition-all">Start Your Free Trial</a>
+            <button 
+              onClick={handleGetStarted}
+              className="inline-flex items-center justify-center px-6 py-3 bg-[#0D2C54] text-white font-semibold rounded-lg hover:bg-[#0a2040] transition-all"
+            >
+              Start Your Free Trial
+            </button>
             <a href="/samples/ceo-evaluation-report.pdf" className="inline-flex items-center justify-center px-6 py-3 border-2 border-[#0D2C54] text-[#0D2C54] font-semibold rounded-lg hover:bg-[#0D2C54] hover:text-white transition-all">View Sample Report</a>
           </div>
           <p className="mt-6 text-sm text-gray-500">Starting at $97/month for teams · Cancel anytime</p>
