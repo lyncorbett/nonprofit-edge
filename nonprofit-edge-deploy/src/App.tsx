@@ -6,7 +6,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { useState, useEffect, Component, ErrorInfo, ReactNode } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import Homepage from './Homepage'
+import Homepage from './components/Homepage'
 
 const TEAL = '#0097A9'
 const NAVY = '#0D2C54'
