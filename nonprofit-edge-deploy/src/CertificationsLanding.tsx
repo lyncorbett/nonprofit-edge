@@ -1,560 +1,340 @@
-/**
- * THE NONPROFIT EDGE - Certifications Landing Page
- * Professional Development & Certification Programs
- */
-
 import React from 'react';
 
-const NAVY = '#0D2C54';
-const TEAL = '#0097A9';
-
 interface CertificationsLandingProps {
-  onNavigate?: (path: string) => void;
+  onNavigate?: (route: string) => void;
+  onGetStarted?: () => void;
 }
 
-const CertificationsLanding: React.FC<CertificationsLandingProps> = ({ onNavigate }) => {
-  
-  const certifications = {
-    partner: [
-      {
-        id: 'disc',
-        name: 'Everything DiSC® Certification',
-        description: 'Master the world\'s most trusted behavioral assessment tool. Learn to administer, interpret, and facilitate DiSC workshops that transform how teams communicate and collaborate.',
-        duration: '2 weeks (20 hours)',
-        format: 'Live online + self-paced',
-        exam: '80% to pass',
-        credits: '20 SHRM/HRCI PDCs',
-        image: '/images/cert-disc.jpg',
-      },
-      {
-        id: 'five-behaviors',
-        name: 'The Five Behaviors® Certification',
-        description: 'Based on Patrick Lencioni\'s bestselling "The Five Dysfunctions of a Team." Learn to build trust, drive healthy conflict, and create accountability in any team environment.',
-        duration: '2 weeks (20 hours)',
-        format: 'Live online + self-paced',
-        exam: '80% to pass',
-        credits: '20 SHRM/HRCI PDCs',
-        image: '/images/cert-five-behaviors.jpg',
-      },
-    ],
-    nonprofitEdge: [
-      {
-        id: 'governance',
-        name: 'Nonprofit Governance Certification',
-        description: 'For board members and executives who want to master nonprofit governance. Learn fiduciary responsibilities, strategic oversight, board-staff dynamics, and how to build a high-performing board.',
-        duration: '4 weeks',
-        format: 'Live online sessions',
-        exam: 'Final assessment required',
-        certificate: 'The Nonprofit Edge',
-        image: '/images/cert-governance.jpg',
-      },
-      {
-        id: 'consultant',
-        name: 'Nonprofit Consultant Certification',
-        description: 'For aspiring and practicing consultants who want to serve the nonprofit sector. Learn consulting frameworks, client engagement, facilitation skills, and how to deliver strategic value.',
-        duration: '6 weeks',
-        format: 'Live online sessions',
-        exam: 'Final assessment required',
-        certificate: 'The Nonprofit Edge',
-        image: '/images/cert-consultant.jpg',
-      },
-      {
-        id: 'leadership',
-        name: 'Strategic Leadership Certification',
-        description: 'For nonprofit executives ready to elevate their leadership. Master strategic thinking, change management, organizational culture, and the skills needed to lead with clarity and impact.',
-        duration: '6 weeks',
-        format: 'Live online sessions',
-        exam: 'Final assessment required',
-        certificate: 'The Nonprofit Edge',
-        image: '/images/cert-leadership.jpg',
-      },
-    ],
+const CertificationsLanding: React.FC<CertificationsLandingProps> = ({ onNavigate, onGetStarted }) => {
+  const handleGetStarted = () => {
+    if (onGetStarted) {
+      onGetStarted();
+    } else if (onNavigate) {
+      onNavigate('/signup');
+    }
   };
 
-  const benefits = [
-    { icon: '📋', title: 'Advance Your Career', description: 'Stand out with recognized credentials that signal expertise to employers and clients.' },
-    { icon: '🎯', title: 'Deepen Your Expertise', description: 'Go beyond surface knowledge with rigorous training from experienced practitioners.' },
-    { icon: '🤝', title: 'Join a Community', description: 'Connect with fellow professionals committed to nonprofit excellence.' },
-    { icon: '💡', title: 'Apply Immediately', description: 'Every certification includes practical tools you can use right away.' },
-    { icon: '✅', title: 'Earn PDCs', description: 'Partner certifications count toward SHRM, HRCI, ATD, and ICF recertification.' },
-    { icon: '🏆', title: 'Lifetime Credential', description: 'Your certification doesn\'t expire—it\'s a permanent addition to your credentials.' },
+  const handleNavigate = (route: string) => {
+    if (onNavigate) {
+      onNavigate(route);
+    }
+  };
+
+  const certifications = [
+    {
+      id: 'governance',
+      title: 'Board Governance Excellence',
+      description: 'Master the fundamentals of effective nonprofit board leadership, from fiduciary duties to strategic oversight.',
+      duration: '4 weeks',
+      modules: 6,
+      image: '/cert-governance.jpg',
+      color: 'purple',
+      topics: ['Fiduciary Responsibilities', 'Strategic Planning Oversight', 'CEO Evaluation', 'Risk Management', 'Financial Oversight', 'Board Development'],
+    },
+    {
+      id: 'leadership',
+      title: 'Executive Leadership',
+      description: 'Develop the skills to lead your nonprofit through growth, change, and challenging times.',
+      duration: '6 weeks',
+      modules: 8,
+      image: '/cert-leadership.jpg',
+      color: 'blue',
+      topics: ['Vision & Strategy', 'Team Building', 'Change Management', 'Stakeholder Relations', 'Crisis Leadership', 'Organizational Culture'],
+    },
+    {
+      id: 'disc',
+      title: 'DISC Assessment Facilitator',
+      description: 'Become certified to administer and interpret DISC assessments for team development.',
+      duration: '2 weeks',
+      modules: 4,
+      image: '/cert-disc.jpg',
+      color: 'teal',
+      topics: ['DISC Theory', 'Assessment Administration', 'Results Interpretation', 'Team Facilitation'],
+    },
+    {
+      id: 'five-behaviors',
+      title: 'Five Behaviors Facilitator',
+      description: 'Lead teams through the Five Behaviors model to build cohesion and high performance.',
+      duration: '3 weeks',
+      modules: 5,
+      image: '/cert-five-behaviors.png',
+      color: 'orange',
+      topics: ['Trust Building', 'Healthy Conflict', 'Commitment', 'Accountability', 'Results Focus'],
+    },
+    {
+      id: 'strategic-planning',
+      title: 'Strategic Planning Professional',
+      description: 'Learn to facilitate strategic planning processes that produce actionable, implementable plans.',
+      duration: '5 weeks',
+      modules: 7,
+      image: '/tool-strategic.jpg',
+      color: 'green',
+      topics: ['Environmental Scanning', 'Mission & Vision', 'Goal Setting', 'Implementation Planning', 'Progress Monitoring', 'Plan Refresh'],
+    },
+    {
+      id: 'consultant',
+      title: 'Nonprofit Consulting Foundations',
+      description: 'Build the skills to serve as an effective consultant to nonprofit organizations.',
+      duration: '8 weeks',
+      modules: 10,
+      image: '/cert-consultant.jpg',
+      color: 'indigo',
+      topics: ['Consulting Frameworks', 'Client Engagement', 'Needs Assessment', 'Solution Design', 'Project Management', 'Ethical Practice'],
+    },
   ];
 
-  const steps = [
-    { number: 1, title: 'Choose Your Program', description: 'Select the certification that matches your goals' },
-    { number: 2, title: 'Complete Training', description: 'Attend live sessions and finish coursework' },
-    { number: 3, title: 'Pass the Exam', description: 'Demonstrate mastery with final assessment' },
-    { number: 4, title: 'Get Certified', description: 'Receive your credential and start applying' },
-  ];
-
-  const styles: { [key: string]: React.CSSProperties } = {
-    container: {
-      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-      color: '#374151',
-      lineHeight: 1.6,
-    },
-    hero: {
-      padding: '80px 24px',
-      background: `linear-gradient(135deg, ${NAVY} 0%, #1a4070 100%)`,
-      textAlign: 'center' as const,
-    },
-    heroBadge: {
-      display: 'inline-block',
-      background: TEAL,
-      color: 'white',
-      padding: '8px 20px',
-      borderRadius: '20px',
-      fontSize: '13px',
-      fontWeight: 600,
-      textTransform: 'uppercase' as const,
-      letterSpacing: '1px',
-      marginBottom: '24px',
-    },
-    heroTitle: {
-      fontSize: '48px',
-      fontWeight: 800,
-      color: 'white',
-      marginBottom: '20px',
-      lineHeight: 1.2,
-    },
-    heroSubtitle: {
-      fontSize: '20px',
-      color: 'rgba(255, 255, 255, 0.85)',
-      maxWidth: '700px',
-      margin: '0 auto',
-    },
-    section: {
-      padding: '80px 24px',
-      maxWidth: '1200px',
-      margin: '0 auto',
-    },
-    sectionHeader: {
-      textAlign: 'center' as const,
-      marginBottom: '48px',
-    },
-    sectionTitle: {
-      fontSize: '36px',
-      fontWeight: 700,
-      color: NAVY,
-      marginBottom: '12px',
-    },
-    sectionSubtitle: {
-      fontSize: '18px',
-      color: '#6b7280',
-      maxWidth: '600px',
-      margin: '0 auto',
-    },
-    certCard: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 1.2fr',
-      gap: 0,
-      background: 'white',
-      borderRadius: '16px',
-      overflow: 'hidden',
-      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-      marginBottom: '40px',
-      border: '1px solid #e5e7eb',
-    },
-    certCardReverse: {
-      display: 'grid',
-      gridTemplateColumns: '1.2fr 1fr',
-      gap: 0,
-      background: 'white',
-      borderRadius: '16px',
-      overflow: 'hidden',
-      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-      marginBottom: '40px',
-      border: '1px solid #e5e7eb',
-    },
-    certImage: {
-      minHeight: '320px',
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-    },
-    certContent: {
-      padding: '40px',
-      display: 'flex',
-      flexDirection: 'column' as const,
-      justifyContent: 'center',
-    },
-    certType: {
-      display: 'inline-block',
-      padding: '6px 14px',
-      borderRadius: '20px',
-      fontSize: '12px',
-      fontWeight: 600,
-      textTransform: 'uppercase' as const,
-      letterSpacing: '0.5px',
-      marginBottom: '16px',
-      width: 'fit-content',
-    },
-    certTypePartner: {
-      background: 'rgba(0, 151, 169, 0.1)',
-      color: TEAL,
-    },
-    certTypeEdge: {
-      background: 'rgba(13, 44, 84, 0.1)',
-      color: NAVY,
-    },
-    certTitle: {
-      fontSize: '28px',
-      fontWeight: 700,
-      color: NAVY,
-      marginBottom: '16px',
-    },
-    certDesc: {
-      fontSize: '16px',
-      color: '#4b5563',
-      marginBottom: '24px',
-      lineHeight: 1.7,
-    },
-    certDetails: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gap: '12px',
-      marginBottom: '24px',
-    },
-    certDetail: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px',
-      fontSize: '14px',
-      color: '#4b5563',
-    },
-    certDetailIcon: {
-      color: TEAL,
-      fontWeight: 600,
-    },
-    certCta: {
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '8px',
-      background: TEAL,
-      color: 'white',
-      padding: '14px 28px',
-      borderRadius: '8px',
-      fontWeight: 600,
-      fontSize: '15px',
-      textDecoration: 'none',
-      width: 'fit-content',
-      cursor: 'pointer',
-      border: 'none',
-    },
-    benefitsSection: {
-      padding: '80px 24px',
-      background: '#f9fafb',
-    },
-    benefitsGrid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(3, 1fr)',
-      gap: '24px',
-      maxWidth: '1000px',
-      margin: '0 auto',
-    },
-    benefitCard: {
-      background: 'white',
-      borderRadius: '12px',
-      padding: '32px 24px',
-      textAlign: 'center' as const,
-      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-      border: '1px solid #e5e7eb',
-    },
-    benefitIcon: {
-      width: '56px',
-      height: '56px',
-      background: 'rgba(0, 151, 169, 0.1)',
-      borderRadius: '12px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      margin: '0 auto 16px',
-      fontSize: '24px',
-    },
-    benefitTitle: {
-      fontSize: '18px',
-      fontWeight: 700,
-      color: NAVY,
-      marginBottom: '8px',
-    },
-    benefitDesc: {
-      fontSize: '14px',
-      color: '#6b7280',
-      lineHeight: 1.6,
-    },
-    processSection: {
-      padding: '80px 24px',
-      maxWidth: '1200px',
-      margin: '0 auto',
-    },
-    processSteps: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(4, 1fr)',
-      gap: '32px',
-      maxWidth: '1000px',
-      margin: '0 auto',
-    },
-    processStep: {
-      textAlign: 'center' as const,
-    },
-    stepNumber: {
-      width: '64px',
-      height: '64px',
-      background: NAVY,
-      color: 'white',
-      borderRadius: '50%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontSize: '24px',
-      fontWeight: 700,
-      margin: '0 auto 20px',
-    },
-    stepTitle: {
-      fontSize: '18px',
-      fontWeight: 700,
-      color: NAVY,
-      marginBottom: '8px',
-    },
-    stepDesc: {
-      fontSize: '14px',
-      color: '#6b7280',
-    },
-    ctaSection: {
-      padding: '80px 24px',
-      background: NAVY,
-      textAlign: 'center' as const,
-    },
-    ctaTitle: {
-      fontSize: '36px',
-      fontWeight: 700,
-      color: 'white',
-      marginBottom: '16px',
-    },
-    ctaSubtitle: {
-      fontSize: '18px',
-      color: 'rgba(255, 255, 255, 0.8)',
-      marginBottom: '32px',
-      maxWidth: '600px',
-      margin: '0 auto 32px',
-    },
-    ctaButton: {
-      display: 'inline-flex',
-      alignItems: 'center',
-      background: 'white',
-      color: NAVY,
-      padding: '16px 32px',
-      borderRadius: '8px',
-      fontWeight: 600,
-      fontSize: '16px',
-      textDecoration: 'none',
-      cursor: 'pointer',
-      border: 'none',
-    },
+  const getColorClasses = (color: string) => {
+    const colors: Record<string, { bg: string; text: string; light: string; border: string }> = {
+      purple: { bg: 'bg-purple-600', text: 'text-purple-600', light: 'bg-purple-100', border: 'border-purple-600' },
+      blue: { bg: 'bg-blue-600', text: 'text-blue-600', light: 'bg-blue-100', border: 'border-blue-600' },
+      teal: { bg: 'bg-teal-600', text: 'text-teal-600', light: 'bg-teal-100', border: 'border-teal-600' },
+      orange: { bg: 'bg-orange-600', text: 'text-orange-600', light: 'bg-orange-100', border: 'border-orange-600' },
+      green: { bg: 'bg-green-600', text: 'text-green-600', light: 'bg-green-100', border: 'border-green-600' },
+      indigo: { bg: 'bg-indigo-600', text: 'text-indigo-600', light: 'bg-indigo-100', border: 'border-indigo-600' },
+    };
+    return colors[color] || colors.blue;
   };
 
   return (
-    <div style={styles.container}>
-      {/* Hero */}
-      <section style={styles.hero}>
-        <span style={styles.heroBadge}>Professional Development</span>
-        <h1 style={styles.heroTitle}>Earn Credentials That Advance Your Career</h1>
-        <p style={styles.heroSubtitle}>
-          Gain recognized certifications in leadership assessment, team development, nonprofit governance, 
-          and strategic consulting—all through live, online training with The Nonprofit Edge.
-        </p>
-      </section>
-
-      {/* Partner Certifications */}
-      <section style={styles.section}>
-        <div style={styles.sectionHeader}>
-          <h2 style={styles.sectionTitle}>Partner Certifications</h2>
-          <p style={styles.sectionSubtitle}>
-            Become certified in industry-leading assessment tools. As authorized distributors, 
-            we'll guide you through the certification process and connect you with the official training.
+    <div className="min-h-screen bg-white font-sans">
+      {/* Hero Section */}
+      <section className="py-20 px-6 bg-gradient-to-br from-[#0D2C54] to-[#0a2040]">
+        <div className="max-w-6xl mx-auto text-center text-white">
+          <span className="inline-block bg-white/10 text-white px-4 py-1 rounded-full text-sm font-semibold mb-6 backdrop-blur">
+            Professional Development
+          </span>
+          <h1 className="text-4xl lg:text-5xl font-extrabold leading-tight mb-6">
+            Nonprofit Leadership <span className="text-[#0097A7]">Certifications</span>
+          </h1>
+          <p className="text-xl text-white/80 max-w-2xl mx-auto mb-10 leading-relaxed">
+            Advance your career and your organization with credentials that demonstrate expertise in nonprofit leadership, governance, and consulting.
           </p>
-        </div>
-
-        {certifications.partner.map((cert, index) => (
-          <div key={cert.id} style={index % 2 === 0 ? styles.certCard : styles.certCardReverse}>
-            {index % 2 === 0 ? (
-              <>
-                <div style={{ ...styles.certImage, backgroundImage: `url(${cert.image})` }} />
-                <div style={styles.certContent}>
-                  <span style={{ ...styles.certType, ...styles.certTypePartner }}>Partner Certification</span>
-                  <h3 style={styles.certTitle}>{cert.name}</h3>
-                  <p style={styles.certDesc}>{cert.description}</p>
-                  <div style={styles.certDetails}>
-                    <div style={styles.certDetail}>
-                      <span style={styles.certDetailIcon}>✓</span>
-                      <span><strong>Duration:</strong> {cert.duration}</span>
-                    </div>
-                    <div style={styles.certDetail}>
-                      <span style={styles.certDetailIcon}>✓</span>
-                      <span><strong>Format:</strong> {cert.format}</span>
-                    </div>
-                    <div style={styles.certDetail}>
-                      <span style={styles.certDetailIcon}>✓</span>
-                      <span><strong>Exam:</strong> {cert.exam}</span>
-                    </div>
-                    <div style={styles.certDetail}>
-                      <span style={styles.certDetailIcon}>✓</span>
-                      <span><strong>Credits:</strong> {cert.credits}</span>
-                    </div>
-                  </div>
-                  <button style={styles.certCta}>Learn More & Register →</button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div style={styles.certContent}>
-                  <span style={{ ...styles.certType, ...styles.certTypePartner }}>Partner Certification</span>
-                  <h3 style={styles.certTitle}>{cert.name}</h3>
-                  <p style={styles.certDesc}>{cert.description}</p>
-                  <div style={styles.certDetails}>
-                    <div style={styles.certDetail}>
-                      <span style={styles.certDetailIcon}>✓</span>
-                      <span><strong>Duration:</strong> {cert.duration}</span>
-                    </div>
-                    <div style={styles.certDetail}>
-                      <span style={styles.certDetailIcon}>✓</span>
-                      <span><strong>Format:</strong> {cert.format}</span>
-                    </div>
-                    <div style={styles.certDetail}>
-                      <span style={styles.certDetailIcon}>✓</span>
-                      <span><strong>Exam:</strong> {cert.exam}</span>
-                    </div>
-                    <div style={styles.certDetail}>
-                      <span style={styles.certDetailIcon}>✓</span>
-                      <span><strong>Credits:</strong> {cert.credits}</span>
-                    </div>
-                  </div>
-                  <button style={styles.certCta}>Learn More & Register →</button>
-                </div>
-                <div style={{ ...styles.certImage, backgroundImage: `url(${cert.image})` }} />
-              </>
-            )}
+          <div className="flex flex-wrap gap-4 justify-center">
+            <button 
+              onClick={handleGetStarted}
+              className="inline-flex items-center justify-center px-8 py-4 bg-[#0097A7] text-white font-semibold rounded-lg hover:bg-[#007b8a] transition-all"
+            >
+              Explore Certifications
+            </button>
+            <button 
+              onClick={() => handleNavigate('/pricing')}
+              className="inline-flex items-center justify-center px-8 py-4 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-all backdrop-blur border border-white/20"
+            >
+              View Pricing
+            </button>
           </div>
-        ))}
+        </div>
       </section>
 
-      {/* Nonprofit Edge Certifications */}
-      <section style={{ ...styles.section, background: '#f9fafb', maxWidth: 'none', padding: '80px 24px' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>The Nonprofit Edge Certifications</h2>
-            <p style={styles.sectionSubtitle}>
-              Exclusive credentials developed by Dr. Lyn Corbett, drawing on 25+ years of nonprofit 
-              leadership experience. Designed specifically for the nonprofit sector.
-            </p>
-          </div>
-
-          {certifications.nonprofitEdge.map((cert, index) => (
-            <div key={cert.id} style={index % 2 === 0 ? styles.certCard : styles.certCardReverse}>
-              {index % 2 === 0 ? (
-                <>
-                  <div style={{ ...styles.certImage, backgroundImage: `url(${cert.image})` }} />
-                  <div style={styles.certContent}>
-                    <span style={{ ...styles.certType, ...styles.certTypeEdge }}>Nonprofit Edge Certification</span>
-                    <h3 style={styles.certTitle}>{cert.name}</h3>
-                    <p style={styles.certDesc}>{cert.description}</p>
-                    <div style={styles.certDetails}>
-                      <div style={styles.certDetail}>
-                        <span style={styles.certDetailIcon}>✓</span>
-                        <span><strong>Duration:</strong> {cert.duration}</span>
-                      </div>
-                      <div style={styles.certDetail}>
-                        <span style={styles.certDetailIcon}>✓</span>
-                        <span><strong>Format:</strong> {cert.format}</span>
-                      </div>
-                      <div style={styles.certDetail}>
-                        <span style={styles.certDetailIcon}>✓</span>
-                        <span><strong>Exam:</strong> {cert.exam}</span>
-                      </div>
-                      <div style={styles.certDetail}>
-                        <span style={styles.certDetailIcon}>✓</span>
-                        <span><strong>Certificate:</strong> {cert.certificate}</span>
-                      </div>
-                    </div>
-                    <button style={styles.certCta}>Learn More & Register →</button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div style={styles.certContent}>
-                    <span style={{ ...styles.certType, ...styles.certTypeEdge }}>Nonprofit Edge Certification</span>
-                    <h3 style={styles.certTitle}>{cert.name}</h3>
-                    <p style={styles.certDesc}>{cert.description}</p>
-                    <div style={styles.certDetails}>
-                      <div style={styles.certDetail}>
-                        <span style={styles.certDetailIcon}>✓</span>
-                        <span><strong>Duration:</strong> {cert.duration}</span>
-                      </div>
-                      <div style={styles.certDetail}>
-                        <span style={styles.certDetailIcon}>✓</span>
-                        <span><strong>Format:</strong> {cert.format}</span>
-                      </div>
-                      <div style={styles.certDetail}>
-                        <span style={styles.certDetailIcon}>✓</span>
-                        <span><strong>Exam:</strong> {cert.exam}</span>
-                      </div>
-                      <div style={styles.certDetail}>
-                        <span style={styles.certDetailIcon}>✓</span>
-                        <span><strong>Certificate:</strong> {cert.certificate}</span>
-                      </div>
-                    </div>
-                    <button style={styles.certCta}>Learn More & Register →</button>
-                  </div>
-                  <div style={{ ...styles.certImage, backgroundImage: `url(${cert.image})` }} />
-                </>
-              )}
+      {/* Stats */}
+      <section className="py-12 px-6 bg-gray-50 border-b border-gray-200">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          {[
+            { number: '500+', label: 'Certified Leaders' },
+            { number: '6', label: 'Certification Programs' },
+            { number: '98%', label: 'Completion Rate' },
+            { number: '4.9★', label: 'Average Rating' },
+          ].map((stat, i) => (
+            <div key={i}>
+              <div className="text-3xl font-extrabold text-[#0D2C54] mb-1">{stat.number}</div>
+              <div className="text-sm text-gray-600">{stat.label}</div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Why Get Certified */}
-      <section style={styles.benefitsSection}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>Why Get Certified?</h2>
-            <p style={styles.sectionSubtitle}>Credentials that demonstrate expertise and open doors</p>
+      {/* Certifications Grid */}
+      <section className="py-20 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-[#0D2C54] mb-4">Available Certifications</h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Each certification includes video lessons, interactive exercises, real-world case studies, and a final assessment.
+            </p>
           </div>
-          <div style={styles.benefitsGrid}>
-            {benefits.map((benefit, index) => (
-              <div key={index} style={styles.benefitCard}>
-                <div style={styles.benefitIcon}>{benefit.icon}</div>
-                <h4 style={styles.benefitTitle}>{benefit.title}</h4>
-                <p style={styles.benefitDesc}>{benefit.description}</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {certifications.map((cert) => {
+              const colors = getColorClasses(cert.color);
+              return (
+                <div key={cert.id} className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-shadow">
+                  {/* Image */}
+                  <div className="h-48 relative overflow-hidden">
+                    <div 
+                      className="absolute inset-0 bg-cover bg-center"
+                      style={{ backgroundImage: `url(${cert.image})` }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <span className={`inline-block ${colors.bg} text-white px-3 py-1 rounded-full text-xs font-semibold`}>
+                        {cert.duration} • {cert.modules} modules
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-[#0D2C54] mb-2">{cert.title}</h3>
+                    <p className="text-sm text-gray-600 mb-4 leading-relaxed">{cert.description}</p>
+                    
+                    {/* Topics Preview */}
+                    <div className="mb-4">
+                      <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Topics Covered</div>
+                      <div className="flex flex-wrap gap-1">
+                        {cert.topics.slice(0, 3).map((topic, i) => (
+                          <span key={i} className={`${colors.light} ${colors.text} text-xs px-2 py-1 rounded`}>
+                            {topic}
+                          </span>
+                        ))}
+                        {cert.topics.length > 3 && (
+                          <span className="text-xs text-gray-400 px-2 py-1">
+                            +{cert.topics.length - 3} more
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <button 
+                      onClick={handleGetStarted}
+                      className={`w-full py-3 rounded-lg font-semibold text-sm border-2 ${colors.border} ${colors.text} hover:${colors.bg} hover:text-white transition-all`}
+                    >
+                      Learn More
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="py-20 px-6 bg-gray-50">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-[#0D2C54] mb-4">How Certification Works</h2>
+            <p className="text-lg text-gray-600">A flexible, self-paced learning experience designed for busy nonprofit leaders.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {[
+              { num: 1, title: 'Enroll', desc: 'Choose your certification and get instant access to all materials', icon: '📚' },
+              { num: 2, title: 'Learn', desc: 'Complete video lessons and interactive exercises at your own pace', icon: '🎓' },
+              { num: 3, title: 'Apply', desc: 'Work through real-world case studies and practical assignments', icon: '💼' },
+              { num: 4, title: 'Certify', desc: 'Pass the final assessment and receive your digital credential', icon: '🏆' },
+            ].map((step, i) => (
+              <div key={i} className="text-center">
+                <div className="text-4xl mb-4">{step.icon}</div>
+                <div className="w-10 h-10 bg-[#0D2C54] text-white rounded-full flex items-center justify-center text-lg font-bold mx-auto mb-3">
+                  {step.num}
+                </div>
+                <h3 className="text-lg font-bold text-[#0D2C54] mb-2">{step.title}</h3>
+                <p className="text-sm text-gray-600">{step.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section style={styles.processSection}>
-        <div style={styles.sectionHeader}>
-          <h2 style={styles.sectionTitle}>How It Works</h2>
-          <p style={styles.sectionSubtitle}>A simple path from enrollment to certification</p>
-        </div>
-        <div style={styles.processSteps}>
-          {steps.map((step) => (
-            <div key={step.number} style={styles.processStep}>
-              <div style={styles.stepNumber}>{step.number}</div>
-              <h4 style={styles.stepTitle}>{step.title}</h4>
-              <p style={styles.stepDesc}>{step.description}</p>
+      {/* Instructor */}
+      <section className="py-20 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="bg-[#0D2C54] rounded-2xl overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
+              {/* Image */}
+              <div className="h-64 lg:h-auto relative">
+                <div 
+                  className="absolute inset-0 bg-cover bg-center"
+                  style={{ backgroundImage: 'url(/dr-corbett.jpg)' }}
+                />
+              </div>
+              
+              {/* Content */}
+              <div className="p-8 lg:p-12 text-white">
+                <span className="inline-block bg-white/10 text-white px-3 py-1 rounded-full text-xs font-semibold mb-4">
+                  Your Instructor
+                </span>
+                <h3 className="text-2xl lg:text-3xl font-bold mb-4">Dr. Lyn Corbett</h3>
+                <p className="text-white/80 mb-6 leading-relaxed">
+                  With over 15 years of nonprofit consulting experience and a PhD in Organizational Leadership, Dr. Corbett has helped 800+ organizations strengthen their leadership, governance, and strategic capacity.
+                </p>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <div className="text-2xl font-bold text-[#0097A7]">800+</div>
+                    <div className="text-white/60">Organizations Served</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-[#0097A7]">$100M+</div>
+                    <div className="text-white/60">Funding Secured</div>
+                  </div>
+                </div>
+              </div>
             </div>
-          ))}
+          </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section style={styles.ctaSection}>
-        <h2 style={styles.ctaTitle}>Ready to Elevate Your Expertise?</h2>
-        <p style={styles.ctaSubtitle}>
-          Explore upcoming certification cohorts or contact us to discuss which program is right for you.
-        </p>
-        <button style={styles.ctaButton}>View Upcoming Cohorts →</button>
+      {/* Testimonial */}
+      <section className="py-20 px-6 bg-gray-50">
+        <div className="max-w-4xl mx-auto text-center">
+          <blockquote className="text-2xl lg:text-3xl font-medium text-[#0D2C54] italic leading-relaxed mb-8">
+            "The Board Governance certification transformed how I approach my role. The practical frameworks and real-world examples made all the difference."
+          </blockquote>
+          <div className="flex items-center justify-center gap-4">
+            <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+              MJ
+            </div>
+            <div className="text-left">
+              <div className="font-semibold text-[#0D2C54]">Maria Johnson</div>
+              <div className="text-sm text-gray-600">Board Chair, Community Health Alliance</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Preview */}
+      <section className="py-20 px-6">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl lg:text-4xl font-bold text-[#0D2C54] mb-4">Included in Your Membership</h2>
+          <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+            All certifications are included with Professional and Premium memberships. Essential members can purchase individual certifications.
+          </p>
+          <div className="bg-white rounded-xl shadow-lg p-8 max-w-md mx-auto border border-gray-100">
+            <div className="text-sm font-semibold text-[#0097A7] mb-2">PROFESSIONAL & PREMIUM</div>
+            <div className="text-4xl font-extrabold text-[#0D2C54] mb-2">All Access</div>
+            <div className="text-gray-600 mb-6">Unlimited certifications included</div>
+            <button 
+              onClick={handleGetStarted}
+              className="w-full py-3 bg-[#0D2C54] text-white rounded-lg font-semibold hover:bg-[#0a2040] transition-all"
+            >
+              Get Started
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="py-20 px-6 bg-[#0D2C54]">
+        <div className="max-w-3xl mx-auto text-center text-white">
+          <h2 className="text-3xl lg:text-4xl font-bold mb-4">Ready to Level Up Your Leadership?</h2>
+          <p className="text-xl text-white/80 mb-8">
+            Join hundreds of nonprofit leaders who have advanced their skills with our certification programs.
+          </p>
+          <div className="flex flex-wrap gap-4 justify-center">
+            <button 
+              onClick={handleGetStarted}
+              className="inline-flex items-center justify-center px-8 py-4 bg-[#0097A7] text-white font-semibold rounded-lg hover:bg-[#007b8a] transition-all"
+            >
+              Start Your Free Trial
+            </button>
+            <button 
+              onClick={() => handleNavigate('/contact')}
+              className="inline-flex items-center justify-center px-8 py-4 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-all backdrop-blur border border-white/20"
+            >
+              Talk to Our Team
+            </button>
+          </div>
+        </div>
       </section>
     </div>
   );
