@@ -1,33 +1,51 @@
 /**
  * THE NONPROFIT EDGE - App.tsx
- * Main routing - Only imports existing components
+ * Routes matching actual component file names in repo
  */
 
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 
-// Core Pages (these should exist in your repo)
+// Core Pages - matching actual file names
 import Homepage from './components/Homepage'
 import Login from './components/Login'
-import Signup from './components/Signup'
+import SignUp from './components/SignUp'
 import Dashboard from './components/Dashboard'
 import AdminDashboard from './components/AdminDashboard'
 
 // Owner/Admin Pages
-import OwnerDashboard from './components/EnhancedOwnerDashboard'
+import EnhancedOwnerDashboard from './components/EnhancedOwnerDashboard'
 import MarketingDashboard from './components/MarketingDashboard'
 import LinkManager from './components/LinkManager'
 
-// Optional: Comment out any that don't exist yet
-// import Templates from './components/Templates'
-// import ResourcesLibrary from './components/ResourcesLibrary'
-// import EventsCalendar from './components/EventsCalendar'
-// import Certifications from './components/Certifications'
-// import BookSummaries from './components/BookSummaries'
-// import Playbooks from './components/Playbooks'
-// import CompletedAssessments from './components/CompletedAssessments'
-// import WhyWeExist from './components/WhyWeExist'
+// Member Resource Pages
+import Templates from './components/Templates'
+import ResourcesLibrary from './components/ResourcesLibrary'
+import EventsCalendar from './components/EventsCalendar'
+import Certifications from './components/Certifications'
+import Playbooks from './components/Playbooks'
+import CompletedAssessments from './components/CompletedAssessments'
+import TheoryOfConstraints from './components/TheoryOfConstraints'
+
+// Tool Landing Pages
+import BoardAssessmentLanding from './components/BoardAssessmentLanding'
+import StrategicPlanCheckupLanding from './components/StrategicPlanCheckupLanding'
+import ScenarioPlannerLanding from './components/ScenarioPlannerLanding'
+import GrantReviewLanding from './components/GrantReviewLanding'
+import CEOEvaluationLanding from './components/CEOEvaluationLanding'
+import CertificationsLanding from './components/CertificationsLanding'
+
+// Tool Pages
+import AskTheProfessor from './components/AskTheProfessor'
+import BoardAssessment from './components/BoardAssessment'
+import StrategicPlanCheckup from './components/StrategicPlanCheckup'
+import ScenarioPlanner from './components/ScenarioPlanner'
+import GrantReview from './components/GrantReview'
+import CEOEvaluation from './components/CEOEvaluation'
+
+// Other Pages
+import ToolsPage from './components/ToolsPage'
 
 function AppContent() {
   const navigate = useNavigate()
@@ -94,34 +112,21 @@ function AppContent() {
     )
   }
 
-  // Placeholder component for pages that don't exist yet
-  const ComingSoon = ({ title }: { title: string }) => (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">{title}</h1>
-        <p className="text-gray-500 mb-4">This page is coming soon!</p>
-        <button onClick={() => navigate('/dashboard')} className="px-4 py-2 bg-[#0097A9] text-white rounded-lg">
-          Back to Dashboard
-        </button>
-      </div>
-    </div>
-  )
-
   return (
     <Routes>
       {/* Public Pages */}
       <Route path="/" element={<Homepage onNavigate={handleNavigate} />} />
       <Route path="/login" element={<Login onNavigate={handleNavigate} />} />
-      <Route path="/signup" element={<Signup onNavigate={handleNavigate} />} />
+      <Route path="/signup" element={<SignUp onNavigate={handleNavigate} />} />
       
-      {/* Placeholder public pages */}
-      <Route path="/why-we-exist" element={<ComingSoon title="Why We Exist" />} />
-      <Route path="/board-assessment" element={<ComingSoon title="Board Assessment" />} />
-      <Route path="/strategic-plan-checkup" element={<ComingSoon title="Strategic Plan Check-Up" />} />
-      <Route path="/scenario-planner" element={<ComingSoon title="Scenario Planner" />} />
-      <Route path="/grant-review" element={<ComingSoon title="Grant Review" />} />
-      <Route path="/ceo-evaluation" element={<ComingSoon title="CEO Evaluation" />} />
-      <Route path="/ask-the-professor" element={<ComingSoon title="Ask the Professor" />} />
+      {/* Tool Landing Pages (Public) */}
+      <Route path="/board-assessment" element={<BoardAssessmentLanding onNavigate={handleNavigate} />} />
+      <Route path="/strategic-plan-checkup" element={<StrategicPlanCheckupLanding onNavigate={handleNavigate} />} />
+      <Route path="/scenario-planner" element={<ScenarioPlannerLanding onNavigate={handleNavigate} />} />
+      <Route path="/grant-review" element={<GrantReviewLanding onNavigate={handleNavigate} />} />
+      <Route path="/ceo-evaluation" element={<CEOEvaluationLanding onNavigate={handleNavigate} />} />
+      <Route path="/certifications-info" element={<CertificationsLanding onNavigate={handleNavigate} />} />
+      <Route path="/tools" element={<ToolsPage onNavigate={handleNavigate} />} />
       
       {/* Member Dashboard */}
       <Route 
@@ -141,14 +146,22 @@ function AppContent() {
         } 
       />
 
-      {/* Member Pages - Placeholders */}
-      <Route path="/templates" element={user ? <ComingSoon title="Template Vault" /> : <Navigate to="/login" />} />
-      <Route path="/resources" element={user ? <ComingSoon title="Resource Library" /> : <Navigate to="/login" />} />
-      <Route path="/events" element={user ? <ComingSoon title="Events Calendar" /> : <Navigate to="/login" />} />
-      <Route path="/certifications" element={user ? <ComingSoon title="Certifications" /> : <Navigate to="/login" />} />
-      <Route path="/book-summaries" element={user ? <ComingSoon title="Book Summaries" /> : <Navigate to="/login" />} />
-      <Route path="/playbooks" element={user ? <ComingSoon title="Playbooks" /> : <Navigate to="/login" />} />
-      <Route path="/completed-assessments" element={user ? <ComingSoon title="Completed Assessments" /> : <Navigate to="/login" />} />
+      {/* Member Resource Pages */}
+      <Route path="/templates" element={user ? <Templates user={user} organization={organization} supabase={supabase} onNavigate={handleNavigate} /> : <Navigate to="/login" />} />
+      <Route path="/resources" element={user ? <ResourcesLibrary user={user} supabase={supabase} onNavigate={handleNavigate} /> : <Navigate to="/login" />} />
+      <Route path="/events" element={user ? <EventsCalendar user={user} supabase={supabase} onNavigate={handleNavigate} /> : <Navigate to="/login" />} />
+      <Route path="/certifications" element={user ? <Certifications user={user} supabase={supabase} onNavigate={handleNavigate} /> : <Navigate to="/login" />} />
+      <Route path="/playbooks" element={user ? <Playbooks user={user} supabase={supabase} onNavigate={handleNavigate} /> : <Navigate to="/login" />} />
+      <Route path="/completed-assessments" element={user ? <CompletedAssessments user={user} organization={organization} supabase={supabase} onNavigate={handleNavigate} /> : <Navigate to="/login" />} />
+      <Route path="/theory-of-constraints" element={user ? <TheoryOfConstraints user={user} onNavigate={handleNavigate} /> : <Navigate to="/login" />} />
+
+      {/* Tool Pages (Authenticated) */}
+      <Route path="/ask-the-professor" element={user ? <AskTheProfessor user={user} supabase={supabase} onNavigate={handleNavigate} /> : <Navigate to="/login" />} />
+      <Route path="/tools/board-assessment" element={user ? <BoardAssessment user={user} supabase={supabase} onNavigate={handleNavigate} /> : <Navigate to="/login" />} />
+      <Route path="/tools/strategic-plan" element={user ? <StrategicPlanCheckup user={user} supabase={supabase} onNavigate={handleNavigate} /> : <Navigate to="/login" />} />
+      <Route path="/tools/scenario-planner" element={user ? <ScenarioPlanner user={user} supabase={supabase} onNavigate={handleNavigate} /> : <Navigate to="/login" />} />
+      <Route path="/tools/grant-review" element={user ? <GrantReview user={user} supabase={supabase} onNavigate={handleNavigate} /> : <Navigate to="/login" />} />
+      <Route path="/tools/ceo-evaluation" element={user ? <CEOEvaluation user={user} supabase={supabase} onNavigate={handleNavigate} /> : <Navigate to="/login" />} />
 
       {/* Admin Dashboard */}
       <Route 
@@ -171,7 +184,7 @@ function AppContent() {
         path="/owner-dashboard" 
         element={
           user?.role === 'owner' ? (
-            <OwnerDashboard 
+            <EnhancedOwnerDashboard 
               user={user}
               onNavigate={handleNavigate}
               onLogout={handleLogout}
@@ -213,10 +226,6 @@ function AppContent() {
           )
         } 
       />
-
-      {/* Legal Pages */}
-      <Route path="/privacy" element={<ComingSoon title="Privacy Policy" />} />
-      <Route path="/terms" element={<ComingSoon title="Terms of Service" />} />
 
       {/* Catch-all redirect */}
       <Route path="*" element={<Navigate to="/" />} />
