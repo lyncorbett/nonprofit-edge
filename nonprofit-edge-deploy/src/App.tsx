@@ -58,7 +58,7 @@ import CEOEvaluationLanding from './CEOEvaluationLanding';
 import StrategicPlanCheckupLanding from './StrategicPlanCheckupLanding';
 import GrantReviewLanding from './GrantReviewLanding';
 import CertificationsLanding from './CertificationsLanding';
-import WhyWeExist from './components/WhyWeExist';
+// import WhyWeExist from './components/WhyWeExist'; // COMMENTED - file doesn't exist
 
 // Tracking utilities
 import { 
@@ -499,8 +499,8 @@ const App: React.FC = () => {
       case '/reset-password':
         return <ResetPassword onNavigate={navigate} />;
 
-      case '/why-we-exist':
-        return <WhyWeExist onNavigate={navigate} />;
+      // case '/why-we-exist':
+      //   return <WhyWeExist onNavigate={navigate} />; // COMMENTED - component doesn't exist
 
       // ========================================
       // TOOL LANDING PAGES (Public)
