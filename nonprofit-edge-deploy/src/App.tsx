@@ -1,44 +1,33 @@
 /**
  * THE NONPROFIT EDGE - App.tsx
- * Main routing and app structure
- * 
- * UPDATED: Routes for Marketing Analytics and Link Manager
+ * Main routing - Only imports existing components
  */
 
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 
-// Pages
+// Core Pages (these should exist in your repo)
 import Homepage from './components/Homepage'
 import Login from './components/Login'
 import Signup from './components/Signup'
 import Dashboard from './components/Dashboard'
 import AdminDashboard from './components/AdminDashboard'
+
+// Owner/Admin Pages
 import OwnerDashboard from './components/EnhancedOwnerDashboard'
 import MarketingDashboard from './components/MarketingDashboard'
 import LinkManager from './components/LinkManager'
 
-// Member Pages
-import Templates from './components/Templates'
-import ResourcesLibrary from './components/ResourcesLibrary'
-import EventsCalendar from './components/EventsCalendar'
-import Certifications from './components/Certifications'
-import BookSummaries from './components/BookSummaries'
-import Playbooks from './components/Playbooks'
-import CompletedAssessments from './components/CompletedAssessments'
-
-// Landing Pages
-import WhyWeExist from './components/WhyWeExist'
-import CertificationsLanding from './components/CertificationsLanding'
-import BoardAssessmentLanding from './components/BoardAssessmentLanding'
-import StrategicPlanLanding from './components/StrategicPlanCheckup.landing'
-import ScenarioPlannerLanding from './components/ScenarioPlanner.landing'
-import GrantReviewLanding from './components/GrantReviewLanding'
-import CEOEvaluationLanding from './components/CEOEvaluationLanding'
-
-// Tool Pages (if you have separate tool interfaces)
-// import AskTheProfessor from './components/AskTheProfessor'
+// Optional: Comment out any that don't exist yet
+// import Templates from './components/Templates'
+// import ResourcesLibrary from './components/ResourcesLibrary'
+// import EventsCalendar from './components/EventsCalendar'
+// import Certifications from './components/Certifications'
+// import BookSummaries from './components/BookSummaries'
+// import Playbooks from './components/Playbooks'
+// import CompletedAssessments from './components/CompletedAssessments'
+// import WhyWeExist from './components/WhyWeExist'
 
 function AppContent() {
   const navigate = useNavigate()
@@ -47,7 +36,6 @@ function AppContent() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check current session
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
@@ -58,7 +46,6 @@ function AppContent() {
 
     checkSession()
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         await loadUserData(session.user.id)
@@ -73,7 +60,6 @@ function AppContent() {
 
   const loadUserData = async (userId: string) => {
     try {
-      // Get user profile
       const { data: userData } = await supabase
         .from('users')
         .select('*, organization:organizations(*)')
@@ -108,21 +94,34 @@ function AppContent() {
     )
   }
 
+  // Placeholder component for pages that don't exist yet
+  const ComingSoon = ({ title }: { title: string }) => (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">{title}</h1>
+        <p className="text-gray-500 mb-4">This page is coming soon!</p>
+        <button onClick={() => navigate('/dashboard')} className="px-4 py-2 bg-[#0097A9] text-white rounded-lg">
+          Back to Dashboard
+        </button>
+      </div>
+    </div>
+  )
+
   return (
     <Routes>
       {/* Public Pages */}
       <Route path="/" element={<Homepage onNavigate={handleNavigate} />} />
       <Route path="/login" element={<Login onNavigate={handleNavigate} />} />
       <Route path="/signup" element={<Signup onNavigate={handleNavigate} />} />
-      <Route path="/why-we-exist" element={<WhyWeExist onNavigate={handleNavigate} />} />
-      <Route path="/certifications-info" element={<CertificationsLanding onNavigate={handleNavigate} />} />
       
-      {/* Tool Landing Pages (Public) */}
-      <Route path="/board-assessment" element={<BoardAssessmentLanding onNavigate={handleNavigate} />} />
-      <Route path="/strategic-plan-checkup" element={<StrategicPlanLanding onNavigate={handleNavigate} />} />
-      <Route path="/scenario-planner" element={<ScenarioPlannerLanding onNavigate={handleNavigate} />} />
-      <Route path="/grant-review" element={<GrantReviewLanding onNavigate={handleNavigate} />} />
-      <Route path="/ceo-evaluation" element={<CEOEvaluationLanding onNavigate={handleNavigate} />} />
+      {/* Placeholder public pages */}
+      <Route path="/why-we-exist" element={<ComingSoon title="Why We Exist" />} />
+      <Route path="/board-assessment" element={<ComingSoon title="Board Assessment" />} />
+      <Route path="/strategic-plan-checkup" element={<ComingSoon title="Strategic Plan Check-Up" />} />
+      <Route path="/scenario-planner" element={<ComingSoon title="Scenario Planner" />} />
+      <Route path="/grant-review" element={<ComingSoon title="Grant Review" />} />
+      <Route path="/ceo-evaluation" element={<ComingSoon title="CEO Evaluation" />} />
+      <Route path="/ask-the-professor" element={<ComingSoon title="Ask the Professor" />} />
       
       {/* Member Dashboard */}
       <Route 
@@ -142,14 +141,14 @@ function AppContent() {
         } 
       />
 
-      {/* Member Pages */}
-      <Route path="/templates" element={user ? <Templates user={user} organization={organization} supabase={supabase} onNavigate={handleNavigate} /> : <Navigate to="/login" />} />
-      <Route path="/resources" element={user ? <ResourcesLibrary user={user} onNavigate={handleNavigate} /> : <Navigate to="/login" />} />
-      <Route path="/events" element={user ? <EventsCalendar user={user} supabase={supabase} onNavigate={handleNavigate} /> : <Navigate to="/login" />} />
-      <Route path="/certifications" element={user ? <Certifications user={user} onNavigate={handleNavigate} /> : <Navigate to="/login" />} />
-      <Route path="/book-summaries" element={user ? <BookSummaries user={user} onNavigate={handleNavigate} /> : <Navigate to="/login" />} />
-      <Route path="/playbooks" element={user ? <Playbooks user={user} onNavigate={handleNavigate} /> : <Navigate to="/login" />} />
-      <Route path="/completed-assessments" element={user ? <CompletedAssessments user={user} organization={organization} supabase={supabase} onNavigate={handleNavigate} /> : <Navigate to="/login" />} />
+      {/* Member Pages - Placeholders */}
+      <Route path="/templates" element={user ? <ComingSoon title="Template Vault" /> : <Navigate to="/login" />} />
+      <Route path="/resources" element={user ? <ComingSoon title="Resource Library" /> : <Navigate to="/login" />} />
+      <Route path="/events" element={user ? <ComingSoon title="Events Calendar" /> : <Navigate to="/login" />} />
+      <Route path="/certifications" element={user ? <ComingSoon title="Certifications" /> : <Navigate to="/login" />} />
+      <Route path="/book-summaries" element={user ? <ComingSoon title="Book Summaries" /> : <Navigate to="/login" />} />
+      <Route path="/playbooks" element={user ? <ComingSoon title="Playbooks" /> : <Navigate to="/login" />} />
+      <Route path="/completed-assessments" element={user ? <ComingSoon title="Completed Assessments" /> : <Navigate to="/login" />} />
 
       {/* Admin Dashboard */}
       <Route 
@@ -183,7 +182,7 @@ function AppContent() {
         } 
       />
 
-      {/* Marketing Analytics - Owner/Admin only */}
+      {/* Marketing Analytics */}
       <Route 
         path="/marketing" 
         element={
@@ -199,7 +198,7 @@ function AppContent() {
         } 
       />
 
-      {/* Link Manager - Owner/Admin only */}
+      {/* Link Manager */}
       <Route 
         path="/link-manager" 
         element={
@@ -216,8 +215,8 @@ function AppContent() {
       />
 
       {/* Legal Pages */}
-      <Route path="/privacy" element={<div className="p-8">Privacy Policy - Coming Soon</div>} />
-      <Route path="/terms" element={<div className="p-8">Terms of Service - Coming Soon</div>} />
+      <Route path="/privacy" element={<ComingSoon title="Privacy Policy" />} />
+      <Route path="/terms" element={<ComingSoon title="Terms of Service" />} />
 
       {/* Catch-all redirect */}
       <Route path="*" element={<Navigate to="/" />} />
