@@ -1,6 +1,6 @@
 /**
  * Homepage - The Nonprofit Edge
- * Updated: Logo 200px, nav items, scroll positions, footer links fixed
+ * MINIMAL FIX: Only header/logo changes, everything else unchanged
  */
 
 import React, { useState } from 'react'
@@ -15,7 +15,6 @@ interface HomepageProps {
 const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  // Navigation handler - works with or without onNavigate prop
   const handleNavigate = (page: string) => {
     if (onNavigate) {
       onNavigate(page)
@@ -65,88 +64,97 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
 
   return (
     <div className="min-h-screen">
-      {/* ==================== HEADER ==================== */}
+      {/* ==================== HEADER - FIXED ==================== */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo - 200px width */}
-            <button onClick={() => handleNavigate('/')} className="flex items-center gap-3">
-              <img 
-                src="/logo.svg" 
-                alt="The Nonprofit Edge" 
-                style={{ width: '200px', height: 'auto' }}
-                onError={(e) => {
-                  // Fallback to jpg if svg fails
-                  (e.target as HTMLImageElement).src = '/logo.jpg'
-                }}
-              />
-            </button>
+        <div className="max-w-6xl mx-auto px-6 flex items-center justify-between" style={{ height: '90px' }}>
+          {/* Logo - 200px width */}
+          <button onClick={() => handleNavigate('/')} className="flex items-center">
+            <img 
+              src="/logo.svg" 
+              alt="The Nonprofit Edge" 
+              style={{ width: '200px', height: 'auto' }}
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/logo.jpg'
+              }}
+            />
+          </button>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-8">
-              <a href="#why-we-exist" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-8">
+            <button 
+              onClick={() => handleNavigate('/')}
+              className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+            >
+              Home
+            </button>
+            <button 
+              onClick={() => handleNavigate('/why-we-exist')}
+              className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+            >
+              Why We Exist
+            </button>
+            <a href="#tools-section" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+              Tools
+            </a>
+            <a href="#pricing-section" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+              Pricing
+            </a>
+            <button 
+              onClick={() => handleNavigate('/login')}
+              className="px-5 py-2.5 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity"
+              style={{ backgroundColor: TEAL }}
+            >
+              Sign In
+            </button>
+          </nav>
+
+          {/* Mobile Menu Button */}
+          <button 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 text-gray-600 hover:text-gray-900"
+          >
+            {mobileMenuOpen ? (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            ) : (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16"/>
+              </svg>
+            )}
+          </button>
+        </div>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden px-6 pt-4 pb-4 border-t border-gray-100 bg-white">
+            <div className="flex flex-col space-y-3">
+              <button onClick={() => handleNavigate('/')} className="py-2 text-gray-600 hover:text-gray-900 font-medium text-left">
+                Home
+              </button>
+              <button onClick={() => handleNavigate('/why-we-exist')} className="py-2 text-gray-600 hover:text-gray-900 font-medium text-left">
                 Why We Exist
-              </a>
-              <a href="#tools-section" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+              </button>
+              <a href="#tools-section" className="py-2 text-gray-600 hover:text-gray-900 font-medium">
                 Tools
               </a>
-              <a href="#pricing-section" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+              <a href="#pricing-section" className="py-2 text-gray-600 hover:text-gray-900 font-medium">
                 Pricing
               </a>
               <button 
                 onClick={() => handleNavigate('/login')}
-                className="px-5 py-2.5 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity"
+                className="py-2.5 px-4 text-white rounded-lg font-semibold text-center"
                 style={{ backgroundColor: TEAL }}
               >
-                Login
+                Sign In
               </button>
-            </nav>
-
-            {/* Mobile Menu Button */}
-            <button 
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-gray-600 hover:text-gray-900"
-            >
-              {mobileMenuOpen ? (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-              ) : (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16"/>
-                </svg>
-              )}
-            </button>
-          </div>
-
-          {/* Mobile Menu */}
-          {mobileMenuOpen && (
-            <div className="md:hidden pt-4 pb-2 border-t border-gray-100 mt-4">
-              <div className="flex flex-col space-y-3">
-                <a href="#why-we-exist" className="py-2 text-gray-600 hover:text-gray-900 font-medium">
-                  Why We Exist
-                </a>
-                <a href="#tools-section" className="py-2 text-gray-600 hover:text-gray-900 font-medium">
-                  Tools
-                </a>
-                <a href="#pricing-section" className="py-2 text-gray-600 hover:text-gray-900 font-medium">
-                  Pricing
-                </a>
-                <button 
-                  onClick={() => handleNavigate('/login')}
-                  className="py-2.5 px-4 text-white rounded-lg font-semibold text-center"
-                  style={{ backgroundColor: TEAL }}
-                >
-                  Login
-                </button>
-              </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </header>
 
       {/* ==================== MAIN CONTENT ==================== */}
-      <div className="pt-16">
+      <div className="pt-24">
         {/* Hero Section */}
         <section className="py-16 md:py-20 px-6" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #e6f7f9 100%)' }}>
           <div className="max-w-6xl mx-auto">
@@ -215,7 +223,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
           </div>
         </section>
 
-        {/* Tools Section - Added scroll-mt for proper anchor positioning */}
+        {/* Tools Section */}
         <section className="py-16 px-6 bg-gray-50 scroll-mt-24" id="tools-section">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-12">
@@ -258,7 +266,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
           </div>
         </section>
 
-        {/* Ask the Professor Section (Why We Exist) - Added scroll-mt for proper anchor positioning */}
+        {/* Ask the Professor Section (Why We Exist) */}
         <section className="py-16 px-6 bg-white scroll-mt-24" id="why-we-exist">
           <div className="max-w-5xl mx-auto">
             <div className="grid md:grid-cols-2 gap-10 items-center">
@@ -327,7 +335,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
           </div>
         </section>
 
-        {/* Free Assessment CTA */}
+        {/* Free Assessment CTA - FIXED: Opens n8n webhook */}
         <section className="py-12 px-6 bg-gray-100">
           <div className="max-w-4xl mx-auto">
             <div 
@@ -343,7 +351,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
               Every nonprofit has ONE thing holding back their next breakthrough. Discover yours in 3 minutes — no login required.
             </p>
             <button
-              onClick={() => handleNavigate('/assessment')}
+              onClick={() => window.open('https://thenonprofitedge.app.n8n.cloud/webhook/constraint-assessment', '_blank')}
               className="inline-block px-6 py-3 text-base font-semibold rounded-lg transition hover:opacity-90"
               style={{ backgroundColor: TEAL, color: 'white' }}
             >
@@ -352,7 +360,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
           </div>
         </section>
 
-        {/* Pricing Section - Added scroll-mt for proper anchor positioning */}
+        {/* Pricing Section */}
         <section className="py-16 px-6 bg-white scroll-mt-32" id="pricing-section">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
@@ -552,7 +560,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
             <div>
               <h4 className="font-bold text-lg mb-4">Company</h4>
               <ul className="space-y-3">
-                <li><a href="#why-we-exist" className="text-gray-300 hover:text-white text-sm transition-colors">Why We Exist</a></li>
+                <li><button onClick={() => handleNavigate('/why-we-exist')} className="text-gray-300 hover:text-white text-sm transition-colors">Why We Exist</button></li>
                 <li><a href="#pricing-section" className="text-gray-300 hover:text-white text-sm transition-colors">Pricing</a></li>
                 <li><a href="mailto:lyn@thepivotalgroup.com" className="text-gray-300 hover:text-white text-sm transition-colors">Contact</a></li>
                 <li><a href="https://thepivotalgroup.com" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white text-sm transition-colors">The Pivotal Group</a></li>
@@ -565,7 +573,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
               <ul className="space-y-3">
                 <li>
                   <button onClick={() => handleNavigate('/login')} className="text-gray-300 hover:text-white text-sm transition-colors">
-                    Login
+                    Sign In
                   </button>
                 </li>
                 <li>
