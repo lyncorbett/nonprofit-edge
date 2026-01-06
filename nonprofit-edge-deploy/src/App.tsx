@@ -1,11 +1,12 @@
 /**
  * THE NONPROFIT EDGE - App.tsx
- * Self-contained version with error handling
+ * Clean version that imports Homepage component
  */
 
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { useState, useEffect, Component, ErrorInfo, ReactNode } from 'react'
 import { createClient } from '@supabase/supabase-js'
+import Homepage from './Homepage'
 
 const TEAL = '#0097A9'
 const NAVY = '#0D2C54'
@@ -27,16 +28,29 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Error:', error, errorInfo)
+    console.error('Error caught by boundary:', error, errorInfo)
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: '40px', textAlign: 'center' }}>
-          <h1 style={{ color: 'red' }}>Something went wrong</h1>
-          <p>{this.state.error?.message}</p>
-          <button onClick={() => window.location.reload()}>Reload</button>
+        <div style={{ padding: '40px', textAlign: 'center', fontFamily: 'system-ui, sans-serif' }}>
+          <h1 style={{ color: '#dc2626', marginBottom: '16px' }}>Something went wrong</h1>
+          <p style={{ color: '#666', marginBottom: '24px' }}>{this.state.error?.message || 'Unknown error'}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            style={{ 
+              background: TEAL, 
+              color: 'white', 
+              border: 'none', 
+              padding: '12px 24px', 
+              borderRadius: '8px', 
+              cursor: 'pointer',
+              fontSize: '16px'
+            }}
+          >
+            Reload Page
+          </button>
         </div>
       )
     }
@@ -44,51 +58,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
   }
 }
 
-// Homepage
-const Homepage = ({ onNavigate }: { onNavigate: (page: string) => void }) => (
-  <div style={{ minHeight: '100vh' }}>
-    <header style={{ position: 'fixed', top: 0, left: 0, right: 0, background: 'white', borderBottom: '1px solid #eee', zIndex: 50 }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <img src="/logo.svg" alt="The Nonprofit Edge" style={{ width: '180px' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-        <nav style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-          <button onClick={() => onNavigate('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#666' }}>Home</button>
-          <button onClick={() => onNavigate('login')} style={{ background: TEAL, color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Sign In</button>
-        </nav>
-      </div>
-    </header>
-    
-    <div style={{ paddingTop: '80px' }}>
-      <section style={{ padding: '80px 24px', background: 'linear-gradient(135deg, #f8fafc 0%, #e6f7f9 100%)' }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
-          <h1 style={{ fontSize: '3rem', fontWeight: 'bold', color: NAVY, marginBottom: '24px', lineHeight: 1.2 }}>
-            Your Mission Deserves More Than Hope—<br/>
-            <span style={{ color: TEAL }}>It Needs an Edge.</span>
-          </h1>
-          <p style={{ fontSize: '1.25rem', color: '#666', marginBottom: '32px' }}>
-            The strategic toolkit behind $100M+ in nonprofit funding.
-          </p>
-          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={() => onNavigate('signup')} style={{ background: TEAL, color: 'white', border: 'none', padding: '16px 32px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '1.1rem' }}>
-              Start Your Free Trial →
-            </button>
-            <button onClick={() => onNavigate('login')} style={{ background: 'white', color: NAVY, border: '2px solid #ddd', padding: '16px 32px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '1.1rem' }}>
-              Sign In
-            </button>
-          </div>
-        </div>
-      </section>
-      
-      {/* Status */}
-      <div style={{ maxWidth: '600px', margin: '40px auto', padding: '20px', background: '#f0f0f0', borderRadius: '8px', textAlign: 'center' }}>
-        <p style={{ fontSize: '14px', color: '#666' }}>
-          <strong>Status:</strong> Supabase {supabase ? '✅ Connected' : '❌ Not configured'}
-        </p>
-      </div>
-    </div>
-  </div>
-)
-
-// Login
+// Login Component
 const Login = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -97,157 +67,277 @@ const Login = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!supabase) { setError('Database not configured'); return }
+    if (!supabase) { 
+      setError('Database not configured') 
+      return 
+    }
     setLoading(true)
     setError('')
+    
     try {
-      const { error: err } = await supabase.auth.signInWithPassword({ email, password })
-      if (err) throw err
+      const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
+      if (authError) throw authError
       onNavigate('dashboard')
     } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
+      setError(err.message || 'Login failed')
     }
+    setLoading(false)
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px' }}>
-      <div style={{ width: '100%', maxWidth: '400px', background: 'white', borderRadius: '16px', padding: '32px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-        <button onClick={() => onNavigate('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#666', marginBottom: '24px' }}>← Back</button>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: NAVY, textAlign: 'center', marginBottom: '24px' }}>Sign In</h1>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', padding: '20px' }}>
+      <div style={{ background: 'white', padding: '40px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <img src="/logo.svg" alt="The Nonprofit Edge" style={{ width: '180px', marginBottom: '16px' }} onError={(e) => { (e.target as HTMLImageElement).src = '/logo.jpg' }} />
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: NAVY }}>Welcome Back</h1>
+        </div>
+        
         {error && <div style={{ background: '#fef2f2', color: '#dc2626', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' }}>{error}</div>}
-        {!supabase && <div style={{ background: '#fffbeb', color: '#d97706', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' }}>⚠️ Database not connected</div>}
+        
         <form onSubmit={handleSubmit}>
-          <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', marginBottom: '12px', boxSizing: 'border-box' }} />
-          <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', marginBottom: '16px', boxSizing: 'border-box' }} />
-          <button type="submit" disabled={loading} style={{ width: '100%', padding: '12px', background: TEAL, color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', opacity: loading ? 0.5 : 1 }}>{loading ? 'Signing in...' : 'Sign In'}</button>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 500, color: '#374151' }}>Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '16px', boxSizing: 'border-box' }}
+            />
+          </div>
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 500, color: '#374151' }}>Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '16px', boxSizing: 'border-box' }}
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{ width: '100%', padding: '14px', background: TEAL, color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
+          >
+            {loading ? 'Signing in...' : 'Sign In'}
+          </button>
         </form>
-        <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '14px', color: '#666' }}>
-          No account? <button onClick={() => onNavigate('signup')} style={{ background: 'none', border: 'none', color: TEAL, cursor: 'pointer', fontWeight: 500 }}>Sign up</button>
-        </p>
+        
+        <div style={{ marginTop: '24px', textAlign: 'center' }}>
+          <button onClick={() => onNavigate('')} style={{ background: 'none', border: 'none', color: TEAL, cursor: 'pointer', fontSize: '14px' }}>
+            ← Back to Home
+          </button>
+        </div>
       </div>
     </div>
   )
 }
 
-// Signup
+// Signup Component
 const Signup = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
-  const [form, setForm] = useState({ name: '', email: '', password: '' })
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [orgName, setOrgName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!supabase) { setError('Database not configured'); return }
+    if (!supabase) { 
+      setError('Database not configured') 
+      return 
+    }
     setLoading(true)
     setError('')
+    
     try {
-      const { error: err } = await supabase.auth.signUp({ email: form.email, password: form.password, options: { data: { full_name: form.name } } })
-      if (err) throw err
+      const { data: authData, error: authError } = await supabase.auth.signUp({ email, password })
+      if (authError) throw authError
+      
+      if (authData.user) {
+        await supabase.from('users').insert({
+          id: authData.user.id,
+          email,
+          organization_name: orgName,
+          role: 'user'
+        })
+      }
+      
       onNavigate('dashboard')
     } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
+      setError(err.message || 'Signup failed')
     }
+    setLoading(false)
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px' }}>
-      <div style={{ width: '100%', maxWidth: '400px', background: 'white', borderRadius: '16px', padding: '32px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-        <button onClick={() => onNavigate('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#666', marginBottom: '24px' }}>← Back</button>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: NAVY, textAlign: 'center', marginBottom: '24px' }}>Start Free Trial</h1>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', padding: '20px' }}>
+      <div style={{ background: 'white', padding: '40px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <img src="/logo.svg" alt="The Nonprofit Edge" style={{ width: '180px', marginBottom: '16px' }} onError={(e) => { (e.target as HTMLImageElement).src = '/logo.jpg' }} />
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: NAVY }}>Start Your Free Trial</h1>
+        </div>
+        
         {error && <div style={{ background: '#fef2f2', color: '#dc2626', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' }}>{error}</div>}
-        {!supabase && <div style={{ background: '#fffbeb', color: '#d97706', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' }}>⚠️ Database not connected</div>}
+        
         <form onSubmit={handleSubmit}>
-          <input type="text" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Full Name" style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', marginBottom: '12px', boxSizing: 'border-box' }} />
-          <input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="Email" style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', marginBottom: '12px', boxSizing: 'border-box' }} />
-          <input type="password" required value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Password (min 6 chars)" style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', marginBottom: '16px', boxSizing: 'border-box' }} />
-          <button type="submit" disabled={loading} style={{ width: '100%', padding: '12px', background: TEAL, color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', opacity: loading ? 0.5 : 1 }}>{loading ? 'Creating...' : 'Start Free Trial'}</button>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 500, color: '#374151' }}>Organization Name</label>
+            <input
+              type="text"
+              value={orgName}
+              onChange={(e) => setOrgName(e.target.value)}
+              required
+              style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '16px', boxSizing: 'border-box' }}
+            />
+          </div>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 500, color: '#374151' }}>Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '16px', boxSizing: 'border-box' }}
+            />
+          </div>
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 500, color: '#374151' }}>Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '16px', boxSizing: 'border-box' }}
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{ width: '100%', padding: '14px', background: TEAL, color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
+          >
+            {loading ? 'Creating Account...' : 'Create Account'}
+          </button>
         </form>
-        <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '14px', color: '#666' }}>
-          Have account? <button onClick={() => onNavigate('login')} style={{ background: 'none', border: 'none', color: TEAL, cursor: 'pointer', fontWeight: 500 }}>Sign in</button>
-        </p>
+        
+        <div style={{ marginTop: '24px', textAlign: 'center' }}>
+          <span style={{ color: '#666', fontSize: '14px' }}>Already have an account? </span>
+          <button onClick={() => onNavigate('login')} style={{ background: 'none', border: 'none', color: TEAL, cursor: 'pointer', fontSize: '14px', fontWeight: 600 }}>
+            Sign In
+          </button>
+        </div>
       </div>
     </div>
   )
 }
 
-// Dashboard
+// Dashboard Component
 const Dashboard = ({ user, onNavigate, onLogout }: { user: any; onNavigate: (page: string) => void; onLogout: () => void }) => {
-  const name = user?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there'
-  const tools = [
-    { title: 'Strategic Plan', icon: '📋', url: 'https://thenonprofitedge.app.n8n.cloud/webhook/strategic-plan-checkup' },
-    { title: 'Board Assessment', icon: '👥', url: 'https://thenonprofitedge.app.n8n.cloud/webhook/board-assessment' },
-    { title: 'Grant Review', icon: '💰', url: 'https://thenonprofitedge.app.n8n.cloud/webhook/grant-review' },
-    { title: 'Scenario Planner', icon: '🎯', url: 'https://thenonprofitedge.app.n8n.cloud/webhook/scenario-planner' },
-    { title: 'CEO Evaluation', icon: '⭐', url: 'https://thenonprofitedge.app.n8n.cloud/webhook/ceo-evaluation' },
-    { title: 'Ask the Professor', icon: '🎓', url: 'https://thenonprofitedge.app.n8n.cloud/webhook/ask-the-professor' },
-  ]
-
   return (
-    <div style={{ minHeight: '100vh', background: '#f9fafb' }}>
-      <header style={{ background: 'white', borderBottom: '1px solid #eee', position: 'sticky', top: 0, zIndex: 40 }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <img src="/logo.svg" alt="Logo" style={{ height: '40px' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            {(user?.role === 'admin' || user?.role === 'owner') && (
-              <button onClick={() => onNavigate('admin')} style={{ background: 'none', border: 'none', color: '#7c3aed', cursor: 'pointer' }}>Admin</button>
-            )}
-            <span style={{ color: '#666', fontSize: '14px' }}>{name}</span>
-            <button onClick={onLogout} style={{ background: 'none', border: 'none', color: '#999', cursor: 'pointer', fontSize: '14px' }}>Sign Out</button>
-          </div>
+    <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
+      <header style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <img src="/logo.svg" alt="The Nonprofit Edge" style={{ width: '150px' }} onError={(e) => { (e.target as HTMLImageElement).src = '/logo.jpg' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <span style={{ color: '#666' }}>{user?.email}</span>
+          {(user?.role === 'admin' || user?.role === 'owner') && (
+            <button onClick={() => onNavigate('admin')} style={{ background: NAVY, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer' }}>Admin</button>
+          )}
+          <button onClick={onLogout} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer' }}>Logout</button>
         </div>
       </header>
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 24px' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: NAVY, marginBottom: '24px' }}>Welcome back, {name}!</h1>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
-          {tools.map((tool, i) => (
-            <button key={i} onClick={() => window.open(tool.url, '_blank')} style={{ background: 'white', border: '1px solid #eee', borderRadius: '12px', padding: '24px', textAlign: 'left', cursor: 'pointer' }}>
-              <div style={{ fontSize: '2rem', marginBottom: '12px' }}>{tool.icon}</div>
-              <h3 style={{ fontWeight: 'bold', color: NAVY, marginBottom: '4px' }}>{tool.title}</h3>
-              <span style={{ color: TEAL, fontSize: '14px' }}>Launch →</span>
+      
+      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 24px' }}>
+        <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: NAVY, marginBottom: '8px' }}>Welcome to The Nonprofit Edge</h1>
+        <p style={{ color: '#666', marginBottom: '32px' }}>Access your strategic tools and resources</p>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+          {[
+            { title: 'Strategic Plan Check-Up', desc: 'Analyze your strategic plan', icon: '📋' },
+            { title: 'Board Assessment', desc: 'Evaluate board effectiveness', icon: '👥' },
+            { title: 'Grant Review', desc: 'Get feedback on grant proposals', icon: '💰' },
+            { title: 'Scenario Planner', desc: 'Plan for different futures', icon: '🔮' },
+          ].map((tool, i) => (
+            <div key={i} style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', cursor: 'pointer' }}>
+              <div style={{ fontSize: '32px', marginBottom: '12px' }}>{tool.icon}</div>
+              <h3 style={{ fontSize: '18px', fontWeight: 600, color: NAVY, marginBottom: '8px' }}>{tool.title}</h3>
+              <p style={{ color: '#666', fontSize: '14px' }}>{tool.desc}</p>
+            </div>
+          ))}
+        </div>
+      </main>
+    </div>
+  )
+}
+
+// Admin Component
+const Admin = ({ onBack, onNavigate }: { onBack: () => void; onNavigate: (page: string) => void }) => {
+  return (
+    <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
+      <header style={{ background: NAVY, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <h1 style={{ color: 'white', fontSize: '20px', fontWeight: 600 }}>Admin Dashboard</h1>
+        <button onClick={onBack} style={{ background: 'white', color: NAVY, border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer' }}>Back to Dashboard</button>
+      </header>
+      
+      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px' }}>
+          {[
+            { title: 'Owner Dashboard', route: 'owner-dashboard' },
+            { title: 'Marketing Analytics', route: 'marketing' },
+            { title: 'Link Manager', route: 'link-manager' },
+          ].map((item, i) => (
+            <button
+              key={i}
+              onClick={() => onNavigate(item.route)}
+              style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', cursor: 'pointer', border: '2px solid transparent', textAlign: 'left' }}
+            >
+              <h3 style={{ fontSize: '18px', fontWeight: 600, color: NAVY }}>{item.title}</h3>
             </button>
           ))}
         </div>
-      </div>
+      </main>
     </div>
   )
 }
 
-// Admin
-const Admin = ({ onBack, onNavigate }: { onBack: () => void; onNavigate: (page: string) => void }) => (
-  <div style={{ minHeight: '100vh', background: '#f9fafb' }}>
-    <header style={{ background: 'white', borderBottom: '1px solid #eee', padding: '16px 24px' }}>
-      <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#666' }}>← Back to Dashboard</button>
-    </header>
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 24px' }}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: NAVY, marginBottom: '24px' }}>Admin Dashboard</h1>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
-        {[{ title: 'Owner Dashboard', icon: '📊', page: 'owner-dashboard' }, { title: 'Marketing', icon: '📈', page: 'marketing' }, { title: 'Link Manager', icon: '🔗', page: 'link-manager' }].map((item, i) => (
-          <button key={i} onClick={() => onNavigate(item.page)} style={{ background: 'white', border: '1px solid #eee', borderRadius: '12px', padding: '24px', textAlign: 'left', cursor: 'pointer' }}>
-            <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>{item.icon}</div>
-            <h3 style={{ fontWeight: 'bold', color: NAVY }}>{item.title}</h3>
-          </button>
-        ))}
-      </div>
-    </div>
-  </div>
-)
-
-// Coming Soon
+// Coming Soon Component
 const ComingSoon = ({ title, onBack }: { title: string; onBack: () => void }) => (
-  <div style={{ minHeight: '100vh', background: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-    <div style={{ textAlign: 'center' }}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: NAVY, marginBottom: '16px' }}>{title}</h1>
-      <p style={{ color: '#666', marginBottom: '24px' }}>Coming soon!</p>
-      <button onClick={onBack} style={{ background: TEAL, color: 'white', border: 'none', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer' }}>Go Back</button>
-    </div>
+  <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
+    <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: NAVY, marginBottom: '16px' }}>{title}</h1>
+    <p style={{ color: '#666', marginBottom: '24px' }}>Coming Soon</p>
+    <button onClick={onBack} style={{ background: TEAL, color: 'white', border: 'none', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer' }}>Go Back</button>
   </div>
 )
 
-// App Content
+// WhyWeExist Component
+const WhyWeExist = ({ onNavigate }: { onNavigate: (page: string) => void }) => (
+  <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
+    <header style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '16px 24px' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <button onClick={() => onNavigate('')} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+          <img src="/logo.svg" alt="The Nonprofit Edge" style={{ width: '150px' }} onError={(e) => { (e.target as HTMLImageElement).src = '/logo.jpg' }} />
+        </button>
+        <button onClick={() => onNavigate('login')} style={{ background: TEAL, color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Sign In</button>
+      </div>
+    </header>
+    
+    <main style={{ maxWidth: '800px', margin: '0 auto', padding: '60px 24px' }}>
+      <h1 style={{ fontSize: '36px', fontWeight: 'bold', color: NAVY, marginBottom: '24px' }}>Why We Exist</h1>
+      <p style={{ fontSize: '18px', color: '#4b5563', lineHeight: 1.8, marginBottom: '24px' }}>
+        After 15+ years working with nonprofit leaders, we saw the same pattern: brilliant missions held back by outdated tools and reactive strategies.
+      </p>
+      <p style={{ fontSize: '18px', color: '#4b5563', lineHeight: 1.8, marginBottom: '24px' }}>
+        The Nonprofit Edge was built to change that—giving every organization access to the strategic frameworks that have helped secure over $100 million in funding.
+      </p>
+      <button onClick={() => onNavigate('')} style={{ background: TEAL, color: 'white', border: 'none', padding: '14px 28px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '16px' }}>
+        ← Back to Home
+      </button>
+    </main>
+  </div>
+)
+
+// App Content with Routes
 function AppContent() {
   const navigate = useNavigate()
   const [user, setUser] = useState<any>(null)
@@ -255,14 +345,19 @@ function AppContent() {
 
   useEffect(() => {
     const init = async () => {
-      if (!supabase) { setLoading(false); return }
+      if (!supabase) { 
+        setLoading(false) 
+        return 
+      }
       try {
         const { data: { session } } = await supabase.auth.getSession()
         if (session?.user) {
           const { data } = await supabase.from('users').select('*').eq('id', session.user.id).single()
           setUser(data || { id: session.user.id, email: session.user.email })
         }
-      } catch (e) { console.error(e) }
+      } catch (e) { 
+        console.error('Session error:', e) 
+      }
       setLoading(false)
     }
     init()
@@ -288,13 +383,24 @@ function AppContent() {
 
   const nav = (page: string) => navigate(`/${page}`)
 
-  if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ width: '40px', height: '40px', border: '4px solid #e5e7eb', borderTopColor: TEAL, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }}></div>
+          <p style={{ color: '#666' }}>Loading...</p>
+        </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    )
+  }
 
   return (
     <Routes>
       <Route path="/" element={<Homepage onNavigate={nav} />} />
       <Route path="/login" element={<Login onNavigate={nav} />} />
       <Route path="/signup" element={<Signup onNavigate={nav} />} />
+      <Route path="/why-we-exist" element={<WhyWeExist onNavigate={nav} />} />
       <Route path="/dashboard" element={user ? <Dashboard user={user} onNavigate={nav} onLogout={handleLogout} /> : <Navigate to="/login" />} />
       <Route path="/admin" element={user?.role === 'admin' || user?.role === 'owner' ? <Admin onBack={() => navigate('/dashboard')} onNavigate={nav} /> : <Navigate to="/dashboard" />} />
       <Route path="/owner-dashboard" element={<ComingSoon title="Owner Dashboard" onBack={() => navigate('/admin')} />} />
@@ -305,6 +411,7 @@ function AppContent() {
   )
 }
 
+// Main App Export
 export default function App() {
   return (
     <ErrorBoundary>
