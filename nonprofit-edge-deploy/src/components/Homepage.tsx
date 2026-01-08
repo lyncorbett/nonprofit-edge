@@ -82,7 +82,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-8">
-              <a href="#why-we-exist" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+              <a href="/why-we-exist" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
                 Why We Exist
               </a>
               <a href="#tools-section" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
@@ -121,7 +121,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
           {mobileMenuOpen && (
             <div className="md:hidden pt-4 pb-2 border-t border-gray-100 mt-4">
               <div className="flex flex-col space-y-3">
-                <a href="#why-we-exist" className="py-2 text-gray-600 hover:text-gray-900 font-medium">
+                <a href="/why-we-exist" className="py-2 text-gray-600 hover:text-gray-900 font-medium">
                   Why We Exist
                 </a>
                 <a href="#tools-section" className="py-2 text-gray-600 hover:text-gray-900 font-medium">
@@ -258,11 +258,11 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
         <section className="py-16 px-6 bg-white scroll-mt-24" id="why-we-exist">
           <div className="max-w-5xl mx-auto">
             <div className="grid md:grid-cols-2 gap-10 items-center">
-              {/* Left: Image - UPDATED TO NEW PHOTO */}
+              {/* Left: Image - LARGER with badge at bottom */}
               <div className="relative flex justify-center">
                 <div 
                   className="rounded-2xl overflow-hidden bg-gray-100"
-                  style={{ maxWidth: '300px' }}
+                  style={{ maxWidth: '400px' }}
                 >
                   <img 
                     src="/lyn-corbett.jpg"
@@ -270,10 +270,10 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
                     className="w-full h-auto object-cover"
                   />
                 </div>
-                {/* Badge */}
+                {/* Badge - positioned at very bottom of image */}
                 <div 
-                  className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-xl py-3 px-4 text-center text-white text-sm font-semibold"
-                  style={{ backgroundColor: NAVY, maxWidth: '280px' }}
+                  className="absolute left-1/2 -translate-x-1/2 rounded-xl py-3 px-4 text-center text-white text-sm font-semibold"
+                  style={{ backgroundColor: NAVY, maxWidth: '320px', bottom: '-16px' }}
                 >
                   Over 25 Years of Nonprofit Experience
                 </div>
@@ -548,7 +548,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
             <div>
               <h4 className="font-bold text-lg mb-4">Company</h4>
               <ul className="space-y-3">
-                <li><a href="#why-we-exist" className="text-gray-300 hover:text-white text-sm transition-colors">Why We Exist</a></li>
+                <li><a href="/why-we-exist" className="text-gray-300 hover:text-white text-sm transition-colors">Why We Exist</a></li>
                 <li><a href="#pricing-section" className="text-gray-300 hover:text-white text-sm transition-colors">Pricing</a></li>
                 <li><a href="mailto:lyn@thepivotalgroup.com" className="text-gray-300 hover:text-white text-sm transition-colors">Contact</a></li>
                 <li><a href="https://thepivotalgroup.com" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white text-sm transition-colors">The Pivotal Group</a></li>
