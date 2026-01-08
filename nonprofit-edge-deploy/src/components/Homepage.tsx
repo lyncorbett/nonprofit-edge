@@ -1,6 +1,6 @@
 /**
  * Homepage - The Nonprofit Edge
- * MINIMAL FIX: Only header/logo changes, everything else unchanged
+ * Updated: Fixed links (/signin → /login), new photo, assessment link
  */
 
 import React, { useState } from 'react'
@@ -19,7 +19,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
     if (onNavigate) {
       onNavigate(page)
     } else {
-      window.location.href = page
+      window.location.href = `/${page}`
     }
   }
 
@@ -34,7 +34,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
       image: '/tool-grant.jpg',
       title: 'Grant Review', 
       desc: 'Win more grants with expert scoring, comments, and funder-ready polish.',
-      link: '/grant-review'
+      link: '/grant-rfp-review'
     },
     { 
       image: '/tool-scenario.jpg',
@@ -64,97 +64,87 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
 
   return (
     <div className="min-h-screen">
-      {/* ==================== HEADER - FIXED ==================== */}
+      {/* ==================== HEADER ==================== */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-6 flex items-center justify-between" style={{ height: '90px' }}>
-          {/* Logo - 200px width */}
-          <button onClick={() => handleNavigate('/')} className="flex items-center">
-            <img 
-              src="/logo.svg" 
-              alt="The Nonprofit Edge" 
-              style={{ width: '200px', height: 'auto' }}
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = '/logo.jpg'
-              }}
-            />
-          </button>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
-            <button 
-              onClick={() => handleNavigate('/')}
-              className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
-            >
-              Home
-            </button>
-            <button 
-              onClick={() => handleNavigate('/why-we-exist')}
-              className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
-            >
-              Why We Exist
-            </button>
-            <a href="#tools-section" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-              Tools
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex items-center justify-between" style={{ height: '120px' }}>
+            {/* Logo - 280px width, no text */}
+            <a href="/" className="flex items-center">
+              <img 
+                src="/logo.svg" 
+                alt="The Nonprofit Edge" 
+                style={{ width: '280px', height: 'auto' }}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/logo.jpg'
+                }}
+              />
             </a>
-            <a href="#pricing-section" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-              Pricing
-            </a>
-            <button 
-              onClick={() => handleNavigate('/login')}
-              className="px-5 py-2.5 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity"
-              style={{ backgroundColor: TEAL }}
-            >
-              Sign In
-            </button>
-          </nav>
 
-          {/* Mobile Menu Button */}
-          <button 
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-gray-600 hover:text-gray-900"
-          >
-            {mobileMenuOpen ? (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-            ) : (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16"/>
-              </svg>
-            )}
-          </button>
-        </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden px-6 pt-4 pb-4 border-t border-gray-100 bg-white">
-            <div className="flex flex-col space-y-3">
-              <button onClick={() => handleNavigate('/')} className="py-2 text-gray-600 hover:text-gray-900 font-medium text-left">
-                Home
-              </button>
-              <button onClick={() => handleNavigate('/why-we-exist')} className="py-2 text-gray-600 hover:text-gray-900 font-medium text-left">
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center gap-8">
+              <a href="#why-we-exist" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
                 Why We Exist
-              </button>
-              <a href="#tools-section" className="py-2 text-gray-600 hover:text-gray-900 font-medium">
+              </a>
+              <a href="#tools-section" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
                 Tools
               </a>
-              <a href="#pricing-section" className="py-2 text-gray-600 hover:text-gray-900 font-medium">
+              <a href="#pricing-section" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
                 Pricing
               </a>
-              <button 
-                onClick={() => handleNavigate('/login')}
-                className="py-2.5 px-4 text-white rounded-lg font-semibold text-center"
+              <a 
+                href="/login"
+                className="px-5 py-2.5 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity"
                 style={{ backgroundColor: TEAL }}
               >
                 Sign In
-              </button>
-            </div>
+              </a>
+            </nav>
+
+            {/* Mobile Menu Button */}
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 text-gray-600 hover:text-gray-900"
+            >
+              {mobileMenuOpen ? (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+              )}
+            </button>
           </div>
-        )}
+
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden pt-4 pb-2 border-t border-gray-100 mt-4">
+              <div className="flex flex-col space-y-3">
+                <a href="#why-we-exist" className="py-2 text-gray-600 hover:text-gray-900 font-medium">
+                  Why We Exist
+                </a>
+                <a href="#tools-section" className="py-2 text-gray-600 hover:text-gray-900 font-medium">
+                  Tools
+                </a>
+                <a href="#pricing-section" className="py-2 text-gray-600 hover:text-gray-900 font-medium">
+                  Pricing
+                </a>
+                <a 
+                  href="/login"
+                  className="py-2.5 px-4 text-white rounded-lg font-semibold text-center"
+                  style={{ backgroundColor: TEAL }}
+                >
+                  Sign In
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
       </header>
 
       {/* ==================== MAIN CONTENT ==================== */}
-      <div className="pt-24">
+      <div className="pt-32">
         {/* Hero Section */}
         <section className="py-16 md:py-20 px-6" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #e6f7f9 100%)' }}>
           <div className="max-w-6xl mx-auto">
@@ -169,13 +159,13 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
                   The strategic toolkit behind $100M+ in nonprofit funding. Join 800+ leaders who've stopped guessing and started winning.
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <button 
-                    onClick={() => handleNavigate('/signup')}
+                  <a 
+                    href="/signup"
                     className="px-6 py-3 text-base font-semibold text-white rounded-lg transition hover:opacity-90 hover:shadow-lg"
                     style={{ backgroundColor: TEAL }}
                   >
                     Start Your Free Trial
-                  </button>
+                  </a>
                   <a 
                     href="#demo"
                     className="px-6 py-3 text-base font-semibold rounded-lg border-2 border-gray-300 hover:border-gray-400 transition flex items-center gap-2 bg-white"
@@ -187,7 +177,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
                 </div>
               </div>
               
-              {/* Right: Hero Image - BIGGER and moved LEFT */}
+              {/* Right: Hero Image */}
               <div className="flex justify-center md:justify-start md:-ml-8">
                 <div 
                   className="overflow-hidden"
@@ -207,7 +197,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
           </div>
         </section>
 
-        {/* Trust Bar - LARGER LOGOS */}
+        {/* Trust Bar */}
         <section className="py-10 px-6 bg-white border-b border-gray-100">
           <div className="max-w-5xl mx-auto text-center">
             <div className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-6">
@@ -237,12 +227,11 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
 
             <div className="grid md:grid-cols-3 gap-6">
               {tools.map((tool, idx) => (
-                <button 
+                <a 
                   key={idx}
-                  onClick={() => handleNavigate(tool.link)}
-                  className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all group border border-gray-100 text-left"
+                  href={tool.link}
+                  className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all group border border-gray-100"
                 >
-                  {/* Image */}
                   <div className="h-36 overflow-hidden">
                     <img 
                       src={tool.image}
@@ -250,7 +239,6 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
-                  {/* Content */}
                   <div className="p-5">
                     <h3 className="text-base font-bold mb-2 text-white rounded px-3 py-2" style={{ backgroundColor: NAVY }}>
                       {tool.title}
@@ -260,24 +248,24 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
                       Find out more →
                     </span>
                   </div>
-                </button>
+                </a>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Ask the Professor Section (Why We Exist) */}
+        {/* Ask the Professor Section */}
         <section className="py-16 px-6 bg-white scroll-mt-24" id="why-we-exist">
           <div className="max-w-5xl mx-auto">
             <div className="grid md:grid-cols-2 gap-10 items-center">
-              {/* Left: Image */}
+              {/* Left: Image - UPDATED TO NEW PHOTO */}
               <div className="relative flex justify-center">
                 <div 
                   className="rounded-2xl overflow-hidden bg-gray-100"
                   style={{ maxWidth: '300px' }}
                 >
                   <img 
-                    src="/dr-corbett.jpg"
+                    src="/lyn-corbett.jpg"
                     alt="Dr. Lyn Corbett"
                     className="w-full h-auto object-cover"
                   />
@@ -323,19 +311,19 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
                   </div>
                 </div>
                 
-                <button
-                  onClick={() => handleNavigate('/ask-the-professor')}
+                <a
+                  href="/ask-the-professor"
                   className="inline-block px-6 py-3 text-base font-semibold text-white rounded-lg transition hover:opacity-90"
                   style={{ backgroundColor: NAVY }}
                 >
                   Ask Your First Question — Free
-                </button>
+                </a>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Free Assessment CTA - FIXED: Opens n8n webhook */}
+        {/* Free Assessment CTA - UPDATED LINK */}
         <section className="py-12 px-6 bg-gray-100">
           <div className="max-w-4xl mx-auto">
             <div 
@@ -350,13 +338,13 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
             <p className="text-gray-600 mb-4">
               Every nonprofit has ONE thing holding back their next breakthrough. Discover yours in 3 minutes — no login required.
             </p>
-            <button
-              onClick={() => window.open('https://thenonprofitedge.app.n8n.cloud/webhook/constraint-assessment', '_blank')}
+            <a
+              href="/assessment"
               className="inline-block px-6 py-3 text-base font-semibold rounded-lg transition hover:opacity-90"
               style={{ backgroundColor: TEAL, color: 'white' }}
             >
               Take the Free Assessment →
-            </button>
+            </a>
           </div>
         </section>
 
@@ -392,13 +380,13 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
                     <span style={{ color: TEAL }}>✓</span> Full Resource Library
                   </li>
                 </ul>
-                <button 
-                  onClick={() => handleNavigate('/signup')}
+                <a 
+                  href="/signup"
                   className="block w-full py-2.5 text-center text-sm font-semibold rounded-lg border border-gray-200 hover:border-gray-300 transition"
                   style={{ color: NAVY }}
                 >
                   Start 3-Day Trial
-                </button>
+                </a>
               </div>
 
               {/* Professional - Popular */}
@@ -426,13 +414,13 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
                     <span style={{ color: TEAL }}>✓</span> Full Resource Library
                   </li>
                 </ul>
-                <button 
-                  onClick={() => handleNavigate('/signup')}
+                <a 
+                  href="/signup"
                   className="block w-full py-2.5 text-center text-sm font-semibold text-white rounded-lg transition hover:opacity-90"
                   style={{ backgroundColor: TEAL }}
                 >
                   Start 3-Day Trial
-                </button>
+                </a>
               </div>
 
               {/* Premium */}
@@ -454,13 +442,13 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
                     <span style={{ color: TEAL }}>✓</span> Monthly coaching call
                   </li>
                 </ul>
-                <button 
-                  onClick={() => handleNavigate('/signup')}
+                <a 
+                  href="/signup"
                   className="block w-full py-2.5 text-center text-sm font-semibold rounded-lg border border-gray-200 hover:border-gray-300 transition"
                   style={{ color: NAVY }}
                 >
                   Start 3-Day Trial
-                </button>
+                </a>
               </div>
 
               {/* Enterprise */}
@@ -509,12 +497,12 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
                 <img 
                   src="/logo.svg" 
                   alt="The Nonprofit Edge" 
-                  style={{ width: '150px', height: 'auto' }}
-                  className="brightness-0 invert"
+                  className="h-10 w-auto brightness-0 invert"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = '/logo.jpg'
                   }}
                 />
+                <span className="font-bold text-xl">The Nonprofit Edge</span>
               </div>
               <p className="text-gray-300 text-sm mb-4">
                 AI-powered strategic tools for nonprofit leaders. From complexity to clarity.
@@ -529,29 +517,29 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
               <h4 className="font-bold text-lg mb-4">Tools</h4>
               <ul className="space-y-3">
                 <li>
-                  <button onClick={() => handleNavigate('/ask-the-professor')} className="text-gray-300 hover:text-white text-sm transition-colors">
+                  <a href="/ask-the-professor" className="text-gray-300 hover:text-white text-sm transition-colors">
                     Ask the Professor
-                  </button>
+                  </a>
                 </li>
                 <li>
-                  <button onClick={() => handleNavigate('/grant-review')} className="text-gray-300 hover:text-white text-sm transition-colors">
+                  <a href="/grant-rfp-review" className="text-gray-300 hover:text-white text-sm transition-colors">
                     Grant Review
-                  </button>
+                  </a>
                 </li>
                 <li>
-                  <button onClick={() => handleNavigate('/board-assessment')} className="text-gray-300 hover:text-white text-sm transition-colors">
+                  <a href="/board-assessment" className="text-gray-300 hover:text-white text-sm transition-colors">
                     Board Assessment
-                  </button>
+                  </a>
                 </li>
                 <li>
-                  <button onClick={() => handleNavigate('/strategic-plan-checkup')} className="text-gray-300 hover:text-white text-sm transition-colors">
+                  <a href="/strategic-plan-checkup" className="text-gray-300 hover:text-white text-sm transition-colors">
                     Strategic Plan Analysis
-                  </button>
+                  </a>
                 </li>
                 <li>
-                  <button onClick={() => handleNavigate('/ceo-evaluation')} className="text-gray-300 hover:text-white text-sm transition-colors">
+                  <a href="/ceo-evaluation" className="text-gray-300 hover:text-white text-sm transition-colors">
                     CEO Evaluation
-                  </button>
+                  </a>
                 </li>
               </ul>
             </div>
@@ -560,40 +548,40 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
             <div>
               <h4 className="font-bold text-lg mb-4">Company</h4>
               <ul className="space-y-3">
-                <li><button onClick={() => handleNavigate('/why-we-exist')} className="text-gray-300 hover:text-white text-sm transition-colors">Why We Exist</button></li>
+                <li><a href="#why-we-exist" className="text-gray-300 hover:text-white text-sm transition-colors">Why We Exist</a></li>
                 <li><a href="#pricing-section" className="text-gray-300 hover:text-white text-sm transition-colors">Pricing</a></li>
                 <li><a href="mailto:lyn@thepivotalgroup.com" className="text-gray-300 hover:text-white text-sm transition-colors">Contact</a></li>
                 <li><a href="https://thepivotalgroup.com" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white text-sm transition-colors">The Pivotal Group</a></li>
               </ul>
             </div>
 
-            {/* Account */}
+            {/* Account - FIXED: /signin → /login */}
             <div>
               <h4 className="font-bold text-lg mb-4">Account</h4>
               <ul className="space-y-3">
                 <li>
-                  <button onClick={() => handleNavigate('/login')} className="text-gray-300 hover:text-white text-sm transition-colors">
+                  <a href="/login" className="text-gray-300 hover:text-white text-sm transition-colors">
                     Sign In
-                  </button>
+                  </a>
                 </li>
                 <li>
-                  <button onClick={() => handleNavigate('/signup')} className="text-gray-300 hover:text-white text-sm transition-colors">
+                  <a href="/signup" className="text-gray-300 hover:text-white text-sm transition-colors">
                     Start Free Trial
-                  </button>
+                  </a>
                 </li>
                 <li>
-                  <button onClick={() => handleNavigate('/dashboard')} className="text-gray-300 hover:text-white text-sm transition-colors">
+                  <a href="/dashboard" className="text-gray-300 hover:text-white text-sm transition-colors">
                     Member Dashboard
-                  </button>
+                  </a>
                 </li>
               </ul>
-              <button 
-                onClick={() => handleNavigate('/signup')}
+              <a 
+                href="/signup"
                 className="mt-6 inline-block px-5 py-2.5 text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity"
                 style={{ backgroundColor: TEAL }}
               >
                 Get Started Free →
-              </button>
+              </a>
             </div>
           </div>
         </div>
@@ -604,8 +592,8 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <p className="text-gray-400 text-sm">© 2026 The Nonprofit Edge. All rights reserved.</p>
               <div className="flex items-center gap-6">
-                <button onClick={() => handleNavigate('/privacy')} className="text-gray-400 hover:text-white text-sm transition-colors">Privacy Policy</button>
-                <button onClick={() => handleNavigate('/terms')} className="text-gray-400 hover:text-white text-sm transition-colors">Terms of Service</button>
+                <a href="/privacy" className="text-gray-400 hover:text-white text-sm transition-colors">Privacy Policy</a>
+                <a href="/terms" className="text-gray-400 hover:text-white text-sm transition-colors">Terms of Service</a>
               </div>
             </div>
           </div>
