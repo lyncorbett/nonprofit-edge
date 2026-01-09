@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
+const NAVY = '#0D2C54';
+const TEAL = '#0097A7';
+
 interface GrantReviewLandingProps {
   onNavigate?: (route: string) => void;
   onGetStarted?: () => void;
@@ -26,8 +29,32 @@ const GrantReviewLanding: React.FC<GrantReviewLandingProps> = ({ onNavigate, onG
 
   return (
     <div className="min-h-screen bg-white font-sans">
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex items-center justify-between" style={{ height: '120px' }}>
+            <a href="/" className="flex items-center">
+              <img 
+                src="/logo.svg" 
+                alt="The Nonprofit Edge" 
+                style={{ width: '280px', height: 'auto' }}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/logo.jpg'
+                }}
+              />
+            </a>
+            <nav className="hidden md:flex items-center gap-8">
+              <a href="/why-we-exist" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Why We Exist</a>
+              <a href="/#tools-section" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Tools</a>
+              <a href="/#pricing-section" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Pricing</a>
+              <a href="/login" className="px-5 py-2.5 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity" style={{ backgroundColor: TEAL }}>Sign In</a>
+            </nav>
+          </div>
+        </div>
+      </header>
+
       {/* Hero Section */}
-      <section className="py-16 px-6">
+      <section className="py-16 px-6" style={{ marginTop: '120px' }}>
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="max-w-xl">
             <span className="inline-block bg-emerald-100 text-emerald-700 px-4 py-1 rounded-full text-sm font-semibold mb-4">
@@ -37,7 +64,7 @@ const GrantReviewLanding: React.FC<GrantReviewLandingProps> = ({ onNavigate, onG
               Stop Leaving <span className="text-emerald-600">Grant Money</span> on the Table
             </h1>
             <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-              Get expert-level feedback on your grant proposals and RFP responses before you submit. Our AI-powered review identifies gaps, strengthens your narrative, and increases your win rate.
+              Get expert-level feedback on your grant proposals and RFP responses before you submit. Our review identifies gaps, strengthens your narrative, and increases your win rate.
             </p>
             <div className="flex flex-wrap gap-4">
               <button 
@@ -51,9 +78,16 @@ const GrantReviewLanding: React.FC<GrantReviewLandingProps> = ({ onNavigate, onG
               </a>
             </div>
           </div>
-          {/* Hero Image */}
+          {/* Hero Image - UNIQUE for Grant Review page */}
           <div className="rounded-xl overflow-hidden shadow-2xl">
-            <img src="/grant-review-hero.jpg" alt="Grant writing success" className="w-full h-auto" />
+            <img 
+              src="/grant-hero.jpg" 
+              alt="Grant writing success" 
+              className="w-full h-auto"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80';
+              }}
+            />
           </div>
         </div>
       </section>
@@ -82,13 +116,32 @@ const GrantReviewLanding: React.FC<GrantReviewLandingProps> = ({ onNavigate, onG
           <h2 className="text-3xl lg:text-4xl font-bold text-[#0D2C54] text-center mb-4">Why Good Proposals Get Rejected</h2>
           <p className="text-lg text-gray-600 text-center max-w-2xl mx-auto mb-12">It's rarely about your program. It's about how you present it.</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Cards - UNIQUE IMAGES for Grant Review page only */}
             {[
-              { img: '/tool-grant.jpg', title: 'Weak Problem Statement', desc: "You know the need is real, but funders can't feel the urgency. Data without story doesn't move reviewers." },
-              { img: '/tool-strategic.jpg', title: 'Vague Outcomes', desc: '"Improve lives" isn\'t measurable. Funders want specific, trackable results they can report to their boards.' },
-              { img: '/tool-resources.jpg', title: 'Missing Alignment', desc: "Your program is great, but does it match what THIS funder wants? Misalignment kills more proposals than weak writing." },
+              { 
+                img: '/grant-weak-problem.jpg',  // UNIQUE: Problem/need concept
+                fallback: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=600&q=80',
+                title: 'Weak Problem Statement', 
+                desc: "You know the need is real, but funders can't feel the urgency. Data without story doesn't move reviewers." 
+              },
+              { 
+                img: '/grant-vague-outcomes.jpg',  // UNIQUE: Measurement/outcomes concept
+                fallback: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&q=80',
+                title: 'Vague Outcomes', 
+                desc: '"Improve lives" isn\'t measurable. Funders want specific, trackable results they can report to their boards.' 
+              },
+              { 
+                img: '/grant-misalignment.jpg',  // UNIQUE: Puzzle/alignment concept
+                fallback: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=600&q=80',
+                title: 'Missing Alignment', 
+                desc: "Your program is great, but does it match what THIS funder wants? Misalignment kills more proposals than weak writing." 
+              },
             ].map((card, i) => (
               <div key={i} className="relative rounded-xl overflow-hidden min-h-[320px] flex flex-col justify-end">
-                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${card.img})` }} />
+                <div 
+                  className="absolute inset-0 bg-cover bg-center" 
+                  style={{ backgroundImage: `url(${card.img}), url(${card.fallback})` }} 
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
                 <div className="relative z-10 p-8 text-white">
                   <h3 className="text-xl font-bold mb-3">{card.title}</h3>
@@ -107,7 +160,7 @@ const GrantReviewLanding: React.FC<GrantReviewLandingProps> = ({ onNavigate, onG
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-8">
             {[
               { num: 1, title: 'Upload', desc: 'Submit your draft proposal or RFP response' },
-              { num: 2, title: 'Analysis', desc: 'AI reviews against funder priorities and best practices' },
+              { num: 2, title: 'Analysis', desc: 'Review against funder priorities and best practices' },
               { num: 3, title: 'Feedback', desc: 'Get specific suggestions for each section' },
               { num: 4, title: 'Strengthen', desc: 'Revise with confidence and submit a winner' },
             ].map((step, i) => (
