@@ -1,3 +1,4 @@
+
 /**
  * THE NONPROFIT EDGE - App.tsx
  * Complete Routing with Usage Tracking Integration
@@ -38,7 +39,6 @@ import ResetPassword from './components/ResetPassword';
 
 // UI Components
 import Homepage from './components/Homepage';
-import WhyWeExist from './components/WhyWeExist';
 // import Sidebar from './components/Sidebar';  // COMMENTED OUT - causes Router context error
 // import ProductTour from './components/ProductTour';  // COMMENTED OUT - not used directly
 // import WelcomeModal from './components/WelcomeModal';  // COMMENTED OUT - not used directly
@@ -583,9 +583,6 @@ const App: React.FC = () => {
       
       case '/reset-password':
         return <ResetPassword onNavigate={navigate} />;
-
-      case '/why-we-exist':
-        return <WhyWeExist onNavigate={navigate} />;
 
       // ========================================
       // TOOL LANDING PAGES (Public)
