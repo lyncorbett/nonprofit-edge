@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
+const NAVY = '#0D2C54';
+const TEAL = '#0097A7';
+
 interface ScenarioPlannerLandingProps {
   onNavigate?: (route: string) => void;
   onGetStarted?: () => void;
@@ -26,8 +29,32 @@ const ScenarioPlannerLanding: React.FC<ScenarioPlannerLandingProps> = ({ onNavig
 
   return (
     <div className="min-h-screen bg-white font-sans">
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex items-center justify-between" style={{ height: '120px' }}>
+            <a href="/" className="flex items-center">
+              <img 
+                src="/logo.svg" 
+                alt="The Nonprofit Edge" 
+                style={{ width: '280px', height: 'auto' }}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/logo.jpg'
+                }}
+              />
+            </a>
+            <nav className="hidden md:flex items-center gap-8">
+              <a href="/why-we-exist" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Why We Exist</a>
+              <a href="/#tools-section" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Tools</a>
+              <a href="/#pricing-section" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Pricing</a>
+              <a href="/login" className="px-5 py-2.5 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity" style={{ backgroundColor: TEAL }}>Sign In</a>
+            </nav>
+          </div>
+        </div>
+      </header>
+
       {/* Hero Section */}
-      <section className="py-16 px-6">
+      <section className="py-16 px-6" style={{ marginTop: '120px' }}>
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="max-w-xl">
             <h1 className="text-4xl lg:text-5xl font-extrabold text-[#0D2C54] leading-tight mb-5">
@@ -49,12 +76,15 @@ const ScenarioPlannerLanding: React.FC<ScenarioPlannerLandingProps> = ({ onNavig
             </div>
           </div>
 
-          {/* Hero Image - FIXED PATH (removed /images/) */}
+          {/* Hero Image */}
           <div className="rounded-xl overflow-hidden shadow-2xl">
             <img 
-              src="/scenario-hero-image.jpg" 
+              src="/scenario-hero.jpg" 
               alt="Leadership team planning together"
               className="w-full h-auto"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80';
+              }}
             />
           </div>
         </div>
@@ -71,50 +101,38 @@ const ScenarioPlannerLanding: React.FC<ScenarioPlannerLandingProps> = ({ onNavig
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Leadership Card - FIXED PATH */}
-            <div className="relative rounded-xl overflow-hidden min-h-[320px] flex flex-col justify-end">
-              <div 
-                className="absolute inset-0 bg-cover bg-center"
-                style={{ backgroundImage: 'url(/scenario-leadership.jpg)' }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
-              <div className="relative z-10 p-8 text-white">
-                <h3 className="text-xl font-bold mb-3">Leadership Transitions</h3>
-                <p className="text-sm opacity-90 leading-relaxed">
-                  Your founding ED is retiring. They hold most of the donor relationships. The board hasn't led a search in 15 years. What's your plan?
-                </p>
+            {[
+              { 
+                img: '/scenario-leadership.jpg',
+                fallback: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=600&q=80',
+                title: 'Leadership Transitions', 
+                desc: "Your founding ED is retiring. They hold most of the donor relationships. The board hasn't led a search in 15 years. What's your plan?" 
+              },
+              { 
+                img: '/scenario-funding.jpg',
+                fallback: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=600&q=80',
+                title: 'Funding Shifts', 
+                desc: "Your largest funder is signaling changes. You've heard 'budget cuts' mentioned. How would you absorb a 20% reduction? 40%?" 
+              },
+              { 
+                img: '/scenario-disruption.jpg',
+                fallback: 'https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=600&q=80',
+                title: 'External Disruption', 
+                desc: "Economic downturn. Policy changes. Public health crisis. The question isn't if something will happen — it's whether you'll be ready." 
+              },
+            ].map((card, i) => (
+              <div key={i} className="relative rounded-xl overflow-hidden min-h-[320px] flex flex-col justify-end">
+                <div 
+                  className="absolute inset-0 bg-cover bg-center" 
+                  style={{ backgroundImage: `url(${card.img}), url(${card.fallback})` }} 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
+                <div className="relative z-10 p-8 text-white">
+                  <h3 className="text-xl font-bold mb-3">{card.title}</h3>
+                  <p className="text-sm opacity-90 leading-relaxed">{card.desc}</p>
+                </div>
               </div>
-            </div>
-
-            {/* Funding Card - FIXED PATH (using actual filename with typo) */}
-            <div className="relative rounded-xl overflow-hidden min-h-[320px] flex flex-col justify-end">
-              <div 
-                className="absolute inset-0 bg-cover bg-center"
-                style={{ backgroundImage: 'url(/scenario-funding.jp.jpeg)' }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
-              <div className="relative z-10 p-8 text-white">
-                <h3 className="text-xl font-bold mb-3">Funding Shifts</h3>
-                <p className="text-sm opacity-90 leading-relaxed">
-                  Your largest funder is signaling changes. You've heard "budget cuts" mentioned. How would you absorb a 20% reduction? 40%?
-                </p>
-              </div>
-            </div>
-
-            {/* Disruption Card - FIXED PATH */}
-            <div className="relative rounded-xl overflow-hidden min-h-[320px] flex flex-col justify-end">
-              <div 
-                className="absolute inset-0 bg-cover bg-center"
-                style={{ backgroundImage: 'url(/scenario-disruption.jpg)' }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
-              <div className="relative z-10 p-8 text-white">
-                <h3 className="text-xl font-bold mb-3">External Disruption</h3>
-                <p className="text-sm opacity-90 leading-relaxed">
-                  Economic downturn. Policy changes. Public health crisis. The question isn't if something will happen — it's whether you'll be ready.
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -157,7 +175,6 @@ const ScenarioPlannerLanding: React.FC<ScenarioPlannerLandingProps> = ({ onNavig
           </p>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Deliverables List */}
             <div className="space-y-6">
               {[
                 { title: 'Readiness Scorecard', desc: 'Your self-assessed scores across four dimensions with interpretation of what your pattern suggests.' },
@@ -263,7 +280,6 @@ const ScenarioPlannerLanding: React.FC<ScenarioPlannerLandingProps> = ({ onNavig
                 </div>
               </div>
 
-              {/* Progress Dots */}
               <div className="bg-gray-100 px-4 py-3 flex justify-center gap-2 border-t border-gray-200">
                 {screens.map((_, i) => (
                   <button
@@ -324,16 +340,11 @@ const ScenarioPlannerLanding: React.FC<ScenarioPlannerLandingProps> = ({ onNavig
         </div>
       </section>
 
-      {/* Philosophy Quote - FIXED PATH */}
-      <section className="py-24 px-6 relative">
-        <div 
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: 'url(/scenario-quote-bg.jpg)' }}
-        />
-        <div className="absolute inset-0 bg-[#0D2C54]/80" />
-        <div className="relative z-10 max-w-4xl mx-auto text-center text-white">
+      {/* Quote Section */}
+      <section className="py-24 px-6 bg-gradient-to-br from-[#e11d48] to-[#be123c]">
+        <div className="max-w-4xl mx-auto text-center text-white">
           <blockquote className="text-2xl lg:text-3xl font-semibold italic leading-relaxed">
-            "Scenario planning doesn't predict the future — <span className="text-[#e11d48]">it prepares you to lead through it.</span>"
+            "Scenario planning doesn't predict the future — it prepares you to lead through it."
           </blockquote>
           <cite className="block mt-6 text-base not-italic opacity-70">— From The Nonprofit Edge</cite>
         </div>
