@@ -32,11 +32,17 @@ const COLORS = {
 };
 
 // ============================================
-// OWNER EMAIL - Gets full admin access
+// ACCESS LEVELS
+// Owner: Full access including Owner Dashboard
+// Admin: All admin tools EXCEPT Owner Dashboard
 // ============================================
 const OWNER_EMAILS = [
   'lyn@thepivotalgroup.com',
-  'lyncorbett@thepivotalgroup.com',
+];
+
+const ADMIN_EMAILS = [
+  'asha@thepivotalgroup.com',  // Asha Gibson
+  // Add more admin emails as needed
 ];
 
 // ============================================
@@ -452,8 +458,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
   const orgName = organization?.name || 'Organization';
   const userEmail = user?.email || '';
 
-  // Check if owner
+  // Check access levels
   const isOwner = OWNER_EMAILS.some(email => userEmail.toLowerCase() === email.toLowerCase());
+  const isAdmin = ADMIN_EMAILS.some(email => userEmail.toLowerCase() === email.toLowerCase());
+  const hasAdminAccess = isOwner || isAdmin;
 
   // ============================================
   // CHECK IF NEW USER → SHOW TOUR
@@ -507,19 +515,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
   };
 
   // ============================================
-  // TOOL CLICK → OPENS N8N WEBHOOK DIRECTLY
+  // TOOL CLICK → NAVIGATES TO TOOL PAGE
   // ============================================
   const handleToolClick = async (tool: typeof TOOLS[0]) => {
-    const webhookUrl = N8N_WEBHOOKS[tool.webhookKey];
-    if (webhookUrl) {
-      const url = new URL(webhookUrl);
-      url.searchParams.append('org_id', organization?.id || '');
-      url.searchParams.append('org_name', organization?.name || '');
-      url.searchParams.append('user_id', user?.id || '');
-      url.searchParams.append('user_email', user?.email || '');
-      url.searchParams.append('user_name', userName);
-      window.open(url.toString(), '_blank');
-    }
+    // Navigate to the tool's internal page
+    const toolRoutes: Record<string, string> = {
+      'board-assessment': '/board-assessment/use',
+      'strategic-plan': '/strategic-plan-checkup/use',
+      'ceo-evaluation': '/ceo-evaluation/use',
+      'scenario-planner': '/scenario-planner/use',
+      'grant-review': '/grant-review/use',
+    };
+    const route = toolRoutes[tool.id] || `/tools/${tool.id}`;
+    handleNavigate(route);
   };
 
   // ============================================
@@ -671,21 +679,25 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
         </div>
 
         {/* ============================================
-            OWNER/ADMIN LINKS - Only visible to owner
+            ADMIN TOOLS - Visible to owner and admins
+            Owner Dashboard only visible to owner
             ============================================ */}
-        {isOwner && (
+        {hasAdminAccess && (
           <div style={{ padding: '20px', borderBottom: `1px solid ${COLORS.gray200}`, background: '#fffbeb' }}>
             <div style={{ fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px', color: '#b45309', marginBottom: '16px' }}>
-              🔐 Owner Tools
+              🔐 {isOwner ? 'Owner Tools' : 'Admin Tools'}
             </div>
             {[
-              { key: 'marketing', icon: '📈', label: 'Marketing Dashboard', path: '/admin/marketing' },
-              { key: 'links', icon: '🔗', label: 'Link Manager', path: '/admin/links' },
-              { key: 'team-access', icon: '👥', label: 'Team Access', path: '/admin/team' },
-              { key: 'content', icon: '⚙️', label: 'Content Manager', path: '/admin/content' },
-              { key: 'platform', icon: '🔧', label: 'Platform Admin', path: '/admin/platform' },
-              { key: 'owner-dash', icon: '💰', label: 'Owner Dashboard', path: '/admin/owner' },
-            ].map(item => (
+              { key: 'users', icon: '👤', label: 'User Manager', path: '/admin/users', ownerOnly: true },
+              { key: 'marketing', icon: '📈', label: 'Marketing Dashboard', path: '/admin/marketing', ownerOnly: false },
+              { key: 'links', icon: '🔗', label: 'Link Manager', path: '/admin/links', ownerOnly: false },
+              { key: 'team-access', icon: '👥', label: 'Team Access', path: '/admin/team', ownerOnly: false },
+              { key: 'content', icon: '⚙️', label: 'Content Manager', path: '/admin/content', ownerOnly: false },
+              { key: 'platform', icon: '🔧', label: 'Platform Admin', path: '/admin/platform', ownerOnly: false },
+              { key: 'owner-dash', icon: '💰', label: 'Owner Dashboard', path: '/admin/owner', ownerOnly: true },
+            ]
+              .filter(item => !item.ownerOnly || isOwner) // Filter out owner-only items for admins
+              .map(item => (
               <button
                 key={item.key}
                 style={{
@@ -763,6 +775,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
             </div>
             {isOwner && (
               <span style={{ fontSize: '9px', fontWeight: 800, padding: '4px 8px', background: '#f59e0b', color: COLORS.white, borderRadius: '4px' }}>OWNER</span>
+            )}
+            {isAdmin && !isOwner && (
+              <span style={{ fontSize: '9px', fontWeight: 800, padding: '4px 8px', background: COLORS.teal, color: COLORS.white, borderRadius: '4px' }}>ADMIN</span>
             )}
           </div>
           <button
@@ -891,6 +906,54 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
                   </span>
                   <div style={{ fontSize: '15px', fontWeight: 700, color: COLORS.navy, marginBottom: '4px' }}>{rec.title}</div>
                   <div style={{ fontSize: '13px', color: COLORS.gray500 }}>{rec.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Upcoming Events */}
+        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.gray200}`, borderRadius: '14px', maxWidth: '1000px', marginTop: '28px' }}>
+          <div style={{ padding: '16px 24px', borderBottom: `1px solid ${COLORS.gray200}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '14px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', color: COLORS.navy }}>📅 Upcoming Events</span>
+            <span onClick={() => handleNavigate('/events')} style={{ fontSize: '13px', fontWeight: 600, color: COLORS.teal, cursor: 'pointer' }}>View all →</span>
+          </div>
+          <div style={{ padding: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+              {[
+                { date: 'Jan 15', title: 'Board Governance Webinar', time: '2:00 PM EST', type: 'Webinar' },
+                { date: 'Jan 22', title: 'Strategic Planning Workshop', time: '10:00 AM EST', type: 'Workshop' },
+                { date: 'Feb 5', title: 'Grant Writing Masterclass', time: '1:00 PM EST', type: 'Masterclass' },
+              ].map((event, i) => (
+                <div
+                  key={i}
+                  onClick={() => handleNavigate('/events')}
+                  style={{
+                    background: COLORS.gray50, borderRadius: '12px', padding: '16px', cursor: 'pointer',
+                    border: `1px solid ${COLORS.gray200}`, transition: 'all 0.15s', display: 'flex', gap: '14px', alignItems: 'flex-start'
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = COLORS.gray100; e.currentTarget.style.borderColor = COLORS.teal; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = COLORS.gray50; e.currentTarget.style.borderColor = COLORS.gray200; }}
+                >
+                  <div style={{
+                    background: `linear-gradient(135deg, ${COLORS.navy}, ${COLORS.navyLight})`,
+                    borderRadius: '8px', padding: '10px 12px', textAlign: 'center', minWidth: '50px'
+                  }}>
+                    <div style={{ fontSize: '11px', fontWeight: 600, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase' }}>{event.date.split(' ')[0]}</div>
+                    <div style={{ fontSize: '20px', fontWeight: 800, color: COLORS.white }}>{event.date.split(' ')[1]}</div>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <span style={{
+                      display: 'inline-block', fontSize: '9px', fontWeight: 700, textTransform: 'uppercase',
+                      padding: '3px 8px', borderRadius: '4px', marginBottom: '6px',
+                      background: event.type === 'Webinar' ? COLORS.teal : event.type === 'Workshop' ? '#f59e0b' : '#8b5cf6',
+                      color: COLORS.white
+                    }}>
+                      {event.type}
+                    </span>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: COLORS.navy, marginBottom: '4px' }}>{event.title}</div>
+                    <div style={{ fontSize: '12px', color: COLORS.gray500 }}>{event.time}</div>
+                  </div>
                 </div>
               ))}
             </div>
