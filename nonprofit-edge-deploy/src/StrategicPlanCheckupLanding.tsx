@@ -103,12 +103,12 @@ export default function StrategicPlanCheckupLanding() {
               }}>
                 Start Your Free 3-Day Trial →
               </a>
-              <a href="#features" style={{
+              <a href="/samples/strategic-plan-report.pdf" style={{
                 display: 'inline-flex', alignItems: 'center', padding: '14px 28px',
                 background: 'white', color: NAVY, borderRadius: '8px', fontWeight: 600,
                 fontSize: '16px', textDecoration: 'none', border: `2px solid ${NAVY}`
               }}>
-                See What You Get
+                See Sample Report
               </a>
             </div>
           </div>
