@@ -1,13 +1,13 @@
-
 /**
  * THE NONPROFIT EDGE - Dashboard Component
- * Version: 2.0 - Fixed Links, Onboarding Tour & Smart Recommendations
+ * Version: 3.0 - With Owner Links, AI Chatbot, Product Tour
  * 
- * CHANGES FROM PREVIOUS VERSION:
- * 1. Tool cards now open n8n webhooks DIRECTLY (not internal routes)
- * 2. New user onboarding tour for first-time visitors
- * 3. Smart recommendation engine based on completed assessments
- * 4. Logo size: 140px (prominent)
+ * FEATURES:
+ * 1. Tool cards open n8n webhooks DIRECTLY
+ * 2. Owner/Admin sidebar links (for owner email only)
+ * 3. AI Chatbot (floating button)
+ * 4. New user onboarding tour
+ * 5. Smart recommendation engine
  */
 
 import React, { useState, useEffect } from 'react';
@@ -30,6 +30,14 @@ const COLORS = {
   gray700: '#374151',
   gray900: '#111827',
 };
+
+// ============================================
+// OWNER EMAIL - Gets full admin access
+// ============================================
+const OWNER_EMAILS = [
+  'lyn@thepivotalgroup.com',
+  'lyncorbett@thepivotalgroup.com',
+];
 
 // ============================================
 // TIER LIMITS
@@ -74,12 +82,12 @@ const RECOMMENDATIONS = [
 // TOUR STEPS
 // ============================================
 const TOUR_STEPS = [
-  { title: 'Welcome to The Nonprofit Edge! 🎉', content: 'Your AI-powered strategic planning platform. Let me give you a quick tour.' },
-  { title: 'Your Assessment Tools', content: 'Click any tool card to start an AI-guided assessment. Each one evaluates a different aspect of your organization.' },
-  { title: 'Ask the Professor 🎓', content: 'Need guidance? Our AI consultant is available 24/7 to answer your nonprofit strategy questions.' },
-  { title: 'Member Resources', content: 'Access templates, playbooks, and certifications in the sidebar to support your work.' },
-  { title: 'Track Your Progress', content: 'Monitor your completed assessments and remaining downloads. Your usage resets monthly.' },
-  { title: 'Ready to Start?', content: 'We recommend beginning with the Board Assessment - it provides a foundation for all other tools. Click it to get started!' },
+  { title: 'Welcome to The Nonprofit Edge! 🎉', content: 'The platform built by nonprofit leaders, for nonprofit leaders. Let me show you around.' },
+  { title: 'Your Assessment Tools', content: 'Each tool evaluates a critical area of your organization — board, strategy, leadership, funding, and more.' },
+  { title: 'Ask the Professor 🎓', content: 'Get expert guidance from Dr. Lyn Corbett\'s 25+ years of nonprofit experience — available 24/7.' },
+  { title: 'Member Resources', content: 'Access templates, playbooks, and certifications to support your work.' },
+  { title: 'Find Your ONE Thing', content: 'Every nonprofit has one constraint holding it back. Our tools help you find it and fix it.' },
+  { title: 'Ready to Start?', content: 'We recommend beginning with the Board Assessment — strong governance is the foundation for everything else.' },
 ];
 
 // ============================================
@@ -128,13 +136,15 @@ const Logo = () => (
 interface TourModalProps {
   step: number;
   onNext: () => void;
+  onBack: () => void;
   onSkip: () => void;
   onComplete: () => void;
 }
 
-const TourModal: React.FC<TourModalProps> = ({ step, onNext, onSkip, onComplete }) => {
+const TourModal: React.FC<TourModalProps> = ({ step, onNext, onBack, onSkip, onComplete }) => {
   const current = TOUR_STEPS[step];
   const isLast = step === TOUR_STEPS.length - 1;
+  const isFirst = step === 0;
 
   return (
     <>
@@ -144,6 +154,7 @@ const TourModal: React.FC<TourModalProps> = ({ step, onNext, onSkip, onComplete 
         background: COLORS.white, borderRadius: '20px', padding: '36px 32px', width: '90%', maxWidth: '440px',
         zIndex: 9999, boxShadow: '0 25px 80px rgba(0,0,0,0.4)'
       }}>
+        {/* Progress dots */}
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '24px' }}>
           {TOUR_STEPS.map((_, i) => (
             <div key={i} style={{
@@ -153,6 +164,12 @@ const TourModal: React.FC<TourModalProps> = ({ step, onNext, onSkip, onComplete 
             }} />
           ))}
         </div>
+        
+        {/* Step counter */}
+        <div style={{ textAlign: 'center', fontSize: '12px', color: COLORS.gray500, marginBottom: '8px' }}>
+          Step {step + 1} of {TOUR_STEPS.length}
+        </div>
+        
         <h3 style={{ fontSize: '22px', fontWeight: 700, color: COLORS.navy, textAlign: 'center', marginBottom: '12px' }}>
           {current.title}
         </h3>
@@ -166,14 +183,183 @@ const TourModal: React.FC<TourModalProps> = ({ step, onNext, onSkip, onComplete 
           }}>
             Skip Tour
           </button>
-          <button onClick={isLast ? onComplete : onNext} style={{
-            padding: '14px 32px', background: `linear-gradient(135deg, ${COLORS.teal}, ${COLORS.tealDark})`,
-            border: 'none', borderRadius: '10px', color: COLORS.white, fontSize: '15px', fontWeight: 600, cursor: 'pointer'
-          }}>
-            {isLast ? "Let's Go! 🚀" : 'Next →'}
-          </button>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {!isFirst && (
+              <button onClick={onBack} style={{
+                padding: '14px 24px', background: COLORS.gray100,
+                border: 'none', borderRadius: '10px', color: COLORS.gray700, fontSize: '15px', fontWeight: 600, cursor: 'pointer'
+              }}>
+                ← Back
+              </button>
+            )}
+            <button onClick={isLast ? onComplete : onNext} style={{
+              padding: '14px 32px', background: `linear-gradient(135deg, ${COLORS.teal}, ${COLORS.tealDark})`,
+              border: 'none', borderRadius: '10px', color: COLORS.white, fontSize: '15px', fontWeight: 600, cursor: 'pointer'
+            }}>
+              {isLast ? "✓ Finish Tour" : 'Next →'}
+            </button>
+          </div>
         </div>
       </div>
+    </>
+  );
+};
+
+// ============================================
+// AI CHATBOT COMPONENT
+// ============================================
+interface ChatbotProps {
+  userName: string;
+  onNavigate: (path: string) => void;
+}
+
+const AIChatbot: React.FC<ChatbotProps> = ({ userName, onNavigate }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; text: string }>>([
+    { role: 'assistant', text: `Hi ${userName}! 👋 I can help you navigate the platform, find resources, or point you to the right tool. What are you working on?` }
+  ]);
+  const [input, setInput] = useState('');
+
+  const quickActions = [
+    { label: '🎯 Start Board Assessment', action: () => window.open(N8N_WEBHOOKS['board-assessment'], '_blank') },
+    { label: '📄 View Templates', action: () => onNavigate('/templates') },
+    { label: '🎓 Ask the Professor', action: () => window.open(N8N_WEBHOOKS['ask-professor'], '_blank') },
+    { label: '📅 Events Calendar', action: () => onNavigate('/events') },
+  ];
+
+  const handleSend = () => {
+    if (!input.trim()) return;
+    
+    setMessages(prev => [...prev, { role: 'user', text: input }]);
+    
+    // Simple response logic
+    const lowerInput = input.toLowerCase();
+    let response = "I can help you find the right tool or resource. Try asking about board governance, strategic planning, leadership, or templates!";
+    
+    if (lowerInput.includes('board')) {
+      response = "Board governance is critical. The Board Assessment helps identify strengths and gaps in your governance practices. Want to start one?";
+    } else if (lowerInput.includes('strategic') || lowerInput.includes('plan')) {
+      response = "The Strategic Plan Check-Up analyzes your current strategy against best practices. Great for annual reviews or when you're feeling stuck.";
+    } else if (lowerInput.includes('template')) {
+      response = "We have templates for board assessments, strategic plans, CEO evaluations, and more. Check the Templates section in the sidebar!";
+    } else if (lowerInput.includes('help') || lowerInput.includes('start') || lowerInput.includes('where')) {
+      response = "I'd recommend starting with the Board Assessment — strong governance is the foundation for everything else. Or take the Core Constraint Assessment to identify what's really holding your org back.";
+    } else if (lowerInput.includes('constraint') || lowerInput.includes('one thing')) {
+      response = "The Theory of Constraints is our core philosophy: every organization has ONE thing limiting its progress. Find it, fix it, and the whole system improves. Check out 'Theory of Constraints' in the sidebar.";
+    } else if (lowerInput.includes('ceo') || lowerInput.includes('executive') || lowerInput.includes('leader')) {
+      response = "The CEO Evaluation tool helps boards conduct fair, comprehensive leadership reviews. It's confidential and based on best practices.";
+    } else if (lowerInput.includes('grant') || lowerInput.includes('funding') || lowerInput.includes('money')) {
+      response = "The Grant Review tool helps you strengthen proposals before submission. Upload a draft and get specific feedback on what funders look for.";
+    }
+    
+    setTimeout(() => {
+      setMessages(prev => [...prev, { role: 'assistant', text: response }]);
+    }, 500);
+    
+    setInput('');
+  };
+
+  return (
+    <>
+      {/* Floating Button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          position: 'fixed', bottom: '24px', right: '24px', width: '60px', height: '60px',
+          borderRadius: '50%', background: `linear-gradient(135deg, ${COLORS.navy}, ${COLORS.navyLight})`,
+          border: 'none', cursor: 'pointer', boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+          transition: 'transform 0.2s'
+        }}
+        onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
+        onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+      >
+        <span style={{ fontSize: '28px' }}>{isOpen ? '✕' : '💬'}</span>
+      </button>
+
+      {/* Chat Window */}
+      {isOpen && (
+        <div style={{
+          position: 'fixed', bottom: '100px', right: '24px', width: '360px', height: '480px',
+          background: COLORS.white, borderRadius: '16px', boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+          display: 'flex', flexDirection: 'column', overflow: 'hidden', zIndex: 1000
+        }}>
+          {/* Header */}
+          <div style={{
+            background: `linear-gradient(135deg, ${COLORS.navy}, ${COLORS.navyLight})`,
+            padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '12px'
+          }}>
+            <div style={{
+              width: '40px', height: '40px', borderRadius: '50%', background: COLORS.teal,
+              display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>
+              <span style={{ fontSize: '20px' }}>🎓</span>
+            </div>
+            <div>
+              <div style={{ color: COLORS.white, fontWeight: 700, fontSize: '15px' }}>Platform Guide</div>
+              <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px' }}>Here to help</div>
+            </div>
+          </div>
+
+          {/* Messages */}
+          <div style={{ flex: 1, padding: '16px', overflowY: 'auto', background: COLORS.gray50 }}>
+            {messages.map((msg, i) => (
+              <div key={i} style={{
+                display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                marginBottom: '12px'
+              }}>
+                <div style={{
+                  maxWidth: '80%', padding: '12px 16px', borderRadius: '12px',
+                  background: msg.role === 'user' ? COLORS.teal : COLORS.white,
+                  color: msg.role === 'user' ? COLORS.white : COLORS.gray700,
+                  fontSize: '14px', lineHeight: 1.5,
+                  boxShadow: msg.role === 'assistant' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+                }}>
+                  {msg.text}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Quick Actions */}
+          <div style={{ padding: '12px 16px', borderTop: `1px solid ${COLORS.gray200}`, background: COLORS.white }}>
+            <div style={{ fontSize: '11px', fontWeight: 600, color: COLORS.gray500, marginBottom: '8px', textTransform: 'uppercase' }}>
+              Quick Actions
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {quickActions.map((action, i) => (
+                <button key={i} onClick={action.action} style={{
+                  padding: '6px 12px', fontSize: '12px', background: COLORS.gray100,
+                  border: 'none', borderRadius: '6px', cursor: 'pointer', color: COLORS.gray700
+                }}>
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Input */}
+          <div style={{ padding: '12px 16px', borderTop: `1px solid ${COLORS.gray200}`, display: 'flex', gap: '8px' }}>
+            <input
+              type="text"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyPress={e => e.key === 'Enter' && handleSend()}
+              placeholder="Ask me anything..."
+              style={{
+                flex: 1, padding: '10px 14px', border: `1px solid ${COLORS.gray200}`,
+                borderRadius: '8px', fontSize: '14px', outline: 'none'
+              }}
+            />
+            <button onClick={handleSend} style={{
+              padding: '10px 16px', background: COLORS.teal, color: COLORS.white,
+              border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600
+            }}>
+              Send
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 };
@@ -229,9 +415,11 @@ interface DashboardProps {
   organization?: any;
   supabase?: any;
   navigate?: (path: string) => void;
+  onNavigate?: (path: string) => void;
+  onLogout?: () => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, navigate }) => {
+const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, navigate, onNavigate, onLogout }) => {
   // State
   const [usageData, setUsageData] = useState({ downloads_this_month: 7, atp_sessions_this_month: 5 });
   const [completedTools, setCompletedTools] = useState<string[]>([]);
@@ -241,7 +429,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
     { id: '3', text: 'Downloaded Board Self-Assessment', time: '5 days ago', color: '#8b5cf6' },
     { id: '4', text: 'Coaching session', time: '2 weeks ago', color: '#f59e0b' },
   ]);
-  const [adminAccess, setAdminAccess] = useState({ isOwner: false });
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
 
   // Tour state
@@ -260,31 +447,23 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
   const downloadPercentage = (remainingDownloads / limits.downloads) * 100;
 
   // User info
-  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || user?.name || 'User';
   const userInitial = userName.charAt(0).toUpperCase();
   const orgName = organization?.name || 'Organization';
+  const userEmail = user?.email || '';
+
+  // Check if owner
+  const isOwner = OWNER_EMAILS.some(email => userEmail.toLowerCase() === email.toLowerCase());
 
   // ============================================
   // CHECK IF NEW USER → SHOW TOUR
   // ============================================
   useEffect(() => {
-    const checkNewUser = async () => {
-      if (!supabase || !user?.id) return;
-      try {
-        const { data } = await supabase
-          .from('user_preferences')
-          .select('has_seen_tour')
-          .eq('user_id', user.id)
-          .single();
-        if (!data || !data.has_seen_tour) {
-          setShowTour(true);
-        }
-      } catch {
-        setShowTour(true); // No record = new user
-      }
-    };
-    checkNewUser();
-  }, [supabase, user?.id]);
+    const hasSeenTour = localStorage.getItem('nonprofit_edge_tour_seen');
+    if (!hasSeenTour) {
+      setShowTour(true);
+    }
+  }, []);
 
   // ============================================
   // CALCULATE SMART RECOMMENDATION
@@ -295,17 +474,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
       setShowRecommendation(false);
       return;
     }
-    // New user: recommend Board Assessment
     if (completedTools.length === 0) {
       const board = TOOLS.find(t => t.id === 'board-assessment');
       if (board) {
         setRecommendedTool(board);
-        setRecommendationReason('A strong board is the foundation of every successful nonprofit. Start here to identify governance strengths.');
+        setRecommendationReason('Strong governance is the foundation for everything else. Most organizational constraints trace back to the board.');
         setShowRecommendation(true);
         return;
       }
     }
-    // After Board, recommend Strategic Plan
     if (completedTools.includes('board-assessment') && !completedTools.includes('strategic-plan')) {
       const strategic = TOOLS.find(t => t.id === 'strategic-plan');
       if (strategic) {
@@ -315,81 +492,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
         return;
       }
     }
-    // Otherwise recommend first uncompleted
     setRecommendedTool(uncompleted[0]);
     setRecommendationReason(`Continue building your organizational profile with ${uncompleted[0].name}.`);
     setShowRecommendation(true);
   }, [completedTools]);
 
   // ============================================
-  // FETCH COMPLETED ASSESSMENTS
-  // ============================================
-  useEffect(() => {
-    const fetchCompleted = async () => {
-      if (!supabase || !organization?.id) return;
-      try {
-        const { data } = await supabase
-          .from('completed_assessments')
-          .select('tool_id')
-          .eq('organization_id', organization.id);
-        if (data) setCompletedTools(data.map((d: any) => d.tool_id));
-      } catch (err) {
-        console.log('Fetch completed:', err);
-      }
-    };
-    fetchCompleted();
-  }, [supabase, organization?.id]);
-
-  // ============================================
-  // FETCH USAGE DATA
-  // ============================================
-  useEffect(() => {
-    const fetchUsage = async () => {
-      if (!supabase || !organization?.id) return;
-      try {
-        const { data } = await supabase
-          .from('usage_tracking')
-          .select('*')
-          .eq('organization_id', organization.id)
-          .single();
-        if (data) {
-          setUsageData({
-            downloads_this_month: data.downloads_this_month || 0,
-            atp_sessions_this_month: data.atp_sessions_this_month || 0,
-          });
-        }
-      } catch (err) {
-        console.log('Usage fetch:', err);
-      }
-    };
-    fetchUsage();
-  }, [supabase, organization?.id]);
-
-  // ============================================
-  // CHECK ADMIN ACCESS
-  // ============================================
-  useEffect(() => {
-    const checkAdmin = async () => {
-      if (!supabase || !user?.email) return;
-      try {
-        const { data } = await supabase
-          .from('platform_admins')
-          .select('role')
-          .eq('email', user.email.toLowerCase())
-          .single();
-        if (data) setAdminAccess({ isOwner: data.role === 'owner' });
-      } catch (err) {
-        console.log('Admin check:', err);
-      }
-    };
-    checkAdmin();
-  }, [supabase, user?.email]);
-
-  // ============================================
   // NAVIGATION HELPER
   // ============================================
   const handleNavigate = (path: string) => {
-    if (navigate) navigate(path);
+    if (onNavigate) onNavigate(path);
+    else if (navigate) navigate(path);
     else window.location.href = path;
   };
 
@@ -397,22 +510,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
   // TOOL CLICK → OPENS N8N WEBHOOK DIRECTLY
   // ============================================
   const handleToolClick = async (tool: typeof TOOLS[0]) => {
-    // Log activity
-    if (supabase && organization?.id) {
-      try {
-        await supabase.from('activity_log').insert({
-          organization_id: organization.id,
-          user_id: user?.id,
-          type: 'tool_start',
-          description: `${tool.name} started`,
-          tool_id: tool.id,
-        });
-      } catch (err) {
-        console.error('Activity log error:', err);
-      }
-    }
-
-    // Build webhook URL with user context
     const webhookUrl = N8N_WEBHOOKS[tool.webhookKey];
     if (webhookUrl) {
       const url = new URL(webhookUrl);
@@ -421,8 +518,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
       url.searchParams.append('user_id', user?.id || '');
       url.searchParams.append('user_email', user?.email || '');
       url.searchParams.append('user_name', userName);
-      
-      // Open in new tab
       window.open(url.toString(), '_blank');
     }
   };
@@ -431,28 +526,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
   // ASK THE PROFESSOR → OPENS N8N WEBHOOK
   // ============================================
   const handleAskProfessor = async () => {
-    // Check limit
     if (limits.atpSessions !== Infinity && usageData.atp_sessions_this_month >= limits.atpSessions) {
       alert('You have reached your ATP session limit for this month. Please upgrade your plan.');
       return;
     }
-
-    // Log and increment
-    if (supabase && organization?.id) {
-      try {
-        await supabase.rpc('increment_atp_sessions', { org_id: organization.id });
-        await supabase.from('activity_log').insert({
-          organization_id: organization.id,
-          user_id: user?.id,
-          type: 'professor',
-          description: 'Ask the Professor session',
-        });
-      } catch (err) {
-        console.error('ATP error:', err);
-      }
-    }
-
-    // Open webhook
     const url = new URL(N8N_WEBHOOKS['ask-professor']);
     url.searchParams.append('org_id', organization?.id || '');
     url.searchParams.append('user_id', user?.id || '');
@@ -469,47 +546,37 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
       alert('You have reached your download limit. Please upgrade your plan.');
       return;
     }
-    if (supabase && organization?.id) {
-      try {
-        await supabase.rpc('increment_downloads', { org_id: organization.id });
-        await supabase.from('activity_log').insert({
-          organization_id: organization.id,
-          user_id: user?.id,
-          type: 'download',
-          description: `Downloaded ${title}`,
-        });
-        setUsageData(prev => ({ ...prev, downloads_this_month: prev.downloads_this_month + 1 }));
-      } catch (err) {
-        console.error('Download error:', err);
-      }
-    }
+    setUsageData(prev => ({ ...prev, downloads_this_month: prev.downloads_this_month + 1 }));
   };
 
   // ============================================
   // TOUR HANDLERS
   // ============================================
   const handleTourNext = () => setTourStep(prev => prev + 1);
+  const handleTourBack = () => setTourStep(prev => prev - 1);
   
-  const handleTourSkip = async () => {
+  const handleTourSkip = () => {
     setShowTour(false);
-    if (supabase && user?.id) {
-      await supabase.from('user_preferences').upsert({ user_id: user.id, has_seen_tour: true });
-    }
+    localStorage.setItem('nonprofit_edge_tour_seen', 'true');
   };
   
-  const handleTourComplete = async () => {
+  const handleTourComplete = () => {
     setShowTour(false);
-    if (supabase && user?.id) {
-      await supabase.from('user_preferences').upsert({ user_id: user.id, has_seen_tour: true });
-    }
+    localStorage.setItem('nonprofit_edge_tour_seen', 'true');
   };
 
   // ============================================
   // LOGOUT
   // ============================================
   const handleLogout = async () => {
-    if (supabase) await supabase.auth.signOut();
-    handleNavigate('/login');
+    if (onLogout) {
+      onLogout();
+    } else if (supabase) {
+      await supabase.auth.signOut();
+      handleNavigate('/login');
+    } else {
+      handleNavigate('/login');
+    }
   };
 
   // ============================================
@@ -519,7 +586,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
     <div style={{ display: 'flex', minHeight: '100vh', fontFamily: "'Inter', sans-serif", background: COLORS.gray50 }}>
       {/* TOUR MODAL */}
       {showTour && (
-        <TourModal step={tourStep} onNext={handleTourNext} onSkip={handleTourSkip} onComplete={handleTourComplete} />
+        <TourModal 
+          step={tourStep} 
+          onNext={handleTourNext} 
+          onBack={handleTourBack}
+          onSkip={handleTourSkip} 
+          onComplete={handleTourComplete} 
+        />
       )}
 
       {/* LEFT SIDEBAR */}
@@ -537,34 +610,26 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
           <div style={{ fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px', color: COLORS.navy, marginBottom: '16px' }}>
             Quick Actions
           </div>
-          <button
-            style={{
-              display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', fontSize: '14px', fontWeight: 500,
-              color: hoveredNav === 'events' ? COLORS.navy : COLORS.gray600,
-              background: hoveredNav === 'events' ? COLORS.gray100 : 'transparent',
-              border: 'none', borderRadius: '8px', cursor: 'pointer', marginBottom: '4px', width: '100%', textAlign: 'left'
-            }}
-            onMouseEnter={() => setHoveredNav('events')}
-            onMouseLeave={() => setHoveredNav(null)}
-            onClick={() => handleNavigate('/events')}
-          >
-            <span style={{ fontSize: '16px', width: '20px', textAlign: 'center' }}>📅</span>
-            Events Calendar
-          </button>
-          <button
-            style={{
-              display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', fontSize: '14px', fontWeight: 500,
-              color: hoveredNav === 'completed' ? COLORS.navy : COLORS.gray600,
-              background: hoveredNav === 'completed' ? COLORS.gray100 : 'transparent',
-              border: 'none', borderRadius: '8px', cursor: 'pointer', marginBottom: '4px', width: '100%', textAlign: 'left'
-            }}
-            onMouseEnter={() => setHoveredNav('completed')}
-            onMouseLeave={() => setHoveredNav(null)}
-            onClick={() => handleNavigate('/completed-assessments')}
-          >
-            <span style={{ fontSize: '16px', width: '20px', textAlign: 'center' }}>📊</span>
-            Completed Assessments
-          </button>
+          {[
+            { key: 'events', icon: '📅', label: 'Events Calendar', path: '/events' },
+            { key: 'completed', icon: '📊', label: 'Completed Assessments', path: '/completed-assessments' },
+          ].map(item => (
+            <button
+              key={item.key}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', fontSize: '14px', fontWeight: 500,
+                color: hoveredNav === item.key ? COLORS.navy : COLORS.gray600,
+                background: hoveredNav === item.key ? COLORS.gray100 : 'transparent',
+                border: 'none', borderRadius: '8px', cursor: 'pointer', marginBottom: '4px', width: '100%', textAlign: 'left'
+              }}
+              onMouseEnter={() => setHoveredNav(item.key)}
+              onMouseLeave={() => setHoveredNav(null)}
+              onClick={() => handleNavigate(item.path)}
+            >
+              <span style={{ fontSize: '16px', width: '20px', textAlign: 'center' }}>{item.icon}</span>
+              {item.label}
+            </button>
+          ))}
           <button
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 14px', fontSize: '14px', fontWeight: 500,
@@ -605,6 +670,41 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
           ))}
         </div>
 
+        {/* ============================================
+            OWNER/ADMIN LINKS - Only visible to owner
+            ============================================ */}
+        {isOwner && (
+          <div style={{ padding: '20px', borderBottom: `1px solid ${COLORS.gray200}`, background: '#fffbeb' }}>
+            <div style={{ fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px', color: '#b45309', marginBottom: '16px' }}>
+              🔐 Owner Tools
+            </div>
+            {[
+              { key: 'marketing', icon: '📈', label: 'Marketing Dashboard', path: '/admin/marketing' },
+              { key: 'links', icon: '🔗', label: 'Link Manager', path: '/admin/links' },
+              { key: 'team-access', icon: '👥', label: 'Team Access', path: '/admin/team' },
+              { key: 'content', icon: '⚙️', label: 'Content Manager', path: '/admin/content' },
+              { key: 'platform', icon: '🔧', label: 'Platform Admin', path: '/admin/platform' },
+              { key: 'owner-dash', icon: '💰', label: 'Owner Dashboard', path: '/admin/owner' },
+            ].map(item => (
+              <button
+                key={item.key}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', fontSize: '14px', fontWeight: 500,
+                  color: hoveredNav === item.key ? '#b45309' : COLORS.gray600,
+                  background: hoveredNav === item.key ? '#fef3c7' : 'transparent',
+                  border: 'none', borderRadius: '8px', cursor: 'pointer', marginBottom: '4px', width: '100%', textAlign: 'left'
+                }}
+                onMouseEnter={() => setHoveredNav(item.key)}
+                onMouseLeave={() => setHoveredNav(null)}
+                onClick={() => handleNavigate(item.path)}
+              >
+                <span style={{ fontSize: '16px', width: '20px', textAlign: 'center' }}>{item.icon}</span>
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Recent Activity */}
         <div style={{ padding: '20px', borderBottom: `1px solid ${COLORS.gray200}` }}>
           <div style={{ fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px', color: COLORS.navy, marginBottom: '16px' }}>
@@ -624,7 +724,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
           ))}
         </div>
 
-        {/* Remaining Downloads - Teal Background */}
+        {/* Remaining Downloads */}
         <div style={{ padding: '20px', borderBottom: `1px solid ${COLORS.gray200}` }}>
           <div style={{
             background: `linear-gradient(135deg, ${COLORS.teal}, ${COLORS.tealDark})`,
@@ -644,16 +744,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
               }}>
                 {tierKey.charAt(0).toUpperCase() + tierKey.slice(1)}
               </span>
-              <div style={{ marginTop: '8px', fontSize: '11px', color: 'rgba(255,255,255,0.9)' }}>
-                {limits.downloads} downloads/mo • {limits.atpSessions === Infinity ? 'Unlimited' : limits.atpSessions} ATP sessions • {limits.seats} team seats
-              </div>
             </div>
           </div>
         </div>
 
         {/* User Profile */}
         <div style={{ padding: '16px 20px', borderTop: `1px solid ${COLORS.gray200}`, marginTop: 'auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px', borderRadius: '10px', cursor: 'pointer' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px', borderRadius: '10px' }}>
             <div style={{
               width: '40px', height: '40px', background: `linear-gradient(135deg, ${COLORS.navy}, ${COLORS.navyLight})`,
               borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: COLORS.white, fontWeight: 700
@@ -664,8 +761,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
               <div style={{ fontSize: '14px', fontWeight: 600, color: COLORS.gray900, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userName}</div>
               <div style={{ fontSize: '12px', color: COLORS.gray500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{orgName}</div>
             </div>
-            {adminAccess.isOwner && (
-              <span style={{ fontSize: '9px', fontWeight: 800, padding: '4px 8px', background: COLORS.teal, color: COLORS.white, borderRadius: '4px' }}>OWNER</span>
+            {isOwner && (
+              <span style={{ fontSize: '9px', fontWeight: 800, padding: '4px 8px', background: '#f59e0b', color: COLORS.white, borderRadius: '4px' }}>OWNER</span>
             )}
           </div>
           <button
@@ -673,6 +770,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
             onClick={handleLogout}
           >
             Sign Out
+          </button>
+          {/* Restart Tour Button */}
+          <button
+            style={{ width: '100%', padding: '8px', fontSize: '11px', fontWeight: 500, color: COLORS.teal, background: 'none', border: 'none', cursor: 'pointer', marginTop: '4px' }}
+            onClick={() => { setTourStep(0); setShowTour(true); }}
+          >
+            🎓 Restart Tour
           </button>
         </div>
       </aside>
@@ -682,7 +786,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
         {/* Welcome */}
         <div style={{ marginBottom: '24px' }}>
           <h1 style={{ fontSize: '26px', fontWeight: 700, color: COLORS.navy, marginBottom: '4px' }}>Welcome back, {userName}!</h1>
-          <p style={{ fontSize: '14px', color: COLORS.gray500 }}>Here's what's happening with your organization</p>
+          <p style={{ fontSize: '14px', color: COLORS.gray500 }}>Let's find your ONE thing and fix it.</p>
         </div>
 
         {/* Smart Recommendation Banner */}
@@ -738,9 +842,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
                       {completedTools.includes(tool.id) ? '✓ Completed' : tool.status}
                     </div>
                   </div>
-                  {completedTools.includes(tool.id) && (
-                    <div style={{ position: 'absolute', top: '10px', right: '10px', width: '10px', height: '10px', background: COLORS.teal, borderRadius: '50%', border: '2px solid white' }} />
-                  )}
                 </div>
               ))}
 
@@ -796,6 +897,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
           </div>
         </div>
       </main>
+
+      {/* AI CHATBOT */}
+      <AIChatbot userName={userName} onNavigate={handleNavigate} />
     </div>
   );
 };
