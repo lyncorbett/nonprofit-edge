@@ -27,6 +27,7 @@ import TeamAccessManager from './components/TeamAccessManager';
 import ContentManager from './components/ContentManager';
 import AdminDashboard from './components/AdminDashboard';
 import PlatformOwnerDashboard from './components/PlatformOwnerDashboard';
+import UserManager from './components/UserManager';
 
 // Auth Components
 import Login from './components/Login';
@@ -54,10 +55,11 @@ import AskTheProfessor from './AskTheProfessor';
 import AISummary from './AISummary';
 
 // Landing Page Components
-import ScenarioPlannerLanding from './components/ScenarioPlannerLanding';
+import ScenarioPlannerLanding from './ScenarioPlannerLanding';
 import BoardAssessmentLanding from './BoardAssessmentLanding';
 import CEOEvaluationLanding from './CEOEvaluationLanding';
 import StrategicPlanCheckupLanding from './StrategicPlanCheckupLanding';
+import GrantReviewLanding from './GrantReviewLanding';
 import CertificationsLanding from './CertificationsLanding';
 
 // Tracking utilities
@@ -604,7 +606,7 @@ const App: React.FC = () => {
         return <ScenarioPlannerLanding onNavigate={navigate} onGetStarted={() => navigate('/scenario-planner/use')} />;
       
       case '/grant-review':
-        return <ScenarioPlannerLanding onNavigate={navigate} onGetStarted={() => navigate('/grant-review/use')} />;
+        return <GrantReviewLanding onNavigate={navigate} onGetStarted={() => navigate('/grant-review/use')} />;
       
       case '/ask-the-professor':
         return <ScenarioPlannerLanding onNavigate={navigate} onGetStarted={handleStartProfessor} />;
@@ -726,6 +728,9 @@ const App: React.FC = () => {
 
       case '/admin/marketing':
         return requireAuth(<MarketingDashboard />);
+
+      case '/admin/users':
+        return requireAuth(<UserManager supabase={supabase} onNavigate={navigate} />);
 
       case '/admin/links':
         return requireAuth(<LinkManager />);
