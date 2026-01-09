@@ -12,6 +12,7 @@ export default function StrategicPlanCheckupLanding() {
   const [analyzeSteps, setAnalyzeSteps] = useState<number[]>([]);
   const [showCards, setShowCards] = useState<number[]>([]);
   const [showRewrite, setShowRewrite] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const runAnimation = () => {
@@ -81,8 +82,32 @@ export default function StrategicPlanCheckupLanding() {
   return (
     <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", color: '#374151', lineHeight: 1.6 }}>
       
+      {/* Header */}
+      <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: 'white', borderBottom: '1px solid #f3f4f6' }}>
+        <div style={{ maxWidth: '1152px', margin: '0 auto', padding: '0 24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '120px' }}>
+            <a href="/" style={{ display: 'flex', alignItems: 'center' }}>
+              <img 
+                src="/logo.svg" 
+                alt="The Nonprofit Edge" 
+                style={{ width: '280px', height: 'auto' }}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/logo.jpg'
+                }}
+              />
+            </a>
+            <nav style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
+              <a href="/why-we-exist" style={{ color: '#4b5563', fontWeight: 500, textDecoration: 'none' }}>Why We Exist</a>
+              <a href="/#tools-section" style={{ color: '#4b5563', fontWeight: 500, textDecoration: 'none' }}>Tools</a>
+              <a href="/#pricing-section" style={{ color: '#4b5563', fontWeight: 500, textDecoration: 'none' }}>Pricing</a>
+              <a href="/login" style={{ padding: '10px 20px', backgroundColor: TEAL, color: 'white', borderRadius: '8px', fontWeight: 600, textDecoration: 'none' }}>Sign In</a>
+            </nav>
+          </div>
+        </div>
+      </header>
+
       {/* Hero Section */}
-      <section style={{ padding: '80px 0 100px' }}>
+      <section style={{ padding: '80px 0 100px', marginTop: '120px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px', alignItems: 'center' }}>
           <div style={{ maxWidth: '540px' }}>
             <h1 style={{ fontSize: '46px', fontWeight: 800, lineHeight: 1.1, marginBottom: '20px' }}>
@@ -108,7 +133,7 @@ export default function StrategicPlanCheckupLanding() {
                 background: 'white', color: NAVY, borderRadius: '8px', fontWeight: 600,
                 fontSize: '16px', textDecoration: 'none', border: `2px solid ${NAVY}`
               }}>
-                View Sample Report
+                See Sample Report
               </a>
             </div>
           </div>
