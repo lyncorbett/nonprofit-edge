@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
+const NAVY = '#0D2C54';
+const TEAL = '#0097A7';
+
 interface BoardAssessmentLandingProps {
   onNavigate?: (route: string) => void;
   onGetStarted?: () => void;
@@ -26,8 +29,32 @@ const BoardAssessmentLanding: React.FC<BoardAssessmentLandingProps> = ({ onNavig
 
   return (
     <div className="min-h-screen bg-white font-sans">
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex items-center justify-between" style={{ height: '120px' }}>
+            <a href="/" className="flex items-center">
+              <img 
+                src="/logo.svg" 
+                alt="The Nonprofit Edge" 
+                style={{ width: '280px', height: 'auto' }}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/logo.jpg'
+                }}
+              />
+            </a>
+            <nav className="hidden md:flex items-center gap-8">
+              <a href="/why-we-exist" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Why We Exist</a>
+              <a href="/#tools-section" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Tools</a>
+              <a href="/#pricing-section" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Pricing</a>
+              <a href="/login" className="px-5 py-2.5 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity" style={{ backgroundColor: TEAL }}>Sign In</a>
+            </nav>
+          </div>
+        </div>
+      </header>
+
       {/* Hero Section */}
-      <section className="py-16 px-6">
+      <section className="py-16 px-6" style={{ marginTop: '120px' }}>
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="max-w-xl">
             <span className="inline-block bg-purple-100 text-purple-700 px-4 py-1 rounded-full text-sm font-semibold mb-4">
@@ -51,9 +78,17 @@ const BoardAssessmentLanding: React.FC<BoardAssessmentLandingProps> = ({ onNavig
               </a>
             </div>
           </div>
-          {/* Hero Image - FIXED PATH */}
+          {/* Hero Image - GUY DANCING ON TABLE */}
           <div className="rounded-xl overflow-hidden shadow-2xl">
-            <img src="/board-hero.jpg" alt="Engaged board meeting" className="w-full h-auto" />
+            <img 
+              src="/board-dancing-hero.jpg" 
+              alt="Energetic board presentation" 
+              className="w-full h-auto"
+              onError={(e) => {
+                // Fallback if image doesn't exist yet
+                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80';
+              }}
+            />
           </div>
         </div>
       </section>
@@ -64,14 +99,47 @@ const BoardAssessmentLanding: React.FC<BoardAssessmentLandingProps> = ({ onNavig
           <h2 className="text-3xl lg:text-4xl font-bold text-[#0D2C54] text-center mb-4">Board Dysfunction Costs You Every Month</h2>
           <p className="text-lg text-gray-600 text-center max-w-2xl mx-auto mb-12">Half your board shows up. The other half just says yes. And you're left doing all the work.</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Cards - FIXED PATHS */}
+            {/* Cards - UNIQUE IMAGES for Board Assessment page only */}
             {[
-              { img: '/cert-governance.jpg', title: 'Disengaged Members', desc: 'Half your board shows up. The other half just nods along. Meetings drag without decisions.' },
-              { img: '/cert-leadership.jpg', title: 'Missing Skills', desc: 'You need marketing expertise but have three lawyers. Major decisions lack diverse input.' },
-              { img: '/tool-grant.jpg', title: 'Fundraising Failures', desc: 'Board gives $500/year per person. "Give or get" exists on paper only.' },
+              { 
+                img: '/board-disengaged.jpg',  // UNIQUE: Empty chairs at board table
+                fallback: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80',
+                title: 'Disengaged Members', 
+                desc: 'Half your board shows up. The other half just nods along. Meetings drag without decisions.' 
+              },
+              { 
+                img: '/board-skills-gap.jpg',  // UNIQUE: Puzzle pieces / skills concept
+                fallback: 'https://images.unsplash.com/photo-1529119368496-2dfda6ec2571?w=600&q=80',
+                title: 'Missing Skills', 
+                desc: 'You need marketing expertise but have three lawyers. Major decisions lack diverse input.' 
+              },
+              { 
+                img: '/board-fundraising.jpg',  // UNIQUE: Fundraising/giving concept
+                fallback: 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=600&q=80',
+                title: 'Fundraising Failures', 
+                desc: 'Board gives $500/year per person. "Give or get" exists on paper only.' 
+              },
             ].map((card, i) => (
               <div key={i} className="relative rounded-xl overflow-hidden min-h-[320px] flex flex-col justify-end">
-                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${card.img})` }} />
+                <div 
+                  className="absolute inset-0 bg-cover bg-center" 
+                  style={{ backgroundImage: `url(${card.img})` }}
+                  onError={(e) => {
+                    (e.target as HTMLDivElement).style.backgroundImage = `url(${card.fallback})`;
+                  }}
+                />
+                <img 
+                  src={card.img} 
+                  alt="" 
+                  className="hidden"
+                  onError={(e) => {
+                    const parent = (e.target as HTMLImageElement).parentElement;
+                    if (parent) {
+                      const bgDiv = parent.querySelector('div');
+                      if (bgDiv) bgDiv.style.backgroundImage = `url(${card.fallback})`;
+                    }
+                  }}
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
                 <div className="relative z-10 p-8 text-white">
                   <h3 className="text-xl font-bold mb-3">{card.title}</h3>
