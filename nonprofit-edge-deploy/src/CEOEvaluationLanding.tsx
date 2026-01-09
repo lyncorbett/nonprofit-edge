@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
+const NAVY = '#0D2C54';
+const TEAL = '#0097A7';
+
 interface CEOEvaluationLandingProps {
   onNavigate?: (route: string) => void;
   onGetStarted?: () => void;
@@ -26,8 +29,32 @@ const CEOEvaluationLanding: React.FC<CEOEvaluationLandingProps> = ({ onNavigate,
 
   return (
     <div className="min-h-screen bg-white font-sans">
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex items-center justify-between" style={{ height: '120px' }}>
+            <a href="/" className="flex items-center">
+              <img 
+                src="/logo.svg" 
+                alt="The Nonprofit Edge" 
+                style={{ width: '280px', height: 'auto' }}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/logo.jpg'
+                }}
+              />
+            </a>
+            <nav className="hidden md:flex items-center gap-8">
+              <a href="/why-we-exist" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Why We Exist</a>
+              <a href="/#tools-section" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Tools</a>
+              <a href="/#pricing-section" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Pricing</a>
+              <a href="/login" className="px-5 py-2.5 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity" style={{ backgroundColor: TEAL }}>Sign In</a>
+            </nav>
+          </div>
+        </div>
+      </header>
+
       {/* Hero Section */}
-      <section className="py-16 px-6">
+      <section className="py-16 px-6" style={{ marginTop: '120px' }}>
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="max-w-xl">
             <span className="inline-block bg-teal-100 text-teal-700 px-4 py-1 rounded-full text-sm font-semibold mb-4">
@@ -51,9 +78,16 @@ const CEOEvaluationLanding: React.FC<CEOEvaluationLandingProps> = ({ onNavigate,
               </a>
             </div>
           </div>
-          {/* Hero Image - FIXED PATH */}
+          {/* Hero Image - UNIQUE for CEO page */}
           <div className="rounded-xl overflow-hidden shadow-2xl">
-            <img src="/ceo-hero.jpg" alt="Celebrating leadership success" className="w-full h-auto" />
+            <img 
+              src="/ceo-hero.jpg" 
+              alt="CEO leadership discussion" 
+              className="w-full h-auto"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&q=80';
+              }}
+            />
           </div>
         </div>
       </section>
@@ -73,14 +107,32 @@ const CEOEvaluationLanding: React.FC<CEOEvaluationLandingProps> = ({ onNavigate,
           <h2 className="text-3xl lg:text-4xl font-bold text-[#0D2C54] text-center mb-4">Why CEO Evaluations Go Wrong</h2>
           <p className="text-lg text-gray-600 text-center max-w-2xl mx-auto mb-12">Good intentions, poor execution.</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Cards - FIXED PATHS */}
+            {/* Cards - UNIQUE IMAGES for CEO Evaluation page only */}
             {[
-              { img: '/ceo-evaluation.jpg', title: 'No Clear Criteria', desc: "Evaluation based on vibes, not goals. The CEO doesn't know what 'success' looks like." },
-              { img: '/cert-consultant.jpg', title: 'Surprise Feedback', desc: 'Issues raised in annual review that were never discussed during the year.' },
-              { img: '/tool-strategic.jpg', title: 'Skipped Entirely', desc: "Things are going fine — but often they aren't. Boards avoid the conversation altogether." },
+              { 
+                img: '/ceo-no-criteria.jpg',  // UNIQUE: Confused/unclear concept
+                fallback: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80',
+                title: 'No Clear Criteria', 
+                desc: "Evaluation based on vibes, not goals. The CEO doesn't know what 'success' looks like." 
+              },
+              { 
+                img: '/ceo-surprise.jpg',  // UNIQUE: Surprise/shock concept
+                fallback: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=600&q=80',
+                title: 'Surprise Feedback', 
+                desc: 'Issues raised in annual review that were never discussed during the year.' 
+              },
+              { 
+                img: '/ceo-skipped.jpg',  // UNIQUE: Avoidance/empty chair concept
+                fallback: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=600&q=80',
+                title: 'Skipped Entirely', 
+                desc: "Things are going fine — but often they aren't. Boards avoid the conversation altogether." 
+              },
             ].map((card, i) => (
               <div key={i} className="relative rounded-xl overflow-hidden min-h-[320px] flex flex-col justify-end">
-                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${card.img})` }} />
+                <div 
+                  className="absolute inset-0 bg-cover bg-center" 
+                  style={{ backgroundImage: `url(${card.img}), url(${card.fallback})` }} 
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
                 <div className="relative z-10 p-8 text-white">
                   <h3 className="text-xl font-bold mb-3">{card.title}</h3>
