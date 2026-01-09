@@ -108,7 +108,7 @@ export default function StrategicPlanCheckupLanding() {
                 background: 'white', color: NAVY, borderRadius: '8px', fontWeight: 600,
                 fontSize: '16px', textDecoration: 'none', border: `2px solid ${NAVY}`
               }}>
-                See Sample Report
+                View Sample Report
               </a>
             </div>
           </div>
