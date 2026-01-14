@@ -1,13 +1,15 @@
 /**
  * THE NONPROFIT EDGE - Dashboard Component
- * Version: 5.0 - Final Production Version
+ * Version: 5.1 - Final Production Version
  * 
  * Features:
- * - Plus Jakarta Sans font (warmer feel)
+ * - Plus Jakarta Sans font
+ * - Teal quote panel with bold quote text
  * - 6 tool cards (5 tools + Ask the Professor)
- * - My Leadership Journey button
+ * - My Leadership Journey (navy, no arrow)
+ * - Upcoming Events panel
  * - Collapsible Owner Tools accordion
- * - Updated sidebar structure
+ * - Reduced whitespace between panels
  */
 
 import React, { useState, useEffect } from 'react';
@@ -60,14 +62,23 @@ const N8N_WEBHOOKS: Record<string, string> = {
 };
 
 // ============================================
-// TOOLS CONFIG - 5 tools (Ask the Professor is separate card)
+// TOOLS CONFIG
 // ============================================
 const TOOLS = [
   { id: 'board-assessment', name: 'Board Assessment', status: 'Ready', image: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=600&q=80', webhookKey: 'board-assessment' },
   { id: 'strategic-plan', name: 'Strategic Plan Check-Up', status: 'Ready', image: 'https://images.unsplash.com/photo-1542626991-cbc4e32524cc?w=600&q=80', webhookKey: 'strategic-checkup' },
-  { id: 'ceo-evaluation', name: 'CEO Evaluation', status: 'Ready', image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=600&q=80', webhookKey: 'ceo-evaluation' },
+  { id: 'ceo-evaluation', name: 'CEO Evaluation', status: 'Ready', image: '/ceo-evaluation.jpg', webhookKey: 'ceo-evaluation' },
   { id: 'scenario-planner', name: 'Scenario Planner', status: 'Ready', image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80', webhookKey: 'scenario-planner' },
   { id: 'grant-review', name: 'Grant Review', status: 'Ready', image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=600&q=80', webhookKey: 'grant-review' },
+];
+
+// ============================================
+// UPCOMING EVENTS
+// ============================================
+const UPCOMING_EVENTS = [
+  { day: '15', month: 'Jan', title: 'Board Governance Webinar', time: '2:00 PM EST', type: 'Webinar' },
+  { day: '22', month: 'Jan', title: 'Strategic Planning Workshop', time: '10:00 AM EST', type: 'Workshop' },
+  { day: '5', month: 'Feb', title: 'Grant Writing Masterclass', time: '1:00 PM EST', type: 'Masterclass' },
 ];
 
 // ============================================
@@ -80,46 +91,6 @@ const TOUR_STEPS = [
   { title: 'My Leadership Journey', content: 'Track your growth with daily challenges and achievement badges.' },
   { title: 'Ready to Start?', content: 'We recommend beginning with the Board Assessment.' },
 ];
-
-// ============================================
-// LOGO COMPONENT
-// ============================================
-const Logo = () => (
-  <svg viewBox="0 0 1024 768" style={{ height: '80px', width: 'auto' }}>
-    <style>{`.st0{fill:#0D2C54;}.st1{fill:#0097A9;}`}</style>
-    <g>
-      <g>
-        <path className="st0" d="M438.46,469.14c-18.16,14.03-40.93,22.38-65.64,22.38c-30.79,0-58.55-12.94-78.16-33.69c2.85,0.46,5.7,0.81,8.57,1.06c9.13,0.79,17.9,0.49,26.26-0.63c12.72,7.44,27.53,11.71,43.33,11.71c17.17,0,33.17-5.03,46.59-13.71C422.94,460.11,428.93,465.14,438.46,469.14z"/>
-        <path className="st0" d="M294.86,420.29c-8.64,2.53-16.05,3.61-21.74,4.02c-5.05-12.44-7.82-26.05-7.82-40.31c0-59.37,48.14-107.52,107.52-107.52c25.62,0,49.15,8.96,67.62,23.94c-9.33,2.92-16.19,7.85-20.47,11.69c-13.54-8.9-29.74-14.08-47.15-14.08c-47.48,0-85.97,38.49-85.97,85.97C286.85,396.97,289.72,409.27,294.86,420.29z"/>
-        <path className="st1" d="M258.67,434.74c0,0,61.28,14.58,121.38-60.61l-18.3-13.11l72.86-22.42l0.39,71.06l-18.78-13.01C416.22,396.64,340.29,479.82,258.67,434.74z"/>
-      </g>
-      <g>
-        <g>
-          <path className="st0" d="M491.43,298.55v7.98h-9.88v32.91h-9.08v-32.91h-9.88v-7.98H491.43z"/>
-          <path className="st0" d="M528.3,298.55v40.89h-9.08V322.6h-14.13v16.83H496v-40.89h9.08v16.02h14.13v-16.02H528.3z"/>
-          <path className="st0" d="M543.91,306.53v8.27h12.17v7.69h-12.17v8.97h13.76v7.98h-22.84v-40.89h22.84v7.98H543.91z"/>
-        </g>
-        <g>
-          <path className="st1" d="M495.94,392.68h-9.08l-15.19-25.22v25.22h-9.08v-40.89h9.08l15.19,25.34v-25.34h9.08V392.68z"/>
-          <path className="st1" d="M510.53,390.41c-2.92-1.79-5.24-4.28-6.96-7.48c-1.72-3.2-2.58-6.8-2.58-10.8c0-4,0.86-7.59,2.58-10.78c1.72-3.18,4.04-5.67,6.96-7.46c2.92-1.79,6.14-2.68,9.64-2.68c3.51,0,6.72,0.89,9.64,2.68c2.92,1.79,5.22,4.27,6.91,7.46c1.68,3.18,2.52,6.78,2.52,10.78c0,4-0.85,7.6-2.55,10.8c-1.7,3.2-4,5.7-6.91,7.48c-2.9,1.79-6.11,2.68-9.62,2.68C516.66,393.09,513.45,392.19,510.53,390.41z"/>
-          <path className="st1" d="M577.65,392.68h-9.08l-15.19-25.22v25.22h-9.08v-40.89h9.08l15.19,25.34v-25.34h9.08V392.68z"/>
-          <path className="st1" d="M611.17,371.45c-0.99,1.96-2.52,3.54-4.57,4.75c-2.05,1.2-4.6,1.81-7.65,1.81h-5.63v14.68h-9.08v-40.89h14.72c2.98,0,5.49,0.56,7.54,1.69c2.05,1.13,3.59,2.68,4.62,4.66c1.03,1.98,1.54,4.25,1.54,6.81C612.66,367.32,612.16,369.49,611.17,371.45z"/>
-          <path className="st1" d="M636.4,392.68l-7.76-15.43h-2.18v15.43h-9.08v-40.89h15.25c2.94,0,5.45,0.56,7.52,1.69c2.07,1.13,3.62,2.67,4.65,4.63c1.03,1.96,1.54,4.15,1.54,6.55c0,2.72-0.7,5.15-2.1,7.28c-1.4,2.14-3.46,3.65-6.19,4.54l8.61,16.19H636.4z"/>
-          <path className="st1" d="M660.02,390.41c-2.92-1.79-5.24-4.28-6.96-7.48c-1.72-3.2-2.58-6.8-2.58-10.8c0-4,0.86-7.59,2.58-10.78c1.72-3.18,4.04-5.67,6.96-7.46c2.92-1.79,6.14-2.68,9.64-2.68c3.51,0,6.72,0.89,9.64,2.68c2.92,1.79,5.22,4.27,6.91,7.46c1.68,3.18,2.52,6.78,2.52,10.78c0,4-0.85,7.6-2.55,10.8c-1.7,3.2-4,5.7-6.91,7.48c-2.9,1.79-6.11,2.68-9.62,2.68C666.15,393.09,662.94,392.19,660.02,390.41z"/>
-          <path className="st1" d="M718.05,351.79v7.98h-15.19v8.62h11.37v7.75h-11.37v16.54h-9.08v-40.89H718.05z"/>
-          <path className="st1" d="M731.92,351.79v40.89h-9.08v-40.89H731.92z"/>
-          <path className="st1" d="M765.33,351.79v7.98h-9.88v32.91h-9.08v-32.91h-9.88v-7.98H765.33z"/>
-        </g>
-        <g>
-          <path className="st0" d="M476.97,418.87v13.1h19.27v12.18h-19.27v14.21h21.8v12.64h-36.19v-64.78h36.19v12.64H476.97z"/>
-          <path className="st0" d="M546.58,410.29c4.66,2.71,8.26,6.51,10.82,11.4c2.55,4.89,3.83,10.54,3.83,16.93c0,6.34-1.28,11.97-3.83,16.89c-2.55,4.92-6.17,8.74-10.86,11.44c-4.69,2.71-10.11,4.06-16.29,4.06h-22.14v-64.78h22.14C536.48,406.23,541.92,407.58,546.58,410.29z"/>
-          <path className="st0" d="M608.53,426.71c-1.07-2.15-2.6-3.8-4.59-4.94c-1.99-1.14-4.33-1.71-7.03-1.71c-4.66,0-8.39,1.68-11.19,5.03c-2.81,3.35-4.21,7.83-4.21,13.43c0,5.97,1.47,10.63,4.42,13.98c2.95,3.35,7,5.03,12.16,5.03c3.54,0,6.52-0.98,8.96-2.95c2.44-1.97,4.22-4.8,5.34-8.49h-18.26v-11.63h31.31v14.67c-1.07,3.94-2.88,7.6-5.43,10.98c-2.55,3.38-5.79,6.12-9.72,8.21c-3.93,2.09-8.36,3.14-13.3,3.14c-5.84,0-11.04-1.4-15.61-4.2c-4.57-2.8-8.14-6.69-10.69-11.67c-2.55-4.98-3.83-10.67-3.83-17.07c0-6.4,1.28-12.1,3.83-17.12c2.55-5.01,6.1-8.92,10.65-11.72c4.55-2.8,9.73-4.2,15.57-4.2c7.07,0,13.03,1.88,17.89,5.63c4.85,3.75,8.07,8.95,9.64,15.6H608.53z"/>
-          <path className="st0" d="M647.83,418.87v13.1h19.27v12.18h-19.27v14.21h21.8v12.64h-36.19v-64.78h36.19v12.64H647.83z"/>
-        </g>
-      </g>
-    </g>
-  </svg>
-);
 
 // ============================================
 // TOUR MODAL COMPONENT
@@ -177,6 +148,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
   const [usageData, setUsageData] = useState({ downloads_this_month: 7, atp_sessions_this_month: 5 });
   const [hoveredTool, setHoveredTool] = useState<string | null>(null);
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
+  const [hoveredEvent, setHoveredEvent] = useState<number | null>(null);
   const [showTour, setShowTour] = useState(false);
   const [tourStep, setTourStep] = useState(0);
   const [completedTools] = useState<string[]>([]);
@@ -188,7 +160,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
     { id: '1', text: 'Board Assessment started', time: 'Today', color: COLORS.teal },
     { id: '2', text: 'Strategic Plan completed', time: '3 days ago', color: '#16a34a' },
     { id: '3', text: 'Downloaded Board Self-Assessment', time: '5 days ago', color: '#8b5cf6' },
-    { id: '4', text: 'Coaching session', time: '2 weeks ago', color: '#f59e0b' },
   ]);
 
   // Tier info
@@ -259,7 +230,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
   const memberResources = [
     { key: 'dashboards', icon: '📊', label: 'Dashboards', path: '/dashboards' },
     { key: 'templates', icon: '📄', label: 'Templates', path: '/templates' },
-    { key: 'playbooks', icon: '📘', label: 'Playbooks', path: '/playbooks' },
     { key: 'certifications', icon: '🎓', label: 'Certifications', path: '/certifications' },
     { key: 'book-summaries', icon: '📚', label: 'Book Summaries', path: '/book-summaries' },
   ];
@@ -314,7 +284,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
       <aside style={{ width: '280px', background: COLORS.white, borderRight: `1px solid ${COLORS.gray200}`, position: 'fixed', height: '100vh', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
         {/* Logo */}
         <div style={{ padding: '20px', borderBottom: `1px solid ${COLORS.gray200}`, display: 'flex', justifyContent: 'center', background: '#fafbfc' }}>
-          <Logo />
+          <img src="/logo.png" alt="The Nonprofit Edge" style={{ height: '60px', width: 'auto' }} />
         </div>
 
         {/* Quick Actions */}
@@ -425,27 +395,27 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
       {/* MAIN CONTENT */}
       <main style={{ flex: 1, marginLeft: '280px', padding: '28px 36px', maxWidth: '1100px' }}>
         {/* Welcome */}
-        <div style={{ marginBottom: '24px' }}>
+        <div style={{ marginBottom: '18px' }}>
           <h1 style={{ fontSize: '28px', fontWeight: 700, color: COLORS.navy, marginBottom: '4px' }}>Welcome back, {userName}!</h1>
           <p style={{ fontSize: '14px', color: COLORS.gray500 }}>Let's move your mission forward.</p>
         </div>
 
-        {/* Quote Card */}
-        <div style={{ background: `linear-gradient(135deg, ${COLORS.navy}, ${COLORS.navyLight})`, borderRadius: '14px', padding: '28px 32px', marginBottom: '28px', position: 'relative', overflow: 'hidden' }}>
-          <span style={{ position: 'absolute', top: '5px', left: '20px', fontSize: '80px', color: 'rgba(0,151,169,0.3)', fontFamily: 'Georgia, serif', lineHeight: 1 }}>"</span>
-          <p style={{ fontSize: '16px', fontStyle: 'italic', color: COLORS.white, lineHeight: 1.7, marginBottom: '12px', marginLeft: '40px', position: 'relative', zIndex: 1 }}>
+        {/* Quote Card - Teal */}
+        <div style={{ background: `linear-gradient(135deg, ${COLORS.teal}, ${COLORS.tealDark})`, borderRadius: '14px', padding: '24px 28px', marginBottom: '20px', position: 'relative', overflow: 'hidden' }}>
+          <span style={{ position: 'absolute', top: '5px', left: '20px', fontSize: '80px', color: 'rgba(255,255,255,0.25)', fontFamily: 'Georgia, serif', lineHeight: 1 }}>"</span>
+          <p style={{ fontSize: '16px', fontStyle: 'italic', fontWeight: 600, color: COLORS.white, lineHeight: 1.7, marginBottom: '12px', marginLeft: '40px', position: 'relative', zIndex: 1 }}>
             "The job of a board member isn't to run the organization. It's to make sure the organization is well-run."
           </p>
-          <p style={{ fontSize: '13px', color: COLORS.teal, fontWeight: 500, textAlign: 'right' }}>— Chait, Ryan & Taylor, "Governance as Leadership"</p>
+          <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.85)', fontWeight: 400, textAlign: 'right' }}>— Chait, Ryan & Taylor, "Governance as Leadership"</p>
         </div>
 
         {/* YOUR TOOLS - 6 CARDS */}
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.gray200}`, borderRadius: '14px', marginBottom: '24px' }}>
-          <div style={{ padding: '16px 24px', borderBottom: `1px solid ${COLORS.gray200}` }}>
-            <span style={{ fontSize: '14px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: COLORS.navy }}>Your Tools</span>
+        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.gray200}`, borderRadius: '14px', marginBottom: '16px' }}>
+          <div style={{ padding: '14px 20px', borderBottom: `1px solid ${COLORS.gray200}` }}>
+            <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px', color: COLORS.navy }}>Your Tools</span>
           </div>
-          <div style={{ padding: '20px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '18px' }}>
+          <div style={{ padding: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
               {TOOLS.map((tool) => (
                 <div
                   key={tool.id}
@@ -500,14 +470,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
         </div>
 
         {/* MY LEADERSHIP JOURNEY */}
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.gray200}`, borderRadius: '14px', marginBottom: '28px' }}>
-          <div style={{ padding: '20px' }}>
+        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.gray200}`, borderRadius: '14px', marginBottom: '16px' }}>
+          <div style={{ padding: '16px' }}>
             <div
               onClick={handleLeadershipJourney}
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
                 background: `linear-gradient(135deg, ${COLORS.navy} 0%, ${COLORS.navyLight} 100%)`,
                 borderRadius: '12px',
                 padding: '20px 24px',
@@ -529,8 +498,43 @@ const Dashboard: React.FC<DashboardProps> = ({ user, organization, supabase, nav
                   </div>
                 </div>
               </div>
-              <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: COLORS.gold, display: 'flex', alignItems: 'center', justifyContent: 'center', color: COLORS.white, fontSize: '20px' }}>→</div>
             </div>
+          </div>
+        </div>
+
+        {/* UPCOMING EVENTS */}
+        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.gray200}`, borderRadius: '14px', marginBottom: '20px' }}>
+          <div style={{ padding: '14px 20px', borderBottom: `1px solid ${COLORS.gray200}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px', color: COLORS.navy }}>Upcoming Events</span>
+            <a href="/events" style={{ fontSize: '13px', color: COLORS.teal, textDecoration: 'none', fontWeight: 500 }}>View All →</a>
+          </div>
+          <div style={{ padding: '16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
+            {UPCOMING_EVENTS.map((event, i) => (
+              <div
+                key={i}
+                onMouseEnter={() => setHoveredEvent(i)}
+                onMouseLeave={() => setHoveredEvent(null)}
+                style={{
+                  display: 'flex',
+                  gap: '14px',
+                  padding: '16px',
+                  background: hoveredEvent === i ? COLORS.gray100 : COLORS.gray50,
+                  borderRadius: '10px',
+                  transition: 'all 0.2s',
+                  cursor: 'pointer'
+                }}
+              >
+                <div style={{ textAlign: 'center', minWidth: '50px', background: `linear-gradient(135deg, ${COLORS.navy}, ${COLORS.navyLight})`, borderRadius: '8px', padding: '10px 12px' }}>
+                  <div style={{ fontSize: '24px', fontWeight: 700, color: COLORS.white, lineHeight: 1 }}>{event.day}</div>
+                  <div style={{ fontSize: '11px', fontWeight: 600, color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase', marginTop: '4px' }}>{event.month}</div>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: COLORS.gray900, marginBottom: '4px' }}>{event.title}</div>
+                  <div style={{ fontSize: '12px', color: COLORS.gray500 }}>{event.time}</div>
+                  <span style={{ display: 'inline-block', fontSize: '10px', fontWeight: 600, padding: '3px 8px', background: 'rgba(0,151,169,0.1)', color: COLORS.teal, borderRadius: '4px', marginTop: '6px' }}>{event.type}</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </main>
