@@ -7,6 +7,10 @@
  *   /tool-name/use     → Actual tool (requires login, tracked)
  * 
  * All tools receive tracking props to connect with Dashboard counters
+ * 
+ * UPDATED: January 19, 2026
+ * - Added DashboardV2 (new design)
+ * - Added OnboardingQuestionnaire for new users
  */
 
 import React, { useState, useEffect } from 'react';
@@ -18,6 +22,8 @@ import { supabase } from './lib/supabase';
 
 // Dashboard & Core Components
 import RealDashboard from './components/Dashboard';
+import DashboardV2 from './components/DashboardV2';  // NEW DASHBOARD
+import OnboardingQuestionnaire from './components/OnboardingQuestionnaire';  // NEW ONBOARDING
 import ResourceLibrary from './components/ResourceLibrary';
 import EventsCalendar from './components/EventsCalendar';
 import EnhancedOwnerDashboard from './components/EnhancedOwnerDashboard';
@@ -85,6 +91,12 @@ interface User {
   avatar_url?: string | null;
   profile_photo?: string | null;
   created_at?: string;
+  // Onboarding fields
+  onboarding_completed?: boolean;
+  focus_area?: string;
+  engagement_preference?: string;
+  leadership_journey_opted_in?: boolean;
+  tutorial_opted_in?: boolean;
 }
 
 interface Organization {
@@ -107,6 +119,15 @@ interface ToolSession {
   id: string;
   tool_type: string;
   started_at: string;
+}
+
+interface OnboardingData {
+  role: string;
+  organizationSize: string;
+  focusArea: string;
+  engagementPreference: string;
+  leadershipJourneyOptIn: boolean;
+  tutorialOptIn: boolean;
 }
 
 // ============================================
@@ -171,6 +192,10 @@ const App: React.FC = () => {
     report_downloads: 0,
   });
 
+  // Onboarding state
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+
   // ==========================================
   // INITIALIZATION - Fixed with Supabase
   // ==========================================
@@ -198,6 +223,11 @@ const App: React.FC = () => {
             role: 'member',
             organization_id: 'org_1',
             created_at: session.user.created_at || new Date().toISOString(),
+            // Check onboarding status from metadata or default to false
+            onboarding_completed: session.user.user_metadata?.onboarding_completed || false,
+            focus_area: session.user.user_metadata?.focus_area || '',
+            engagement_preference: session.user.user_metadata?.engagement_preference || 'weekly',
+            leadership_journey_opted_in: session.user.user_metadata?.leadership_journey_opted_in || false,
           };
           
           const newOrg: Organization = {
@@ -210,13 +240,20 @@ const App: React.FC = () => {
           setOrganization(newOrg);
           localStorage.setItem('nonprofit_edge_user', JSON.stringify(newUser));
           localStorage.setItem('nonprofit_edge_org', JSON.stringify(newOrg));
+          
+          // Check if user needs onboarding
+          const needsOnboarding = !newUser.onboarding_completed;
+          setShowOnboarding(needsOnboarding);
         } else {
           // No Supabase session - check localStorage as fallback
           const savedUser = localStorage.getItem('nonprofit_edge_user');
           const savedOrg = localStorage.getItem('nonprofit_edge_org');
           
           if (savedUser) {
-            setUser(JSON.parse(savedUser));
+            const parsedUser = JSON.parse(savedUser);
+            setUser(parsedUser);
+            // Check onboarding from localStorage
+            setShowOnboarding(!parsedUser.onboarding_completed);
           }
           if (savedOrg) {
             setOrganization(JSON.parse(savedOrg));
@@ -245,10 +282,17 @@ const App: React.FC = () => {
         if (event === 'SIGNED_OUT') {
           setUser(null);
           setOrganization(null);
+          setShowOnboarding(false);
           localStorage.removeItem('nonprofit_edge_user');
           localStorage.removeItem('nonprofit_edge_org');
           setCurrentRoute('/');
           window.history.pushState({}, '', '/');
+        }
+        
+        // Handle new sign up - show onboarding
+        if (event === 'SIGNED_IN' && session) {
+          const isNewUser = !session.user.user_metadata?.onboarding_completed;
+          setShowOnboarding(isNewUser);
         }
       }
     );
@@ -293,6 +337,10 @@ const App: React.FC = () => {
         role: 'member',
         organization_id: 'org_1',
         created_at: session.user.created_at || new Date().toISOString(),
+        onboarding_completed: session.user.user_metadata?.onboarding_completed || false,
+        focus_area: session.user.user_metadata?.focus_area || '',
+        engagement_preference: session.user.user_metadata?.engagement_preference || 'weekly',
+        leadership_journey_opted_in: session.user.user_metadata?.leadership_journey_opted_in || false,
       };
       
       const newOrg: Organization = {
@@ -305,6 +353,10 @@ const App: React.FC = () => {
       setOrganization(newOrg);
       localStorage.setItem('nonprofit_edge_user', JSON.stringify(newUser));
       localStorage.setItem('nonprofit_edge_org', JSON.stringify(newOrg));
+      
+      // Check if needs onboarding
+      setShowOnboarding(!newUser.onboarding_completed);
+      
       navigate('/dashboard');
     } else {
       // Fallback if no Supabase session (shouldn't happen normally)
@@ -317,6 +369,7 @@ const App: React.FC = () => {
         role: 'member',
         organization_id: 'org_1',
         created_at: new Date().toISOString(),
+        onboarding_completed: false,
       };
       
       const newOrg: Organization = {
@@ -329,6 +382,10 @@ const App: React.FC = () => {
       setOrganization(newOrg);
       localStorage.setItem('nonprofit_edge_user', JSON.stringify(newUser));
       localStorage.setItem('nonprofit_edge_org', JSON.stringify(newOrg));
+      
+      // New user needs onboarding
+      setShowOnboarding(true);
+      
       navigate('/dashboard');
     }
   };
@@ -340,10 +397,63 @@ const App: React.FC = () => {
     setUser(null);
     setOrganization(null);
     setCurrentSession(null);
+    setShowOnboarding(false);
     localStorage.removeItem('nonprofit_edge_user');
     localStorage.removeItem('nonprofit_edge_org');
     localStorage.removeItem('nonprofit_edge_usage');
     navigate('/');
+  };
+
+  // ==========================================
+  // ONBOARDING HANDLER
+  // ==========================================
+
+  const handleOnboardingComplete = async (data: OnboardingData) => {
+    if (!user) return;
+    
+    console.log('[App] Onboarding completed:', data);
+    
+    // Update user with onboarding data
+    const updatedUser: User = {
+      ...user,
+      onboarding_completed: true,
+      focus_area: data.focusArea,
+      engagement_preference: data.engagementPreference,
+      leadership_journey_opted_in: data.leadershipJourneyOptIn,
+      tutorial_opted_in: data.tutorialOptIn,
+    };
+    
+    setUser(updatedUser);
+    localStorage.setItem('nonprofit_edge_user', JSON.stringify(updatedUser));
+    setShowOnboarding(false);
+    
+    // Show tutorial if user opted in
+    if (data.tutorialOptIn) {
+      setShowTutorial(true);
+    }
+    
+    // Save to Supabase (update user metadata)
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          onboarding_completed: true,
+          focus_area: data.focusArea,
+          engagement_preference: data.engagementPreference,
+          leadership_journey_opted_in: data.leadershipJourneyOptIn,
+          tutorial_opted_in: data.tutorialOptIn,
+          role: data.role,
+          organization_size: data.organizationSize,
+        }
+      });
+      
+      if (error) {
+        console.error('[App] Error saving onboarding to Supabase:', error);
+      } else {
+        console.log('[App] Onboarding saved to Supabase successfully');
+      }
+    } catch (e) {
+      console.error('[App] Error updating user metadata:', e);
+    }
   };
 
   // ==========================================
@@ -551,6 +661,11 @@ const App: React.FC = () => {
       'link-manager': '/admin/links',
       'team-access': '/admin/team',
       'homepage-editor': '/admin/homepage',
+      'member-resources': '/resources',
+      'leadership-profile': '/leadership-profile',
+      'constraint-report': '/constraint-report',
+      'tools': '/tools',
+      'conversations': '/conversations',
     };
     return routeMap[page] || `/${page}`;
   };
@@ -676,6 +791,26 @@ const App: React.FC = () => {
           navigate('/login');
           return null;
         }
+        
+        // Show onboarding questionnaire for new users
+        if (showOnboarding) {
+          return (
+            <OnboardingQuestionnaire
+              userName={user.name}
+              onComplete={handleOnboardingComplete}
+            />
+          );
+        }
+        
+        // Show the new DashboardV2
+        return <DashboardV2 />;
+
+      // Keep old dashboard accessible at /dashboard-old if needed
+      case '/dashboard-old':
+        if (!user || !organization) {
+          navigate('/login');
+          return null;
+        }
         return (
           <RealDashboard 
             user={{
@@ -696,6 +831,7 @@ const App: React.FC = () => {
         );
 
       case '/resources':
+      case '/member-resources':
         return requireAuth(
           <ResourceLibrary 
             user={{ ...user!, full_name: user!.name }}
@@ -713,6 +849,55 @@ const App: React.FC = () => {
             onNavigate={(page: string) => navigate(mapDashboardNavigation(page))}
             onLogout={handleLogout}
           />
+        );
+
+      // ========================================
+      // PLACEHOLDER ROUTES (To be built)
+      // ========================================
+      
+      case '/leadership-profile':
+        return requireAuth(
+          <div style={{ padding: '40px', textAlign: 'center' }}>
+            <h1>My Leadership Profile</h1>
+            <p>Coming soon...</p>
+            <button onClick={() => navigate('/dashboard')}>← Back to Dashboard</button>
+          </div>
+        );
+      
+      case '/constraint-report':
+        return requireAuth(
+          <div style={{ padding: '40px', textAlign: 'center' }}>
+            <h1>Our Constraint Report</h1>
+            <p>Coming soon...</p>
+            <button onClick={() => navigate('/dashboard')}>← Back to Dashboard</button>
+          </div>
+        );
+      
+      case '/tools':
+        return requireAuth(
+          <div style={{ padding: '40px', textAlign: 'center' }}>
+            <h1>All Tools</h1>
+            <p>Coming soon...</p>
+            <button onClick={() => navigate('/dashboard')}>← Back to Dashboard</button>
+          </div>
+        );
+      
+      case '/conversations':
+        return requireAuth(
+          <div style={{ padding: '40px', textAlign: 'center' }}>
+            <h1>Conversation History</h1>
+            <p>Coming soon...</p>
+            <button onClick={() => navigate('/dashboard')}>← Back to Dashboard</button>
+          </div>
+        );
+      
+      case '/settings':
+        return requireAuth(
+          <div style={{ padding: '40px', textAlign: 'center' }}>
+            <h1>Settings</h1>
+            <p>Coming soon...</p>
+            <button onClick={() => navigate('/dashboard')}>← Back to Dashboard</button>
+          </div>
         );
 
       // ========================================
