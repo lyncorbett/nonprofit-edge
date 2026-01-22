@@ -1,525 +1,247 @@
 import React, { useState, useRef, useEffect } from 'react';
 
 interface Message {
-  id: string;
   role: 'user' | 'assistant';
   content: string;
-  timestamp: Date;
-  fileName?: string;
 }
 
-const AskTheProfessor: React.FC = () => {
+interface AskTheProfessorProps {
+  userName?: string;
+  focusArea?: string;
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+const AskTheProfessor: React.FC<AskTheProfessorProps> = ({ 
+  userName = 'there',
+  focusArea = 'nonprofit strategy',
+  isOpen = true,
+  onClose 
+}) => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [inputValue, setInputValue] = useState('');
+  const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [dragActive, setDragActive] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Welcome message on mount
+  // Initial greeting based on focus area
   useEffect(() => {
-    setMessages([
-      {
-        id: '1',
+    if (messages.length === 0) {
+      const greeting: Message = {
         role: 'assistant',
-        content: `Hello! I'm the AI Professor, your nonprofit strategy advisor with 25+ years of expertise built in. 
-
-I can help you with:
-• **Strategic planning** - Mission clarity, goal setting, implementation
-• **Board governance** - Roles, engagement, best practices  
-• **Financial sustainability** - Revenue diversification, reserves, budgeting
-• **Leadership challenges** - Team dynamics, change management, succession
-• **Organizational development** - Capacity building, scaling, partnerships
-
-You can also upload a document (PDF, Word, or text file) and I'll analyze it and provide guidance.
-
-What's on your mind today?`,
-        timestamp: new Date(),
-      },
-    ]);
-  }, []);
-
-  const toBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        const result = reader.result as string;
-        // Remove data URL prefix to get just base64
-        const base64 = result.split(',')[1];
-        resolve(base64);
+        content: `Good morning, ${userName}. I noticed your focus is on ${focusArea}. What's the most pressing challenge you're facing with your ${focusArea.toLowerCase()} right now?`
       };
-      reader.onerror = (error) => reject(error);
-    });
-  };
+      setMessages([greeting]);
+    }
+  }, [userName, focusArea]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputValue.trim() && !selectedFile) return;
+  const sendMessage = async () => {
+    if (!input.trim() || isLoading) return;
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: inputValue || `[Uploaded file: ${selectedFile?.name}]`,
-      timestamp: new Date(),
-      fileName: selectedFile?.name,
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInputValue('');
+    const userMessage: Message = { role: 'user', content: input };
+    const updatedMessages = [...messages, userMessage];
+    
+    setMessages(updatedMessages);
+    setInput('');
     setIsLoading(true);
 
     try {
-      // Prepare payload for n8n webhook
-      const payload: any = {
-        message: inputValue || `Please analyze this document: ${selectedFile?.name}`,
-      };
+      // Filter out the initial greeting for API call (only send actual conversation)
+      const apiMessages = updatedMessages
+        .slice(1) // Remove initial greeting
+        .map(m => ({ role: m.role, content: m.content }));
 
-      if (selectedFile) {
-        payload.file = await toBase64(selectedFile);
-        payload.file_name = selectedFile.name;
+      const response = await fetch('/api/ask-professor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: apiMessages,
+          conversationId,
+          focusArea,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
       }
 
-      const response = await fetch(
-        'https://thenonprofitedge.app.n8n.cloud/webhook/professor',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      const responseText = await response.text();
-
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: responseText || 'I apologize, but I encountered an issue processing your request. Please try again.',
-        timestamp: new Date(),
+      const assistantMessage: Message = { 
+        role: 'assistant', 
+        content: data.response 
       };
+      
+      setMessages([...updatedMessages, assistantMessage]);
+      
+      if (data.conversationId) {
+        setConversationId(data.conversationId);
+      }
 
-      setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
-      console.error('Error calling AI Professor:', error);
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: 'I apologize, but I\'m having trouble connecting right now. Please try again in a moment.',
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+      console.error('Error:', error);
+      setMessages([
+        ...updatedMessages,
+        { 
+          role: 'assistant', 
+          content: "I apologize, but I'm having trouble connecting right now. Please try again in a moment." 
+        },
+      ]);
     } finally {
       setIsLoading(false);
-      setSelectedFile(null);
     }
   };
 
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true);
-    } else if (e.type === 'dragleave') {
-      setDragActive(false);
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
     }
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      if (isValidFileType(file)) {
-        setSelectedFile(file);
-      }
-    }
+  const startNewConversation = () => {
+    setMessages([{
+      role: 'assistant',
+      content: `Good morning, ${userName}. I noticed your focus is on ${focusArea}. What's the most pressing challenge you're facing with your ${focusArea.toLowerCase()} right now?`
+    }]);
+    setConversationId(null);
   };
 
-  const isValidFileType = (file: File): boolean => {
-    const validTypes = [
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'text/plain',
-    ];
-    return validTypes.includes(file.type);
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      if (isValidFileType(file)) {
-        setSelectedFile(file);
-      }
-    }
-  };
-
-  const formatContent = (content: string) => {
-    // Convert markdown-style formatting to HTML
-    return content
-      .split('\n')
-      .map((line, i) => {
-        // Bold text
-        line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        // Bullet points
-        if (line.startsWith('• ') || line.startsWith('- ')) {
-          return `<li key="${i}">${line.substring(2)}</li>`;
-        }
-        // Numbered lists
-        if (/^\d+\.\s/.test(line)) {
-          return `<li key="${i}">${line.replace(/^\d+\.\s/, '')}</li>`;
-        }
-        return line;
-      })
-      .join('<br />');
-  };
-
-  const suggestedQuestions = [
-    "How do I engage my board more effectively?",
-    "What should be in a strong strategic plan?",
-    "How do I diversify our funding sources?",
-    "What are signs of a healthy nonprofit culture?",
+  const starterQuestions = [
+    "My board isn't engaged. What should I do?",
+    "How do I create a strategic plan that actually gets used?",
+    "We're struggling with fundraising. Where do I start?",
+    "How do I handle a difficult staff situation?",
   ];
 
+  if (!isOpen) return null;
+
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      background: '#f8fafc',
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
+    <div className="flex flex-col h-full bg-white rounded-xl shadow-lg overflow-hidden">
       {/* Header */}
-      <div style={{
-        background: '#0D2C54',
-        color: 'white',
-        padding: '20px 32px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '16px'
-      }}>
-        <div style={{
-          width: '48px',
-          height: '48px',
-          background: '#0097A9',
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '24px'
-        }}>
-          🎓
-        </div>
-        <div>
-          <h1 style={{ 
-            margin: 0, 
-            fontSize: '1.5rem',
-            fontFamily: 'Merriweather, serif',
-            fontWeight: 700
-          }}>
-            Ask The Professor
-          </h1>
-          <p style={{ margin: 0, opacity: 0.8, fontSize: '0.875rem' }}>
-            AI-powered nonprofit strategy coaching
-          </p>
+      <div className="bg-gradient-to-r from-[#003d5c] to-[#008B9A] px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
+              <span className="text-xl">🎓</span>
+            </div>
+            <div>
+              <h2 className="text-white font-semibold">Ask the Professor</h2>
+              <p className="text-white/70 text-xs">Available 24/7</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={startNewConversation}
+              className="text-white/70 hover:text-white text-xs px-2 py-1 rounded border border-white/30 hover:border-white/60 transition-colors"
+            >
+              New Chat
+            </button>
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="text-white/70 hover:text-white"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Chat Area */}
-      <div style={{
-        flex: 1,
-        maxWidth: '900px',
-        width: '100%',
-        margin: '0 auto',
-        padding: '24px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '16px',
-        overflowY: 'auto'
-      }}>
-        {messages.map((message) => (
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+        {messages.map((message, index) => (
           <div
-            key={message.id}
-            style={{
-              display: 'flex',
-              justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
-            }}
+            key={index}
+            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              style={{
-                maxWidth: '80%',
-                padding: '16px 20px',
-                borderRadius: message.role === 'user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
-                background: message.role === 'user' ? '#0D2C54' : 'white',
-                color: message.role === 'user' ? 'white' : '#1e293b',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-              }}
+              className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+                message.role === 'user'
+                  ? 'bg-[#003d5c] text-white rounded-br-md'
+                  : 'bg-white text-gray-800 rounded-bl-md shadow-sm border border-gray-100'
+              }`}
             >
-              {message.fileName && (
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  marginBottom: '8px',
-                  padding: '8px 12px',
-                  background: message.role === 'user' ? 'rgba(255,255,255,0.1)' : '#f1f5f9',
-                  borderRadius: '8px',
-                  fontSize: '0.875rem'
-                }}>
-                  📎 {message.fileName}
+              {message.role === 'assistant' && (
+                <div className="flex items-center gap-2 mb-1 text-[#008B9A] font-medium text-xs">
+                  <span>🎓</span> The Professor
                 </div>
               )}
-              <div
-                style={{ lineHeight: 1.6 }}
-                dangerouslySetInnerHTML={{ __html: formatContent(message.content) }}
-              />
-              <div style={{
-                fontSize: '0.75rem',
-                opacity: 0.5,
-                marginTop: '8px',
-                textAlign: message.role === 'user' ? 'right' : 'left'
-              }}>
-                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                {message.content}
               </div>
             </div>
           </div>
         ))}
 
+        {/* Starter questions - show only when just the greeting exists */}
+        {messages.length === 1 && (
+          <div className="space-y-2 mt-4">
+            <p className="text-xs text-gray-500 px-1">Try asking:</p>
+            {starterQuestions.map((question, i) => (
+              <button
+                key={i}
+                onClick={() => setInput(question)}
+                className="block w-full text-left p-3 rounded-lg border border-gray-200 hover:border-[#008B9A] hover:bg-[#008B9A]/5 transition-colors text-sm text-gray-700"
+              >
+                {question}
+              </button>
+            ))}
+          </div>
+        )}
+
         {isLoading && (
-          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-            <div style={{
-              padding: '16px 20px',
-              borderRadius: '20px 20px 20px 4px',
-              background: 'white',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              <div style={{
-                display: 'flex',
-                gap: '4px'
-              }}>
-                {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    style={{
-                      width: '8px',
-                      height: '8px',
-                      borderRadius: '50%',
-                      background: '#0097A9',
-                      animation: `bounce 1.4s ease-in-out ${i * 0.2}s infinite both`,
-                    }}
-                  />
-                ))}
+          <div className="flex justify-start">
+            <div className="bg-white rounded-2xl rounded-bl-md px-4 py-3 shadow-sm border border-gray-100">
+              <div className="flex items-center gap-2 text-[#008B9A] font-medium text-xs mb-1">
+                <span>🎓</span> The Professor
               </div>
-              <span style={{ color: '#64748b', fontSize: '0.875rem' }}>
-                Thinking...
-              </span>
+              <div className="flex gap-1">
+                <div className="w-2 h-2 bg-[#008B9A] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 bg-[#008B9A] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 bg-[#008B9A] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
             </div>
           </div>
         )}
 
         <div ref={messagesEndRef} />
-
-        {/* Suggested Questions (only show if no user messages yet) */}
-        {messages.length === 1 && (
-          <div style={{ marginTop: '16px' }}>
-            <p style={{ 
-              fontSize: '0.875rem', 
-              color: '#64748b',
-              marginBottom: '12px'
-            }}>
-              Try asking:
-            </p>
-            <div style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '8px'
-            }}>
-              {suggestedQuestions.map((question, i) => (
-                <button
-                  key={i}
-                  onClick={() => setInputValue(question)}
-                  style={{
-                    padding: '8px 16px',
-                    background: 'white',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '20px',
-                    fontSize: '0.875rem',
-                    color: '#475569',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.borderColor = '#0097A9';
-                    e.currentTarget.style.color = '#0097A9';
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.borderColor = '#e2e8f0';
-                    e.currentTarget.style.color = '#475569';
-                  }}
-                >
-                  {question}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Input Area */}
-      <div style={{
-        background: 'white',
-        borderTop: '1px solid #e2e8f0',
-        padding: '16px 24px',
-      }}>
-        <div style={{
-          maxWidth: '900px',
-          margin: '0 auto',
-        }}>
-          {/* File Drop Zone */}
-          {selectedFile && (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '8px 12px',
-              background: '#f0fdfa',
-              border: '1px solid #0097A9',
-              borderRadius: '8px',
-              marginBottom: '12px',
-              fontSize: '0.875rem'
-            }}>
-              <span>📎</span>
-              <span style={{ flex: 1 }}>{selectedFile.name}</span>
-              <button
-                onClick={() => setSelectedFile(null)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#64748b',
-                  fontSize: '1.25rem',
-                  lineHeight: 1
-                }}
-              >
-                ×
-              </button>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '12px' }}>
-            <div
-              style={{
-                flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '12px 16px',
-                background: dragActive ? '#f0fdfa' : '#f8fafc',
-                border: `2px solid ${dragActive ? '#0097A9' : '#e2e8f0'}`,
-                borderRadius: '12px',
-                transition: 'all 0.2s'
-              }}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-            >
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#64748b',
-                  fontSize: '1.25rem',
-                  padding: '4px'
-                }}
-                title="Attach a file"
-              >
-                📎
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.doc,.docx,.txt"
-                onChange={handleFileSelect}
-                style={{ display: 'none' }}
-              />
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Ask me anything about nonprofit strategy..."
-                disabled={isLoading}
-                style={{
-                  flex: 1,
-                  border: 'none',
-                  background: 'transparent',
-                  fontSize: '1rem',
-                  outline: 'none',
-                  color: '#1e293b'
-                }}
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={isLoading || (!inputValue.trim() && !selectedFile)}
-              style={{
-                padding: '12px 24px',
-                background: isLoading || (!inputValue.trim() && !selectedFile) ? '#cbd5e1' : '#0097A9',
-                color: 'white',
-                border: 'none',
-                borderRadius: '12px',
-                fontSize: '1rem',
-                fontWeight: 600,
-                cursor: isLoading || (!inputValue.trim() && !selectedFile) ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}
-            >
-              {isLoading ? 'Sending...' : 'Send'}
-              {!isLoading && <span>→</span>}
-            </button>
-          </form>
-
-          <p style={{
-            fontSize: '0.75rem',
-            color: '#94a3b8',
-            marginTop: '8px',
-            textAlign: 'center'
-          }}>
-            Powered by AI with 25+ years of nonprofit expertise • Drop files here or click 📎 to upload
-          </p>
+      <div className="border-t border-gray-200 p-3 bg-white">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Ask about board engagement, strategy, funding..."
+            className="flex-1 rounded-xl border border-gray-300 px-4 py-2.5 focus:outline-none focus:border-[#008B9A] focus:ring-2 focus:ring-[#008B9A]/20 transition-all text-sm"
+            disabled={isLoading}
+          />
+          <button
+            onClick={sendMessage}
+            disabled={!input.trim() || isLoading}
+            className="px-4 py-2.5 bg-[#008B9A] hover:bg-[#007a88] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
+          </button>
         </div>
+        <p className="text-xs text-gray-400 mt-2 text-center">
+          Ask the Professor • AI can make mistakes. Please double-check responses.
+        </p>
       </div>
-
-      {/* CSS Animation for loading dots */}
-      <style>{`
-        @keyframes bounce {
-          0%, 80%, 100% {
-            transform: scale(0);
-          }
-          40% {
-            transform: scale(1);
-          }
-        }
-      `}</style>
     </div>
   );
 };
