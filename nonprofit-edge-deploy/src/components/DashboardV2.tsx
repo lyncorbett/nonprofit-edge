@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   FolderOpen, User, Target, Calendar, Users, Clock, PenLine, 
   ChevronDown, ChevronRight, Settings, MessageCircle, Lightbulb,
-  ArrowRight, X, Send, Check
+  ArrowRight, X, Send, Check, Loader2
 } from 'lucide-react';
 
 // Logo component inline to avoid import issues
@@ -58,6 +58,7 @@ const DashboardV2: React.FC = () => {
   const [selectedCommitment, setSelectedCommitment] = useState<string | null>(null);
   const [customCommitment, setCustomCommitment] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     { 
       role: 'assistant', 
@@ -83,30 +84,56 @@ const DashboardV2: React.FC = () => {
   ];
 
   const handleSendMessage = async () => {
-    if (chatInput.trim()) {
-      const userMessage = chatInput;
-      setChatMessages(prev => [...prev, { role: 'user', content: userMessage }]);
-      setChatInput('');
-      
-      try {
-        // TODO: Connect to n8n webhook
-        // const response = await fetch('https://thenonprofitedge.app.n8n.cloud/webhook/professor', {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify({ message: userMessage })
-        // });
-        // const data = await response.text();
-        
-        // Simulated response for now
-        setTimeout(() => {
-          setChatMessages(prev => [...prev, { 
-            role: 'assistant', 
-            content: "That's a common challenge. Many boards struggle with the balance between governance and management. Let me share a framework that might help..." 
-          }]);
-        }, 1000);
-      } catch (error) {
-        console.error('Error sending message:', error);
+    if (!chatInput.trim() || isLoading) return;
+    
+    const userMessage = chatInput;
+    setChatMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setChatInput('');
+    setIsLoading(true);
+    
+    try {
+      // Build messages array for Claude (conversation history)
+      // Skip the initial greeting for cleaner context
+      const messagesForAPI = [
+        ...chatMessages.slice(1).map(msg => ({
+          role: msg.role,
+          content: msg.content
+        })),
+        { role: 'user', content: userMessage }
+      ];
+
+      const response = await fetch('/api/ask-professor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: messagesForAPI,
+          userName: 'Lyn', // TODO: Get from Supabase auth
+          organizationName: 'The Pivotal Group', // TODO: Get from Supabase auth
+          focusArea: 'Board Engagement' // TODO: Get from user selection
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API Error:', errorData);
+        throw new Error(errorData.error || 'Failed to get response');
       }
+
+      const data = await response.json();
+      
+      setChatMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: data.response 
+      }]);
+
+    } catch (error) {
+      console.error('Error sending message:', error);
+      setChatMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: "I'm having trouble connecting right now. Please try again in a moment." 
+      }]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -704,6 +731,30 @@ const DashboardV2: React.FC = () => {
               </div>
             </div>
           ))}
+          
+          {/* Loading indicator */}
+          {isLoading && (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-start'
+            }}>
+              <div style={{
+                maxWidth: '85%',
+                padding: '14px 18px',
+                borderRadius: '16px 16px 16px 4px',
+                background: '#f1f5f9',
+                color: '#64748b',
+                fontSize: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+                Thinking...
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Chat Input */}
@@ -717,6 +768,7 @@ const DashboardV2: React.FC = () => {
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               placeholder="Ask about board engagement, strategy, funding..."
+              disabled={isLoading}
               style={{
                 flex: 1,
                 padding: '14px 16px',
@@ -728,7 +780,8 @@ const DashboardV2: React.FC = () => {
                 maxHeight: '120px',
                 outline: 'none',
                 fontFamily: 'inherit',
-                lineHeight: 1.5
+                lineHeight: 1.5,
+                opacity: isLoading ? 0.6 : 1
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -739,12 +792,15 @@ const DashboardV2: React.FC = () => {
             />
             <button
               onClick={handleSendMessage}
+              disabled={isLoading || !chatInput.trim()}
               style={{
-                background: 'linear-gradient(135deg, #0D2C54 0%, #1a4175 100%)',
+                background: isLoading || !chatInput.trim() 
+                  ? '#94a3b8' 
+                  : 'linear-gradient(135deg, #0D2C54 0%, #1a4175 100%)',
                 border: 'none',
                 borderRadius: '12px',
                 padding: '14px',
-                cursor: 'pointer',
+                cursor: isLoading || !chatInput.trim() ? 'not-allowed' : 'pointer',
                 color: 'white',
                 display: 'flex',
                 alignItems: 'center',
@@ -769,6 +825,14 @@ const DashboardV2: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* CSS for loading spinner */}
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };
