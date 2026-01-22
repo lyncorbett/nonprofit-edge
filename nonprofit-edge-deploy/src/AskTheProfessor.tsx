@@ -57,6 +57,7 @@ const AskTheProfessor: React.FC<AskTheProfessorProps> = ({
         .map(m => ({ role: m.role, content: m.content }));
 
       const response = await fetch('/api/ask-professor', {
+        // Note: This calls the Vercel serverless function at /api/ask-professor.js
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
