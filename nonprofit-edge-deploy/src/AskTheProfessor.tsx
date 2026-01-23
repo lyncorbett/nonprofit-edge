@@ -1,3 +1,2 @@
-git rm src/AskTheProfessor.tsx
-git commit -m "Delete duplicate file"
-git push
+// This file moved to src/components/AskTheProfessor.tsx
+export default function AskTheProfessor() { return null; }
