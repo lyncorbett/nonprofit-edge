@@ -57,7 +57,7 @@ import CEOEvaluation from './CEOEvaluation';
 import BoardAssessment from './BoardAssessment';
 import GrantReview from './GrantReview';
 import ScenarioPlanner from './ScenarioPlanner';
-import AskTheProfessor from './AskTheProfessor';
+import AskTheProfessor from './components/AskTheProfessor';
 import AISummary from './AISummary';
 
 // Landing Page Components
