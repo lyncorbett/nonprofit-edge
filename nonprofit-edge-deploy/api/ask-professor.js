@@ -335,8 +335,24 @@ Use context naturally. Greet by name. Reference their history when relevant.`;
 
     // Save if logged in
     if (userId) {
-      await supabase.from('professor_conversations').insert({ user_id: userId, messages: [...messages, { role: 'assistant', content: reply }], focus_area: ctx.focus }).catch(console.error);
-      await supabase.from('professor_usage').insert({ user_id: userId, tokens_used: (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0) }).catch(console.error);
+      try {
+        await supabase.from('professor_conversations').insert({ 
+          user_id: userId, 
+          messages: [...messages, { role: 'assistant', content: reply }], 
+          focus_area: ctx.focus 
+        });
+      } catch (e) { 
+        console.error('Save conversation error:', e); 
+      }
+
+      try {
+        await supabase.from('professor_usage').insert({ 
+          user_id: userId, 
+          tokens_used: (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0) 
+        });
+      } catch (e) { 
+        console.error('Save usage error:', e); 
+      }
     }
 
     return res.status(200).json({ response: reply, usage: data.usage });
