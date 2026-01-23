@@ -288,15 +288,14 @@ export default async function handler(req, res) {
     const hour = new Date().getHours();
     const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
-    // Context block
+    // Context block - DO NOT include focus area to avoid assuming topic
     const contextBlock = `
 ---
 ## CURRENT USER CONTEXT
 **Name:** ${ctx.name}
-**Greeting:** ${greeting}
+**Time of Day:** ${greeting}
 **Organization:** ${ctx.org || 'Not specified'}
 **Role:** ${ctx.role || 'Nonprofit leader'}
-**Focus:** ${ctx.focus || 'General strategy'}
 
 ### Leadership Assessment
 ${ctx.leadership ? `Completed ${new Date(ctx.leadership.date).toLocaleDateString()} | Style: ${ctx.leadership.style || 'See results'} | Strengths: ${ctx.leadership.strengths || 'See results'}` : 'Not completed — suggest when relevant'}
@@ -307,7 +306,7 @@ ${ctx.board ? `Completed ${new Date(ctx.board.date).toLocaleDateString()} | Scor
 ### Recent Conversations
 ${ctx.history.length ? ctx.history.map(h => `- ${new Date(h.date).toLocaleDateString()}: "${h.topic}..."`).join('\n') : 'First conversation'}
 ---
-Use context naturally. Greet by name. Reference their history when relevant.`;
+IMPORTANT: Do NOT mention or assume their focus area in your greeting. Just greet them by name and ask what they'd like to discuss.`;
 
     // Call Claude
     const response = await fetch('https://api.anthropic.com/v1/messages', {
