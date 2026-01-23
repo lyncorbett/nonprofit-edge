@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import { 
   FolderOpen, User, Target, Calendar, Users, Clock, PenLine, 
   ChevronDown, ChevronRight, Settings, MessageCircle, Lightbulb,
@@ -59,13 +60,65 @@ const DashboardV2: React.FC = () => {
   const [customCommitment, setCustomCommitment] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    { 
-      role: 'assistant', 
-      content: "Good morning, Lyn. I noticed your focus is on board engagement this quarter. What's the most pressing challenge you're facing with your board right now?" 
-    }
-  ]);
+  
+  // FIXED: Start with empty messages - greeting comes from API
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [greetingLoaded, setGreetingLoaded] = useState(false);
+  
   const [chatInput, setChatInput] = useState('');
+  const [userName, setUserName] = useState('there');
+
+  // Fetch user info on mount
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name, first_name')
+          .eq('id', user.id)
+          .single();
+        if (profile) {
+          setUserName(profile.full_name || profile.first_name || 'there');
+        }
+      }
+    };
+    fetchUser();
+  }, []);
+
+  // Fetch greeting from API when panel opens
+  useEffect(() => {
+    const fetchGreeting = async () => {
+      if (isProfessorOpen && !greetingLoaded && chatMessages.length === 0) {
+        setIsLoading(true);
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          const response = await fetch('/api/ask-professor', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              messages: [{ role: 'user', content: '[GREETING]' }],
+              accessToken: session?.access_token,
+            })
+          });
+          const data = await response.json();
+          if (data.response) {
+            setChatMessages([{ role: 'assistant', content: data.response }]);
+          } else {
+            setChatMessages([{ role: 'assistant', content: `Hey ${userName}! What's on your mind today?` }]);
+          }
+        } catch (error) {
+          console.error('Greeting error:', error);
+          setChatMessages([{ role: 'assistant', content: `Hey ${userName}! What's on your mind today?` }]);
+        } finally {
+          setIsLoading(false);
+          setGreetingLoaded(true);
+        }
+      }
+    };
+    fetchGreeting();
+  }, [isProfessorOpen, greetingLoaded, chatMessages.length, userName]);
 
   const commitmentOptions: CommitmentOption[] = [
     { icon: Calendar, text: "Schedule this conversation this week" },
@@ -92,24 +145,20 @@ const DashboardV2: React.FC = () => {
     setIsLoading(true);
     
     try {
-      // Build messages array for Claude (conversation history)
-      // Skip the initial greeting for cleaner context
-      const messagesForAPI = [
-        ...chatMessages.slice(1).map(msg => ({
-          role: msg.role,
-          content: msg.content
-        })),
-        { role: 'user', content: userMessage }
-      ];
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      // Build messages array for Claude (skip greeting marker)
+      const messagesForAPI = chatMessages
+        .filter(msg => msg.content !== '[GREETING]')
+        .map(msg => ({ role: msg.role, content: msg.content }));
+      messagesForAPI.push({ role: 'user', content: userMessage });
 
       const response = await fetch('/api/ask-professor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: messagesForAPI,
-          userName: 'Lyn', // TODO: Get from Supabase auth
-          organizationName: 'The Pivotal Group', // TODO: Get from Supabase auth
-          focusArea: 'Board Engagement' // TODO: Get from user selection
+          accessToken: session?.access_token,
         })
       });
 
@@ -141,12 +190,15 @@ const DashboardV2: React.FC = () => {
     setSelectedCommitment(commitment);
     setIsCommitmentOpen(false);
     setShowCustomInput(false);
-    // TODO: Save to Supabase commitments table
   };
 
   const handleSignOut = async () => {
-    // TODO: Connect to Supabase auth signOut
-    console.log('Sign out clicked');
+    await supabase.auth.signOut();
+  };
+
+  const startNewConversation = () => {
+    setChatMessages([]);
+    setGreetingLoaded(false);
   };
 
   return (
@@ -289,10 +341,10 @@ const DashboardV2: React.FC = () => {
             fontWeight: 600,
             fontSize: '14px'
           }}>
-            L
+            {userName.charAt(0).toUpperCase()}
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>Lyn</div>
+            <div style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>{userName}</div>
             <div style={{ fontSize: '12px', color: '#94a3b8' }}>The Pivotal Group</div>
           </div>
         </div>
@@ -325,7 +377,7 @@ const DashboardV2: React.FC = () => {
           {/* Welcome */}
           <div style={{ marginBottom: '28px' }}>
             <h1 style={{ fontSize: '26px', fontWeight: 700, color: '#0D2C54', marginBottom: '6px' }}>
-              Good morning, Lyn
+              Good morning, {userName}
             </h1>
             <p style={{ color: '#64748b', fontSize: '15px' }}>
               You chose <strong style={{ color: '#0097A9', fontWeight: 600 }}>Board Engagement</strong> as your focus area
@@ -680,22 +732,39 @@ const DashboardV2: React.FC = () => {
               <div style={{ fontSize: '12px', opacity: 0.8 }}>Available 24/7</div>
             </div>
           </div>
-          <button
-            onClick={() => setIsProfessorOpen(false)}
-            style={{
-              background: 'rgba(255,255,255,0.15)',
-              border: 'none',
-              borderRadius: '8px',
-              padding: '8px',
-              cursor: 'pointer',
-              color: 'white',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <X size={18} />
-          </button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={startNewConversation}
+              style={{
+                background: 'rgba(255,255,255,0.15)',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '8px 12px',
+                cursor: 'pointer',
+                color: 'white',
+                fontSize: '12px',
+                fontWeight: 500
+              }}
+            >
+              New
+            </button>
+            <button
+              onClick={() => setIsProfessorOpen(false)}
+              style={{
+                background: 'rgba(255,255,255,0.15)',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '8px',
+                cursor: 'pointer',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
         {/* Chat Messages */}
