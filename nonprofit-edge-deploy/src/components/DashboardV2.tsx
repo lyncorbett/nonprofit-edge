@@ -1,11 +1,101 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { 
-  FolderOpen, User, Target, Calendar, Users, Clock, PenLine, 
-  ChevronDown, ChevronRight, Settings, MessageCircle, Lightbulb,
-  ArrowRight, X, Send, Check, Loader2, LayoutDashboard
+  FolderOpen, User, Target, Calendar, Users, Clock, 
+  ChevronRight, Settings, MessageCircle, Lightbulb,
+  ArrowRight, RefreshCw
 } from 'lucide-react';
 
+// Logo component - DOUBLED SIZE (320px width)
+const Logo = ({ width = 320 }: { width?: number }) => (
+  <svg width={width} height={width * 0.4} viewBox="250 270 500 220">
+    <g>
+      <path fill="#0D2C54" d="M438.46,469.14c-18.16,14.03-40.93,22.38-65.64,22.38c-30.79,0-58.55-12.94-78.16-33.69c2.85,0.46,5.7,0.81,8.57,1.06c9.13,0.79,17.9,0.49,26.26-0.63c12.72,7.44,27.53,11.71,43.33,11.71c17.17,0,33.17-5.03,46.59-13.71C422.94,460.11,428.93,465.14,438.46,469.14z"/>
+      <path fill="#0D2C54" d="M294.86,420.29c-8.64,2.53-16.05,3.61-21.74,4.02c-5.05-12.44-7.82-26.05-7.82-40.31c0-59.37,48.14-107.52,107.52-107.52c25.62,0,49.15,8.96,67.62,23.94c-9.33,2.92-16.19,7.85-20.47,11.69c-13.54-8.9-29.74-14.08-47.15-14.08c-47.48,0-85.97,38.49-85.97,85.97C286.85,396.97,289.72,409.27,294.86,420.29z"/>
+      <path fill="#0097A9" d="M258.67,434.74c0,0,61.28,14.58,121.38-60.61l-18.3-13.11l72.86-22.42l0.39,71.06l-18.78-13.01C416.22,396.64,340.29,479.82,258.67,434.74z"/>
+      <g>
+        <path fill="#0D2C54" d="M491.43,298.55v7.98h-9.88v32.91h-9.08v-32.91h-9.88v-7.98H491.43z"/>
+        <path fill="#0D2C54" d="M528.3,298.55v40.89h-9.08V322.6h-14.13v16.83H496v-40.89h9.08v16.02h14.13v-16.02H528.3z"/>
+        <path fill="#0D2C54" d="M543.91,306.53v8.27h12.17v7.69h-12.17v8.97h13.76v7.98h-22.84v-40.89h22.84v7.98H543.91z"/>
+      </g>
+      <g>
+        <path fill="#0097A9" d="M495.94,392.68h-9.08l-15.19-25.22v25.22h-9.08v-40.89h9.08l15.19,25.34v-25.34h9.08V392.68z"/>
+        <path fill="#0097A9" d="M510.53,390.41c-2.92-1.79-5.24-4.28-6.96-7.48c-1.72-3.2-2.58-6.8-2.58-10.8c0-4,0.86-7.59,2.58-10.78c1.72-3.18,4.04-5.67,6.96-7.46c2.92-1.79,6.14-2.68,9.64-2.68c3.51,0,6.72,0.89,9.64,2.68c2.92,1.79,5.22,4.27,6.91,7.46c1.68,3.18,2.52,6.78,2.52,10.78c0,4-0.85,7.6-2.55,10.8c-1.7,3.2-4,5.7-6.91,7.48c-2.9,1.79-6.11,2.68-9.62,2.68C516.66,393.09,513.45,392.19,510.53,390.41z"/>
+        <path fill="#0097A9" d="M577.65,392.68h-9.08l-15.19-25.22v25.22h-9.08v-40.89h9.08l15.19,25.34v-25.34h9.08V392.68z"/>
+      </g>
+      <g>
+        <path fill="#0D2C54" d="M476.97,418.87v13.1h19.27v12.18h-19.27v14.21h21.8v12.64h-36.19v-64.78h36.19v12.64H476.97z"/>
+        <path fill="#0D2C54" d="M546.58,410.29c4.66,2.71,8.26,6.51,10.82,11.4c2.55,4.89,3.83,10.54,3.83,16.93c0,6.34-1.28,11.97-3.83,16.89c-2.55,4.92-6.17,8.74-10.86,11.44c-4.69,2.71-10.11,4.06-16.29,4.06h-22.14v-64.78h22.14C536.48,406.23,541.92,407.58,546.58,410.29z"/>
+        <path fill="#0D2C54" d="M608.53,426.71c-1.07-2.15-2.6-3.8-4.59-4.94c-1.99-1.14-4.33-1.71-7.03-1.71c-4.66,0-8.39,1.68-11.19,5.03c-2.81,3.35-4.21,7.83-4.21,13.43c0,5.97,1.47,10.63,4.42,13.98c2.95,3.35,7,5.03,12.16,5.03c3.54,0,6.52-0.98,8.96-2.95c2.44-1.97,4.22-4.8,5.34-8.49h-18.26v-11.63h31.31v14.67c-1.07,3.94-2.88,7.6-5.43,10.98c-2.55,3.38-5.79,6.12-9.72,8.21c-3.93,2.09-8.36,3.14-13.3,3.14c-5.84,0-11.04-1.4-15.61-4.2c-4.57-2.8-8.14-6.69-10.69-11.67c-2.55-4.98-3.83-10.67-3.83-17.07c0-6.4,1.28-12.1,3.83-17.12c2.55-5.01,6.1-8.92,10.65-11.72c4.55-2.8,9.73-4.2,15.57-4.2c7.07,0,13.03,1.88,17.89,5.63c4.85,3.75,8.07,8.95,9.64,15.6H608.53z"/>
+        <path fill="#0D2C54" d="M647.83,418.87v13.1h19.27v12.18h-19.27v14.21h21.8v12.64h-36.19v-64.78h36.19v12.64H647.83z"/>
+      </g>
+    </g>
+  </svg>
+);
+
+// Challenges by focus area
+const challengesByFocus: Record<string, string[]> = {
+  'Board Engagement': [
+    "Reach out to one board member this week — coffee, not agenda. Just ask: \"What made you say yes to joining us?\"",
+    "Text your board chair just to say thanks. No ask attached.",
+    "Ask a board member: \"What's the one thing we could do better?\"",
+    "Invite a board member to see your program in action this month.",
+    "Send a 2-minute voice memo update to your board instead of an email.",
+  ],
+  'Staff Leadership': [
+    "Recognize one staff member today — in the way that matters to THEM. Not everyone wants public praise.",
+    "Take 10 minutes to walk around. No laptop. Just listen.",
+    "Send a handwritten note to someone who's been grinding quietly.",
+    "Ask a team member: \"What's getting in your way that I could help remove?\"",
+    "Have lunch with someone you don't usually talk to.",
+  ],
+  'Fundraising': [
+    "Call one donor today just to say thank you. No ask. No agenda. Just gratitude.",
+    "Review your top 10 donors. When did you last talk to them personally?",
+    "Write a thank you note by hand to a donor who gave this month.",
+    "Share one impact story with a donor — no ask, just connection.",
+    "Text a board member asking who they could introduce you to.",
+  ],
+  'Strategic Planning': [
+    "Can you name your top 3 strategic priorities without looking? If not, neither can your team.",
+    "Ask a frontline staff member: \"What's the one thing getting in your way?\"",
+    "Open your strategic plan. When did you last look at it?",
+    "Share one strategic win with your team this week.",
+    "Block 30 minutes to think about what's NOT working.",
+  ],
+  'Self-Care': [
+    "Block 30 minutes on your calendar this week that's just for you. Protect it like a board meeting.",
+    "Leave on time today. The work will still be there tomorrow.",
+    "Take a real lunch break — away from your desk.",
+    "Say no to one thing today that doesn't align with your priorities.",
+    "Call someone who energizes you. Not about work.",
+  ],
+};
+
+// Quotes library
+const quotes = [
+  { text: "The best time to plant a tree was 20 years ago. The second best time is now.", author: "Chinese Proverb" },
+  { text: "Culture eats strategy for breakfast.", author: "Peter Drucker" },
+  { text: "People don't care how much you know until they know how much you care.", author: "Theodore Roosevelt" },
+  { text: "Give me six hours to chop down a tree and I will spend the first four sharpening the axe.", author: "Abraham Lincoln" },
+  { text: "The main thing is to keep the main thing the main thing.", author: "Stephen Covey" },
+  { text: "If you want to go fast, go alone. If you want to go far, go together.", author: "African Proverb" },
+  { text: "What got you here won't get you there.", author: "Marshall Goldsmith" },
+  { text: "However beautiful the strategy, you should occasionally look at the results.", author: "Winston Churchill" },
+  { text: "You can't read the label from inside the jar.", author: "Unknown" },
+  { text: "Leadership is not about being in charge. It's about taking care of those in your charge.", author: "Simon Sinek" },
+];
+
+// Focus tag colors
+const focusTagStyles: Record<string, { background: string; color: string }> = {
+  'Board Engagement': { background: '#0D2C54', color: 'white' },
+  'Staff Leadership': { background: '#6366f1', color: 'white' },
+  'Fundraising': { background: '#f59e0b', color: 'white' },
+  'Strategic Planning': { background: '#10b981', color: 'white' },
+  'Self-Care': { background: '#ec4899', color: 'white' },
+};
+
+// Tool images
 const toolImages = {
   boardAssessment: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop',
   strategicPlan: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&h=300&fit=crop',
@@ -15,35 +105,12 @@ const toolImages = {
   dashboards: 'https://images.unsplash.com/photo-1568992687947-868a62a9f521?w=400&h=300&fit=crop',
 };
 
-interface CommitmentOption {
-  icon: React.ElementType;
-  text: string;
-}
-
-interface ChatMessage {
-  role: 'user' | 'assistant';
-  content: string;
-}
-
 const DashboardV2: React.FC = () => {
-  const [isProfessorOpen, setIsProfessorOpen] = useState(false);
-  const [isCommitmentOpen, setIsCommitmentOpen] = useState(false);
-  const [selectedCommitment, setSelectedCommitment] = useState<string | null>(null);
-  const [customCommitment, setCustomCommitment] = useState('');
-  const [showCustomInput, setShowCustomInput] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [greetingLoaded, setGreetingLoaded] = useState(false);
-  const [chatInput, setChatInput] = useState('');
   const [userName, setUserName] = useState('there');
-  
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Auto-scroll to bottom on new messages
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages, isLoading]);
+  const [focusArea, setFocusArea] = useState('Board Engagement');
+  const [currentChallenge, setCurrentChallenge] = useState(0);
+  const [isCommitted, setIsCommitted] = useState(false);
+  const [dailyQuote, setDailyQuote] = useState(quotes[0]);
 
   // Fetch user info on mount
   useEffect(() => {
@@ -52,57 +119,24 @@ const DashboardV2: React.FC = () => {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('full_name, first_name')
+          .select('full_name, first_name, focus_area')
           .eq('id', user.id)
           .single();
         if (profile) {
           setUserName(profile.full_name || profile.first_name || 'there');
+          if (profile.focus_area) {
+            setFocusArea(profile.focus_area);
+          }
         }
       }
     };
     fetchUser();
+
+    // Set daily quote based on date
+    const today = new Date();
+    const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
+    setDailyQuote(quotes[dayOfYear % quotes.length]);
   }, []);
-
-  // Fetch greeting from API when panel opens
-  useEffect(() => {
-    const fetchGreeting = async () => {
-      if (isProfessorOpen && !greetingLoaded && chatMessages.length === 0) {
-        setIsLoading(true);
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          
-          const response = await fetch('/api/ask-professor', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              messages: [{ role: 'user', content: '[GREETING]' }],
-              accessToken: session?.access_token,
-            })
-          });
-          const data = await response.json();
-          if (data.response) {
-            setChatMessages([{ role: 'assistant', content: data.response }]);
-          } else {
-            setChatMessages([{ role: 'assistant', content: `Hey ${userName}! What's on your mind today?` }]);
-          }
-        } catch (error) {
-          console.error('Greeting error:', error);
-          setChatMessages([{ role: 'assistant', content: `Hey ${userName}! What's on your mind today?` }]);
-        } finally {
-          setIsLoading(false);
-          setGreetingLoaded(true);
-        }
-      }
-    };
-    fetchGreeting();
-  }, [isProfessorOpen, greetingLoaded, chatMessages.length, userName]);
-
-  const commitmentOptions: CommitmentOption[] = [
-    { icon: Calendar, text: "Schedule this conversation this week" },
-    { icon: Users, text: "Discuss at next board meeting" },
-    { icon: Clock, text: "Block 30 minutes to reflect on this" },
-    { icon: Target, text: "Add to my quarterly goals" },
-  ];
 
   const tools = [
     { name: 'Board Assessment', image: toolImages.boardAssessment, route: '/tools/board-assessment' },
@@ -113,79 +147,23 @@ const DashboardV2: React.FC = () => {
     { name: 'Dashboards', image: toolImages.dashboards, route: '/tools/dashboards' },
   ];
 
-  const handleSendMessage = async () => {
-    if (!chatInput.trim() || isLoading) return;
-    
-    const userMessage = chatInput;
-    setChatMessages(prev => [...prev, { role: 'user', content: userMessage }]);
-    setChatInput('');
-    setIsLoading(true);
-    
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      const messagesForAPI = chatMessages
-        .filter(msg => msg.content !== '[GREETING]')
-        .map(msg => ({ role: msg.role, content: msg.content }));
-      messagesForAPI.push({ role: 'user', content: userMessage });
+  const challenges = challengesByFocus[focusArea] || challengesByFocus['Board Engagement'];
+  const tagStyle = focusTagStyles[focusArea] || focusTagStyles['Board Engagement'];
+  const shortFocus = focusArea.split(' ')[0]; // "Board", "Staff", etc.
 
-      const response = await fetch('/api/ask-professor', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: messagesForAPI,
-          accessToken: session?.access_token,
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to get response');
-      }
-
-      const data = await response.json();
-      
-      setChatMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: data.response 
-      }]);
-
-    } catch (error) {
-      console.error('Error sending message:', error);
-      setChatMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: "I'm having trouble connecting right now. Please try again in a moment." 
-      }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCommitmentSelect = (commitment: string) => {
-    setSelectedCommitment(commitment);
-    setIsCommitmentOpen(false);
-    setShowCustomInput(false);
+  const handleRefreshChallenge = () => {
+    setCurrentChallenge((prev) => (prev + 1) % challenges.length);
+    setIsCommitted(false);
   };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-  };
-
-  const startNewConversation = () => {
-    setChatMessages([]);
-    setGreetingLoaded(false);
-  };
-
-  const closeProfessor = () => {
-    setIsProfessorOpen(false);
+    window.location.href = '/';
   };
 
   // Get time-based greeting
-  const getTimeGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
-  };
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
   return (
     <div style={{ 
@@ -194,7 +172,7 @@ const DashboardV2: React.FC = () => {
       fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
       display: 'flex',
     }}>
-      {/* Left Sidebar - Always visible */}
+      {/* Left Sidebar */}
       <aside style={{
         width: '280px',
         background: 'white',
@@ -206,12 +184,11 @@ const DashboardV2: React.FC = () => {
         top: 0,
         left: 0,
         height: '100vh',
-        overflowY: 'auto',
-        zIndex: 100
+        overflowY: 'auto'
       }}>
-        {/* Logo */}
+        {/* Logo - DOUBLED */}
         <div style={{ marginBottom: '32px' }}>
-          <img src="/logo.svg" alt="The Nonprofit Edge" style={{ width: '160px', height: 'auto' }} />
+          <Logo width={220} />
         </div>
 
         {/* Quick Actions */}
@@ -226,33 +203,6 @@ const DashboardV2: React.FC = () => {
           }}>
             Quick Actions
           </div>
-          
-          {/* Dashboard Button - Shows when Professor is open */}
-          <button
-            onClick={closeProfessor}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '12px 14px',
-              borderRadius: '10px',
-              color: isProfessorOpen ? 'white' : '#475569',
-              background: isProfessorOpen ? '#0097A9' : 'transparent',
-              textDecoration: 'none',
-              fontSize: '14px',
-              fontWeight: 500,
-              marginBottom: '4px',
-              transition: 'all 0.15s ease',
-              border: 'none',
-              width: '100%',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
-          >
-            <LayoutDashboard size={20} />
-            Dashboard
-          </button>
-          
           <NavLink href="/member-resources" icon={FolderOpen}>Member Resources</NavLink>
           <NavLink href="/leadership-profile" icon={User}>My Leadership Profile</NavLink>
           <NavLink href="/constraint-report" icon={Target}>Our Constraint Report</NavLink>
@@ -371,603 +321,303 @@ const DashboardV2: React.FC = () => {
             background: 'none',
             border: 'none',
             cursor: 'pointer',
-            textAlign: 'left',
-            fontFamily: 'inherit',
+            textAlign: 'left'
           }}
         >
           Sign Out
         </button>
       </aside>
 
-      {/* Main Content Area */}
+      {/* Main Content */}
       <main style={{
         flex: 1,
         marginLeft: '280px',
-        minHeight: '100vh',
-        position: 'relative',
+        padding: '32px 40px',
       }}>
-        {/* Dashboard Content - Hidden when Professor is open */}
-        {!isProfessorOpen && (
-          <div style={{ padding: '32px 40px' }}>
-            <div style={{ maxWidth: '1000px' }}>
-              {/* Welcome */}
-              <div style={{ marginBottom: '28px' }}>
-                <h1 style={{ fontSize: '26px', fontWeight: 700, color: '#0D2C54', marginBottom: '6px' }}>
-                  {getTimeGreeting()}, {userName}
-                </h1>
-                <p style={{ color: '#64748b', fontSize: '15px' }}>
-                  You chose <strong style={{ color: '#0097A9', fontWeight: 600 }}>Board Engagement</strong> as your focus area
-                  <button style={{
-                    marginLeft: '12px',
-                    fontSize: '13px',
-                    color: '#94a3b8',
-                    textDecoration: 'underline',
-                    textUnderlineOffset: '2px',
-                    cursor: 'pointer',
-                    background: 'none',
-                    border: 'none',
-                    fontFamily: 'inherit',
-                  }}>
-                    Change focus
-                  </button>
-                </p>
-              </div>
-
-              {/* Top Cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '32px', alignItems: 'stretch' }}>
-                {/* Today's Insight Card */}
-                <div style={{
-                  background: 'linear-gradient(135deg, #0097A9 0%, #00b4cc 100%)',
-                  borderRadius: '16px',
-                  padding: '28px',
-                  color: 'white',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  height: '100%'
-                }}>
-                  <div style={{
-                    fontSize: '11px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '1.5px',
-                    opacity: 0.85,
-                    marginBottom: '16px',
-                    fontWeight: 600,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}>
-                    <Lightbulb size={14} />
-                    Today's Insight
-                  </div>
-                  <p style={{ fontSize: '16px', lineHeight: 1.65, flex: 1, marginBottom: '24px' }}>
-                    The most effective boards don't just govern—they champion. When was the last time you asked your board members what excites them about your mission?
-                  </p>
-
-                  {/* Commitment Dropdown */}
-                  <div style={{ position: 'relative', marginTop: 'auto' }}>
-                    {!selectedCommitment ? (
-                      <button
-                        onClick={() => setIsCommitmentOpen(!isCommitmentOpen)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          gap: '8px',
-                          background: 'rgba(255,255,255,0.2)',
-                          border: '1px solid rgba(255,255,255,0.3)',
-                          borderRadius: '10px',
-                          padding: '12px 18px',
-                          color: 'white',
-                          cursor: 'pointer',
-                          fontSize: '14px',
-                          fontWeight: 500,
-                          width: '100%',
-                          fontFamily: 'inherit'
-                        }}
-                      >
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Target size={16} />
-                          Make a Commitment
-                        </span>
-                        <ChevronDown size={16} style={{ transform: isCommitmentOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s ease' }} />
-                      </button>
-                    ) : (
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        background: 'rgba(255,255,255,0.2)',
-                        border: '1px solid rgba(255,255,255,0.3)',
-                        borderRadius: '10px',
-                        padding: '12px 18px'
-                      }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
-                          <Check size={16} style={{ color: '#4ade80' }} />
-                          {selectedCommitment}
-                        </span>
-                        <button
-                          onClick={() => setSelectedCommitment(null)}
-                          style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', padding: '4px' }}
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Dropdown Menu */}
-                    {isCommitmentOpen && (
-                      <div style={{
-                        position: 'absolute',
-                        top: 'calc(100% + 8px)',
-                        left: 0,
-                        right: 0,
-                        background: 'white',
-                        borderRadius: '12px',
-                        boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
-                        overflow: 'hidden',
-                        zIndex: 100
-                      }}>
-                        {commitmentOptions.map((option, index) => (
-                          <button
-                            key={index}
-                            onClick={() => handleCommitmentSelect(option.text)}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '12px',
-                              width: '100%',
-                              padding: '14px 18px',
-                              border: 'none',
-                              background: 'none',
-                              cursor: 'pointer',
-                              fontSize: '14px',
-                              color: '#0D2C54',
-                              textAlign: 'left',
-                              fontFamily: 'inherit',
-                              borderBottom: index < commitmentOptions.length - 1 ? '1px solid #f1f5f9' : 'none'
-                            }}
-                            onMouseEnter={(e) => (e.currentTarget.style.background = '#f8f9fa')}
-                            onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
-                          >
-                            <option.icon size={16} style={{ color: '#0097A9' }} />
-                            {option.text}
-                          </button>
-                        ))}
-                        
-                        {!showCustomInput ? (
-                          <button
-                            onClick={() => setShowCustomInput(true)}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '12px',
-                              width: '100%',
-                              padding: '14px 18px',
-                              border: 'none',
-                              background: '#f8f9fa',
-                              cursor: 'pointer',
-                              fontSize: '14px',
-                              color: '#64748b',
-                              textAlign: 'left',
-                              fontFamily: 'inherit',
-                              fontStyle: 'italic'
-                            }}
-                          >
-                            <PenLine size={16} />
-                            Write my own commitment...
-                          </button>
-                        ) : (
-                          <div style={{ padding: '12px 18px', background: '#f8f9fa' }}>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                              <input
-                                type="text"
-                                placeholder="I will..."
-                                value={customCommitment}
-                                onChange={(e) => setCustomCommitment(e.target.value)}
-                                style={{
-                                  flex: 1,
-                                  padding: '10px 14px',
-                                  border: '1px solid #e2e8f0',
-                                  borderRadius: '8px',
-                                  fontSize: '14px',
-                                  outline: 'none',
-                                  fontFamily: 'inherit'
-                                }}
-                                autoFocus
-                              />
-                              <button
-                                onClick={() => {
-                                  if (customCommitment.trim()) {
-                                    handleCommitmentSelect(customCommitment);
-                                    setCustomCommitment('');
-                                  }
-                                }}
-                                style={{
-                                  background: '#0097A9',
-                                  color: 'white',
-                                  border: 'none',
-                                  borderRadius: '8px',
-                                  padding: '10px 14px',
-                                  cursor: 'pointer',
-                                  fontSize: '14px',
-                                  fontWeight: 500,
-                                  fontFamily: 'inherit',
-                                }}
-                              >
-                                Save
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Ask the Professor Card */}
-                <div
-                  onClick={() => setIsProfessorOpen(true)}
-                  style={{
-                    background: 'linear-gradient(135deg, #0D2C54 0%, #1a4175 100%)',
-                    borderRadius: '16px',
-                    padding: '28px',
-                    color: 'white',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    height: '100%'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 12px 32px rgba(13,44,84,0.3)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                >
-                  <div style={{
-                    fontSize: '11px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '1.5px',
-                    opacity: 0.85,
-                    marginBottom: '16px',
-                    fontWeight: 600,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}>
-                    <MessageCircle size={14} style={{ color: '#0097A9' }} />
-                    Ask the Professor
-                  </div>
-                  <p style={{ fontSize: '16px', lineHeight: 1.65, flex: 1, marginBottom: '24px' }}>
-                    Your personal nonprofit leadership advisor, available 24/7. Get strategic guidance tailored to your challenges.
-                  </p>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '8px',
-                    background: 'rgba(255,255,255,0.2)',
-                    border: '1px solid rgba(255,255,255,0.3)',
-                    borderRadius: '10px',
-                    padding: '12px 18px',
-                    color: 'white',
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    marginTop: 'auto'
-                  }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <MessageCircle size={16} />
-                      Ask me anything
-                    </span>
-                    <ArrowRight size={16} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Tools Section */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0D2C54' }}>Your Tools</h2>
-                <a href="/tools" style={{
-                  fontSize: '14px',
-                  color: '#0097A9',
-                  textDecoration: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  fontWeight: 500
-                }}>
-                  View All <ChevronRight size={16} />
-                </a>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
-                {tools.map((tool, index) => (
-                  <ToolCard key={index} name={tool.name} image={tool.image} route={tool.route} />
-                ))}
-              </div>
-            </div>
+        <div style={{ maxWidth: '1000px' }}>
+          {/* Welcome */}
+          <div style={{ marginBottom: '28px' }}>
+            <h1 style={{ fontSize: '26px', fontWeight: 700, color: '#0D2C54', marginBottom: '6px' }}>
+              {greeting}, {userName}
+            </h1>
+            <p style={{ color: '#64748b', fontSize: '15px' }}>
+              You chose <strong style={{ color: '#0097A9', fontWeight: 600 }}>{focusArea}</strong> as your focus area
+              <button style={{
+                marginLeft: '12px',
+                fontSize: '13px',
+                color: '#94a3b8',
+                textDecoration: 'underline',
+                textUnderlineOffset: '2px',
+                cursor: 'pointer',
+                background: 'none',
+                border: 'none'
+              }}>
+                Change focus
+              </button>
+            </p>
           </div>
-        )}
 
-        {/* Ask the Professor Full Overlay - Covers entire main area */}
-        {isProfessorOpen && (
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: '#f8fafc',
-            display: 'flex',
-            flexDirection: 'column',
-            minHeight: '100vh',
-            animation: 'fadeScaleIn 350ms ease-out forwards',
-          }}>
-            {/* Professor Header */}
-            <header style={{
-              background: 'linear-gradient(135deg, #0D2C54 0%, #1a4175 100%)',
-              padding: '16px 32px',
+          {/* Top Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px', alignItems: 'stretch' }}>
+            {/* Today's Challenge Card */}
+            <div style={{
+              background: 'linear-gradient(135deg, #0097A9 0%, #00b4cc 100%)',
+              borderRadius: '16px',
+              padding: '28px',
+              color: 'white',
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
+              flexDirection: 'column',
+              height: '100%',
+              position: 'relative',
+              overflow: 'hidden'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {/* Background circle decoration */}
+              <div style={{
+                position: 'absolute',
+                top: '-50px',
+                right: '-50px',
+                width: '150px',
+                height: '150px',
+                background: 'rgba(255,255,255,0.1)',
+                borderRadius: '50%',
+              }} />
+
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '16px',
+              }}>
                 <div style={{
-                  width: '44px',
-                  height: '44px',
-                  borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.15)',
+                  fontSize: '11px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1.5px',
+                  opacity: 0.9,
+                  fontWeight: 600,
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '24px',
+                  gap: '8px'
                 }}>
-                  🎓
+                  <Lightbulb size={14} />
+                  Today's Challenge
                 </div>
-                <div>
-                  <h2 style={{ color: 'white', fontSize: '20px', fontWeight: 700, margin: 0 }}>
-                    Ask the Professor
-                  </h2>
-                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', margin: 0 }}>
-                    Available 24/7
-                  </p>
-                </div>
+                <span style={{
+                  display: 'inline-block',
+                  padding: '4px 12px',
+                  borderRadius: '12px',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  background: tagStyle.background,
+                  color: tagStyle.color,
+                }}>
+                  {shortFocus}
+                </span>
               </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
+
+              <p style={{ fontSize: '18px', lineHeight: 1.6, fontWeight: 500, flex: 1, marginBottom: '20px' }}>
+                {challenges[currentChallenge]}
+              </p>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <button
-                  onClick={startNewConversation}
+                  onClick={() => setIsCommitted(!isCommitted)}
                   style={{
-                    background: 'rgba(255,255,255,0.15)',
-                    color: 'white',
-                    border: '1px solid rgba(255,255,255,0.3)',
-                    padding: '10px 20px',
-                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    background: isCommitted ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.2)',
+                    border: isCommitted ? 'none' : '1px solid rgba(255,255,255,0.3)',
+                    borderRadius: '10px',
+                    padding: '12px 20px',
+                    color: isCommitted ? '#0097A9' : 'white',
+                    cursor: 'pointer',
                     fontSize: '14px',
                     fontWeight: 500,
-                    cursor: 'pointer',
                     fontFamily: 'inherit',
+                    transition: 'all 0.2s',
+                    flex: 1,
                   }}
                 >
-                  New Conversation
+                  <span style={{
+                    width: '22px',
+                    height: '22px',
+                    border: isCommitted ? 'none' : '2px solid rgba(255,255,255,0.5)',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: isCommitted ? '#0097A9' : 'transparent',
+                    transition: 'all 0.2s',
+                  }}>
+                    {isCommitted && (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                        <path d="M20 6L9 17l-5-5" />
+                      </svg>
+                    )}
+                  </span>
+                  {isCommitted ? "I'm committed!" : "I'll do this"}
                 </button>
                 <button
-                  onClick={closeProfessor}
+                  onClick={handleRefreshChallenge}
                   style={{
                     background: 'rgba(255,255,255,0.15)',
-                    color: 'white',
                     border: 'none',
-                    width: '40px',
-                    height: '40px',
                     borderRadius: '8px',
-                    fontSize: '20px',
+                    padding: '12px',
+                    color: 'white',
                     cursor: 'pointer',
+                    transition: 'all 0.2s',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
+                  title="Show another challenge"
                 >
-                  <X size={20} />
+                  <RefreshCw size={18} />
                 </button>
               </div>
-            </header>
-
-            {/* Chat Area */}
-            <div style={{
-              flex: 1,
-              overflowY: 'auto',
-              padding: '32px',
-              display: 'flex',
-              justifyContent: 'center',
-            }}>
-              <div style={{ width: '100%', maxWidth: '800px' }}>
-                {chatMessages.map((message, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      display: 'flex',
-                      justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
-                      marginBottom: '20px',
-                    }}
-                  >
-                    <div style={{
-                      maxWidth: '75%',
-                      padding: '16px 20px',
-                      borderRadius: message.role === 'user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
-                      background: message.role === 'user' 
-                        ? 'linear-gradient(135deg, #0D2C54 0%, #1a4175 100%)' 
-                        : 'white',
-                      color: message.role === 'user' ? 'white' : '#0D2C54',
-                      boxShadow: message.role === 'assistant' ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
-                      fontSize: '15px',
-                      lineHeight: 1.7,
-                    }}>
-                      {message.role === 'assistant' && (
-                        <div style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: '8px',
-                          marginBottom: '10px',
-                          color: '#0097A9',
-                          fontWeight: 600,
-                          fontSize: '13px'
-                        }}>
-                          🎓 The Professor
-                        </div>
-                      )}
-                      <div style={{ whiteSpace: 'pre-wrap' }}>{message.content}</div>
-                    </div>
-                  </div>
-                ))}
-
-                {/* Loading */}
-                {isLoading && (
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'flex-start',
-                    marginBottom: '20px',
-                  }}>
-                    <div style={{
-                      background: 'white',
-                      padding: '16px 20px',
-                      borderRadius: '20px 20px 20px 4px',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                    }}>
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '8px',
-                        marginBottom: '10px',
-                        color: '#0097A9',
-                        fontWeight: 600,
-                        fontSize: '13px'
-                      }}>
-                        🎓 The Professor
-                      </div>
-                      <div style={{ display: 'flex', gap: '6px' }}>
-                        <div style={{
-                          width: '10px',
-                          height: '10px',
-                          background: '#0097A9',
-                          borderRadius: '50%',
-                          animation: 'bounce 1s infinite',
-                        }} />
-                        <div style={{
-                          width: '10px',
-                          height: '10px',
-                          background: '#0097A9',
-                          borderRadius: '50%',
-                          animation: 'bounce 1s infinite',
-                          animationDelay: '150ms',
-                        }} />
-                        <div style={{
-                          width: '10px',
-                          height: '10px',
-                          background: '#0097A9',
-                          borderRadius: '50%',
-                          animation: 'bounce 1s infinite',
-                          animationDelay: '300ms',
-                        }} />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div ref={messagesEndRef} />
-              </div>
             </div>
 
-            {/* Input Area */}
-            <div style={{
-              borderTop: '1px solid #e2e8f0',
-              background: 'white',
-              padding: '20px 32px',
-            }}>
-              <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <input
-                    type="text"
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendMessage();
-                      }
-                    }}
-                    placeholder="Ask about board engagement, strategic planning, fundraising, leadership..."
-                    disabled={isLoading}
-                    style={{
-                      flex: 1,
-                      padding: '14px 20px',
-                      border: '2px solid #e2e8f0',
-                      borderRadius: '12px',
-                      fontSize: '15px',
-                      fontFamily: 'inherit',
-                      outline: 'none',
-                      transition: 'border-color 0.2s',
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = '#0097A9'}
-                    onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-                  />
-                  <button
-                    onClick={handleSendMessage}
-                    disabled={!chatInput.trim() || isLoading}
-                    style={{
-                      background: !chatInput.trim() || isLoading 
-                        ? '#94a3b8' 
-                        : 'linear-gradient(135deg, #0097A9 0%, #00b4cc 100%)',
-                      color: 'white',
-                      border: 'none',
-                      padding: '14px 28px',
-                      borderRadius: '12px',
-                      fontSize: '15px',
-                      fontWeight: 600,
-                      cursor: !chatInput.trim() || isLoading ? 'not-allowed' : 'pointer',
-                      fontFamily: 'inherit',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                    }}
-                  >
-                    Send
-                    <Send size={16} />
-                  </button>
-                </div>
-                <p style={{
-                  color: '#94a3b8',
-                  fontSize: '12px',
-                  textAlign: 'center',
-                  marginTop: '12px',
-                  marginBottom: 0,
-                }}>
-                  AI can make mistakes. Please double-check important information.
-                </p>
+            {/* Ask the Professor Card */}
+            <a
+              href="/ask-professor"
+              style={{
+                background: 'linear-gradient(135deg, #0D2C54 0%, #1a4175 100%)',
+                borderRadius: '16px',
+                padding: '28px',
+                color: 'white',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%',
+                textDecoration: 'none',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 12px 32px rgba(13,44,84,0.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              <div style={{
+                fontSize: '11px',
+                textTransform: 'uppercase',
+                letterSpacing: '1.5px',
+                opacity: 0.85,
+                marginBottom: '16px',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <MessageCircle size={14} style={{ color: '#0097A9' }} />
+                Ask the Professor
               </div>
+              <p style={{ fontSize: '16px', lineHeight: 1.65, flex: 1, marginBottom: '24px' }}>
+                Your personal nonprofit leadership advisor, available 24/7. Get strategic guidance tailored to your challenges.
+              </p>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '8px',
+                background: 'rgba(255,255,255,0.2)',
+                border: '1px solid rgba(255,255,255,0.3)',
+                borderRadius: '10px',
+                padding: '12px 18px',
+                color: 'white',
+                fontSize: '14px',
+                fontWeight: 500,
+                marginTop: 'auto'
+              }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <MessageCircle size={16} />
+                  Ask me anything
+                </span>
+                <ArrowRight size={16} />
+              </div>
+            </a>
+          </div>
+
+          {/* Quote of the Day */}
+          <div style={{
+            background: 'white',
+            borderRadius: '16px',
+            padding: '32px 40px',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+            border: '1px solid #e2e8f0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '40px',
+            marginBottom: '32px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', flex: 1 }}>
+              <span style={{
+                fontSize: '48px',
+                color: '#0097A9',
+                opacity: 0.3,
+                fontFamily: "'Playfair Display', Georgia, serif",
+                lineHeight: 1,
+                marginTop: '-8px',
+              }}>"</span>
+              <p style={{
+                fontFamily: "'Playfair Display', Georgia, serif",
+                fontSize: '22px',
+                fontStyle: 'italic',
+                color: '#0D2C54',
+                lineHeight: 1.5,
+                fontWeight: 400,
+              }}>
+                {dailyQuote.text}
+              </p>
+            </div>
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <p style={{ color: '#0D2C54', fontSize: '14px', fontWeight: 600, marginBottom: '4px' }}>
+                {dailyQuote.author}
+              </p>
+              <span style={{
+                fontSize: '10px',
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+                color: '#94a3b8',
+              }}>
+                Quote of the Day
+              </span>
             </div>
           </div>
-        )}
+
+          {/* Tools Section */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0D2C54' }}>Your Tools</h2>
+            <a href="/tools" style={{
+              fontSize: '14px',
+              color: '#0097A9',
+              textDecoration: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontWeight: 500
+            }}>
+              View All <ChevronRight size={16} />
+            </a>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+            {tools.map((tool, index) => (
+              <ToolCard key={index} name={tool.name} image={tool.image} route={tool.route} />
+            ))}
+          </div>
+        </div>
       </main>
 
-      {/* CSS for animations */}
-      <style>{`
-        @keyframes bounce {
-          0%, 60%, 100% { transform: translateY(0); }
-          30% { transform: translateY(-8px); }
-        }
-        @keyframes fadeScaleIn {
-          0% {
-            opacity: 0;
-            transform: scale(0.97);
-          }
-          100% {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-      `}</style>
+      {/* Google Font for quotes */}
+      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet" />
     </div>
   );
 };
