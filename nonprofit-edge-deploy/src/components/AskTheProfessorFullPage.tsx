@@ -1,13 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { 
+  FolderOpen, User, Target, Settings, MessageCircle,
+  RefreshCw, ArrowLeft, X
+} from 'lucide-react';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
 }
 
-// Logo component - doubled in size
-const Logo = ({ width = 320 }: { width?: number }) => (
+// Logo component - matching DashboardV2
+const Logo = ({ width = 220 }: { width?: number }) => (
   <svg width={width} height={width * 0.4} viewBox="250 270 500 220">
     <g>
       <path fill="#0D2C54" d="M438.46,469.14c-18.16,14.03-40.93,22.38-65.64,22.38c-30.79,0-58.55-12.94-78.16-33.69c2.85,0.46,5.7,0.81,8.57,1.06c9.13,0.79,17.9,0.49,26.26-0.63c12.72,7.44,27.53,11.71,43.33,11.71c17.17,0,33.17-5.03,46.59-13.71C422.94,460.11,428.93,465.14,438.46,469.14z"/>
@@ -38,7 +42,6 @@ const AskTheProfessorFullPage: React.FC = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [userName, setUserName] = useState('there');
-  const [isClosing, setIsClosing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom on new messages
@@ -147,132 +150,204 @@ const AskTheProfessorFullPage: React.FC = () => {
     generateGreeting();
   };
 
-  const handleClose = () => {
-    setIsClosing(true);
-    setTimeout(() => {
-      window.location.href = '/dashboard';
-    }, 300);
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    window.location.href = '/';
   };
 
   return (
-    <div 
-      style={{
-        minHeight: '100vh',
-        background: '#f8fafc',
-        fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+    <div style={{ 
+      minHeight: '100vh', 
+      backgroundColor: '#f8fafc',
+      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+      display: 'flex',
+    }}>
+      {/* Left Sidebar - Same as Dashboard */}
+      <aside style={{
+        width: '280px',
+        background: 'white',
+        borderRight: '1px solid #e2e8f0',
+        padding: '24px',
         display: 'flex',
         flexDirection: 'column',
-        animation: isClosing ? 'slideOut 0.3s ease forwards' : 'slideIn 0.3s ease',
-      }}
-    >
-      {/* Header */}
-      <header style={{
-        background: 'linear-gradient(135deg, #0D2C54 0%, #1a4175 100%)',
-        padding: '20px 32px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        height: '100vh',
+        overflowY: 'auto'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-          <Logo width={180} />
+        {/* Logo */}
+        <div style={{ marginBottom: '32px' }}>
+          <Logo width={220} />
+        </div>
+
+        {/* Quick Actions */}
+        <nav style={{ marginBottom: '24px' }}>
           <div style={{
-            width: '1px',
-            height: '40px',
-            background: 'rgba(255,255,255,0.2)',
-          }} />
+            fontSize: '11px',
+            textTransform: 'uppercase',
+            letterSpacing: '1.2px',
+            color: '#94a3b8',
+            marginBottom: '12px',
+            fontWeight: 600
+          }}>
+            Quick Actions
+          </div>
+          <NavLink href="/dashboard" icon={ArrowLeft} active>Back to Dashboard</NavLink>
+          <NavLink href="/member-resources" icon={FolderOpen}>Member Resources</NavLink>
+          <NavLink href="/leadership-profile" icon={User}>My Leadership Profile</NavLink>
+          <NavLink href="/constraint-report" icon={Target}>Our Constraint Report</NavLink>
+        </nav>
+
+        {/* Current Session */}
+        <div style={{
+          marginBottom: '20px',
+          padding: '16px',
+          background: 'linear-gradient(135deg, #0097A9 0%, #00b4cc 100%)',
+          borderRadius: '10px',
+          color: 'white'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <MessageCircle size={16} />
+            <span style={{ fontSize: '13px', fontWeight: 600 }}>Ask the Professor</span>
+          </div>
+          <p style={{ fontSize: '12px', opacity: 0.9, margin: 0 }}>
+            Your 24/7 nonprofit leadership advisor
+          </p>
+        </div>
+
+        {/* Settings */}
+        <div style={{ marginBottom: '16px' }}>
+          <NavLink href="/settings" icon={Settings}>Settings</NavLink>
+        </div>
+
+        {/* User Profile */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          padding: '16px 0',
+          borderTop: '1px solid #e2e8f0',
+          marginTop: 'auto'
+        }}>
+          <div style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '8px',
+            background: '#0097A9',
+            color: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 600,
+            fontSize: '14px'
+          }}>
+            {userName.charAt(0).toUpperCase()}
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>{userName}</div>
+            <div style={{ fontSize: '12px', color: '#94a3b8' }}>The Pivotal Group</div>
+          </div>
+        </div>
+        <button 
+          onClick={handleSignOut}
+          style={{
+            fontSize: '13px',
+            color: '#94a3b8',
+            textDecoration: 'none',
+            paddingLeft: '48px',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            textAlign: 'left'
+          }}
+        >
+          Sign Out
+        </button>
+      </aside>
+
+      {/* Main Content - Chat Area */}
+      <main style={{
+        flex: 1,
+        marginLeft: '280px',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        animation: 'fadeIn 0.3s ease-out',
+      }}>
+        {/* Chat Header */}
+        <header style={{
+          background: 'linear-gradient(135deg, #0D2C54 0%, #1a4175 100%)',
+          padding: '20px 32px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ fontSize: '40px' }}>🎓</span>
+            <span style={{ fontSize: '32px' }}>🎓</span>
             <div>
-              <h1 style={{ color: 'white', fontSize: '22px', fontWeight: 700, margin: 0 }}>
+              <h1 style={{ color: 'white', fontSize: '20px', fontWeight: 700, margin: 0 }}>
                 Ask the Professor
               </h1>
-              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', margin: 0 }}>
-                Your 24/7 nonprofit leadership advisor
+              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', margin: 0 }}>
+                Your personal nonprofit leadership advisor
               </p>
             </div>
           </div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button
-            onClick={startNewConversation}
-            style={{
-              background: 'rgba(255,255,255,0.15)',
-              color: 'white',
-              border: '1px solid rgba(255,255,255,0.3)',
-              padding: '10px 20px',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: 500,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              transition: 'all 0.2s',
-            }}
-          >
-            New Chat
-          </button>
-          <button
-            onClick={handleClose}
-            style={{
-              background: 'rgba(255,255,255,0.15)',
-              color: 'white',
-              border: '1px solid rgba(255,255,255,0.3)',
-              padding: '10px 20px',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: 500,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              transition: 'all 0.2s',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-            Dashboard
-          </button>
-          <button
-            onClick={handleClose}
-            style={{
-              background: 'rgba(255,255,255,0.15)',
-              color: 'white',
-              border: 'none',
-              width: '40px',
-              height: '40px',
-              borderRadius: '8px',
-              fontSize: '20px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s',
-            }}
-            title="Close"
-          >
-            ✕
-          </button>
-        </div>
-      </header>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button
+              onClick={startNewConversation}
+              style={{
+                background: 'rgba(255,255,255,0.15)',
+                color: 'white',
+                border: '1px solid rgba(255,255,255,0.3)',
+                padding: '10px 20px',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: 500,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <RefreshCw size={16} />
+              New Chat
+            </button>
+            <a
+              href="/dashboard"
+              style={{
+                background: 'rgba(255,255,255,0.15)',
+                color: 'white',
+                border: '1px solid rgba(255,255,255,0.3)',
+                width: '40px',
+                height: '40px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s',
+                textDecoration: 'none',
+              }}
+              title="Close"
+            >
+              <X size={20} />
+            </a>
+          </div>
+        </header>
 
-      {/* Chat Container */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        justifyContent: 'center',
-        padding: '32px',
-        overflowY: 'auto',
-      }}>
+        {/* Chat Messages */}
         <div style={{
-          width: '100%',
-          maxWidth: '900px',
+          flex: 1,
+          overflowY: 'auto',
+          padding: '32px',
           display: 'flex',
-          flexDirection: 'column',
+          justifyContent: 'center',
         }}>
-          {/* Messages */}
-          <div style={{ flex: 1, marginBottom: '24px' }}>
+          <div style={{ width: '100%', maxWidth: '800px' }}>
             {messages.map((message, index) => (
               <div
                 key={index}
@@ -283,7 +358,7 @@ const AskTheProfessorFullPage: React.FC = () => {
                 }}
               >
                 <div style={{
-                  maxWidth: '70%',
+                  maxWidth: '75%',
                   padding: '18px 24px',
                   borderRadius: message.role === 'user' ? '24px 24px 4px 24px' : '24px 24px 24px 4px',
                   background: message.role === 'user' 
@@ -337,29 +412,9 @@ const AskTheProfessorFullPage: React.FC = () => {
                     🎓 The Professor
                   </div>
                   <div style={{ display: 'flex', gap: '6px' }}>
-                    <div className="loading-dot" style={{
-                      width: '10px',
-                      height: '10px',
-                      background: '#0097A9',
-                      borderRadius: '50%',
-                      animation: 'bounce 1s infinite',
-                    }} />
-                    <div className="loading-dot" style={{
-                      width: '10px',
-                      height: '10px',
-                      background: '#0097A9',
-                      borderRadius: '50%',
-                      animation: 'bounce 1s infinite',
-                      animationDelay: '150ms',
-                    }} />
-                    <div className="loading-dot" style={{
-                      width: '10px',
-                      height: '10px',
-                      background: '#0097A9',
-                      borderRadius: '50%',
-                      animation: 'bounce 1s infinite',
-                      animationDelay: '300ms',
-                    }} />
+                    <div className="loading-dot" />
+                    <div className="loading-dot" style={{ animationDelay: '150ms' }} />
+                    <div className="loading-dot" style={{ animationDelay: '300ms' }} />
                   </div>
                 </div>
               </div>
@@ -368,77 +423,74 @@ const AskTheProfessorFullPage: React.FC = () => {
             <div ref={messagesEndRef} />
           </div>
         </div>
-      </div>
 
-      {/* Input Area - Fixed at bottom */}
-      <div style={{
-        borderTop: '1px solid #e2e8f0',
-        background: 'white',
-        padding: '20px 32px',
-      }}>
+        {/* Input Area */}
         <div style={{
-          maxWidth: '900px',
-          margin: '0 auto',
+          borderTop: '1px solid #e2e8f0',
+          background: 'white',
+          padding: '20px 32px',
         }}>
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Ask about board engagement, strategic planning, fundraising, leadership..."
-              disabled={isLoading}
-              style={{
-                flex: 1,
-                padding: '16px 24px',
-                border: '2px solid #e2e8f0',
-                borderRadius: '16px',
-                fontSize: '16px',
-                fontFamily: 'inherit',
-                outline: 'none',
-                transition: 'border-color 0.2s',
-              }}
-              onFocus={(e) => e.target.style.borderColor = '#0097A9'}
-              onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-            />
-            <button
-              onClick={sendMessage}
-              disabled={!input.trim() || isLoading}
-              style={{
-                background: !input.trim() || isLoading 
-                  ? '#94a3b8' 
-                  : 'linear-gradient(135deg, #0097A9 0%, #00b4cc 100%)',
-                color: 'white',
-                border: 'none',
-                padding: '16px 32px',
-                borderRadius: '16px',
-                fontSize: '16px',
-                fontWeight: 600,
-                cursor: !input.trim() || isLoading ? 'not-allowed' : 'pointer',
-                fontFamily: 'inherit',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                transition: 'transform 0.2s',
-              }}
-            >
-              Send
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
-              </svg>
-            </button>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Ask about board engagement, strategic planning, fundraising, leadership..."
+                disabled={isLoading}
+                style={{
+                  flex: 1,
+                  padding: '16px 24px',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '16px',
+                  fontSize: '16px',
+                  fontFamily: 'inherit',
+                  outline: 'none',
+                  transition: 'border-color 0.2s',
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#0097A9'}
+                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+              />
+              <button
+                onClick={sendMessage}
+                disabled={!input.trim() || isLoading}
+                style={{
+                  background: !input.trim() || isLoading 
+                    ? '#94a3b8' 
+                    : 'linear-gradient(135deg, #0097A9 0%, #00b4cc 100%)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '16px 32px',
+                  borderRadius: '16px',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  cursor: !input.trim() || isLoading ? 'not-allowed' : 'pointer',
+                  fontFamily: 'inherit',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'transform 0.2s',
+                }}
+              >
+                Send
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+                </svg>
+              </button>
+            </div>
+            <p style={{
+              color: '#94a3b8',
+              fontSize: '12px',
+              textAlign: 'center',
+              marginTop: '12px',
+              marginBottom: 0,
+            }}>
+              AI can make mistakes. Please double-check important information.
+            </p>
           </div>
-          <p style={{
-            color: '#94a3b8',
-            fontSize: '12px',
-            textAlign: 'center',
-            marginTop: '12px',
-            marginBottom: 0,
-          }}>
-            AI can make mistakes. Please double-check important information.
-          </p>
         </div>
-      </div>
+      </main>
 
       {/* Animations */}
       <style>{`
@@ -446,17 +498,47 @@ const AskTheProfessorFullPage: React.FC = () => {
           0%, 60%, 100% { transform: translateY(0); }
           30% { transform: translateY(-8px); }
         }
-        @keyframes slideIn {
-          from { transform: translateX(100%); opacity: 0; }
-          to { transform: translateX(0); opacity: 1; }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
-        @keyframes slideOut {
-          from { transform: translateX(0); opacity: 1; }
-          to { transform: translateX(100%); opacity: 0; }
+        .loading-dot {
+          width: 10px;
+          height: 10px;
+          background: #0097A9;
+          border-radius: 50%;
+          animation: bounce 1s infinite;
         }
       `}</style>
+
+      {/* Google Font */}
+      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet" />
     </div>
   );
 };
+
+// NavLink helper component
+const NavLink: React.FC<{ href: string; icon: React.ElementType; children: React.ReactNode; active?: boolean }> = ({ href, icon: Icon, children, active }) => (
+  <a
+    href={href}
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+      padding: '12px 14px',
+      borderRadius: '10px',
+      color: active ? '#0097A9' : '#475569',
+      textDecoration: 'none',
+      fontSize: '14px',
+      fontWeight: active ? 600 : 500,
+      marginBottom: '4px',
+      background: active ? '#f0fdfa' : 'transparent',
+      transition: 'all 0.15s ease'
+    }}
+  >
+    <Icon size={20} />
+    {children}
+  </a>
+);
 
 export default AskTheProfessorFullPage;
