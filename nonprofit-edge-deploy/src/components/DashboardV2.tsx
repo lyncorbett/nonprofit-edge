@@ -338,7 +338,7 @@ const DashboardV2: React.FC = () => {
           {/* Welcome */}
           <div style={{ marginBottom: '28px' }}>
             <h1 style={{ fontSize: '26px', fontWeight: 700, color: '#0D2C54', marginBottom: '6px' }}>
-              {greeting}, {userName}
+              {greeting}, {userName}.
             </h1>
             <p style={{ color: '#64748b', fontSize: '15px' }}>
               You chose <strong style={{ color: '#0097A9', fontWeight: 600 }}>{focusArea}</strong> as your focus area
