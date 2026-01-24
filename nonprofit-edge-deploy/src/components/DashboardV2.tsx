@@ -544,6 +544,28 @@ const DashboardV2: React.FC = () => {
             </a>
           </div>
 
+          {/* Tools Section */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0D2C54' }}>Your Tools</h2>
+            <a href="/tools" style={{
+              fontSize: '14px',
+              color: '#0097A9',
+              textDecoration: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontWeight: 500
+            }}>
+              View All <ChevronRight size={16} />
+            </a>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+            {tools.map((tool, index) => (
+              <ToolCard key={index} name={tool.name} image={tool.image} route={tool.route} />
+            ))}
+          </div>
+
           {/* Quote of the Day */}
           <div style={{
             background: 'white',
@@ -555,7 +577,7 @@ const DashboardV2: React.FC = () => {
             alignItems: 'center',
             justifyContent: 'space-between',
             gap: '40px',
-            marginBottom: '32px',
+            marginTop: '32px',
           }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', flex: 1 }}>
               <span style={{
@@ -590,28 +612,6 @@ const DashboardV2: React.FC = () => {
                 Quote of the Day
               </span>
             </div>
-          </div>
-
-          {/* Tools Section */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0D2C54' }}>Your Tools</h2>
-            <a href="/tools" style={{
-              fontSize: '14px',
-              color: '#0097A9',
-              textDecoration: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              fontWeight: 500
-            }}>
-              View All <ChevronRight size={16} />
-            </a>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
-            {tools.map((tool, index) => (
-              <ToolCard key={index} name={tool.name} image={tool.image} route={tool.route} />
-            ))}
           </div>
         </div>
       </main>
