@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { 
   FolderOpen, User, Target, Calendar, Users, Clock, PenLine, 
   ChevronDown, ChevronRight, Settings, MessageCircle, Lightbulb,
-  ArrowRight, X, Send, Check, Loader2
+  ArrowRight, X, Send, Check, Loader2, LayoutDashboard
 } from 'lucide-react';
 
-// Logo component inline to avoid import issues
+// Logo component - The Nonprofit Edge
 const Logo = ({ width = 180 }: { width?: number }) => (
   <svg width={width} height={width * 0.4} viewBox="250 270 500 220">
     <g>
@@ -33,7 +33,6 @@ const Logo = ({ width = 180 }: { width?: number }) => (
   </svg>
 );
 
-// Import images - replace with local hosted versions
 const toolImages = {
   boardAssessment: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop',
   strategicPlan: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&h=300&fit=crop',
@@ -61,12 +60,17 @@ const DashboardV2: React.FC = () => {
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
-  // FIXED: Start with empty messages - greeting comes from API
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [greetingLoaded, setGreetingLoaded] = useState(false);
-  
   const [chatInput, setChatInput] = useState('');
   const [userName, setUserName] = useState('there');
+  
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom on new messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages, isLoading]);
 
   // Fetch user info on mount
   useEffect(() => {
@@ -147,7 +151,6 @@ const DashboardV2: React.FC = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
-      // Build messages array for Claude (skip greeting marker)
       const messagesForAPI = chatMessages
         .filter(msg => msg.content !== '[GREETING]')
         .map(msg => ({ role: msg.role, content: msg.content }));
@@ -163,9 +166,7 @@ const DashboardV2: React.FC = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('API Error:', errorData);
-        throw new Error(errorData.error || 'Failed to get response');
+        throw new Error('Failed to get response');
       }
 
       const data = await response.json();
@@ -201,15 +202,26 @@ const DashboardV2: React.FC = () => {
     setGreetingLoaded(false);
   };
 
+  const closeProfessor = () => {
+    setIsProfessorOpen(false);
+  };
+
+  // Get time-based greeting
+  const getTimeGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
+
   return (
     <div style={{ 
       minHeight: '100vh', 
       backgroundColor: '#f8fafc',
       fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
       display: 'flex',
-      zoom: 0.9
     }}>
-      {/* Left Sidebar */}
+      {/* Left Sidebar - Always visible */}
       <aside style={{
         width: '280px',
         background: 'white',
@@ -221,7 +233,8 @@ const DashboardV2: React.FC = () => {
         top: 0,
         left: 0,
         height: '100vh',
-        overflowY: 'auto'
+        overflowY: 'auto',
+        zIndex: 100
       }}>
         {/* Logo */}
         <div style={{ marginBottom: '32px' }}>
@@ -240,6 +253,33 @@ const DashboardV2: React.FC = () => {
           }}>
             Quick Actions
           </div>
+          
+          {/* Dashboard Button - Shows when Professor is open */}
+          <button
+            onClick={closeProfessor}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '12px 14px',
+              borderRadius: '10px',
+              color: isProfessorOpen ? 'white' : '#475569',
+              background: isProfessorOpen ? '#0097A9' : 'transparent',
+              textDecoration: 'none',
+              fontSize: '14px',
+              fontWeight: 500,
+              marginBottom: '4px',
+              transition: 'all 0.15s ease',
+              border: 'none',
+              width: '100%',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            <LayoutDashboard size={20} />
+            Dashboard
+          </button>
+          
           <NavLink href="/member-resources" icon={FolderOpen}>Member Resources</NavLink>
           <NavLink href="/leadership-profile" icon={User}>My Leadership Profile</NavLink>
           <NavLink href="/constraint-report" icon={Target}>Our Constraint Report</NavLink>
@@ -358,548 +398,590 @@ const DashboardV2: React.FC = () => {
             background: 'none',
             border: 'none',
             cursor: 'pointer',
-            textAlign: 'left'
+            textAlign: 'left',
+            fontFamily: 'inherit',
           }}
         >
           Sign Out
         </button>
       </aside>
 
-      {/* Main Content */}
+      {/* Main Content Area */}
       <main style={{
         flex: 1,
         marginLeft: '280px',
-        padding: '32px 40px',
-        transition: 'margin-right 0.3s ease',
-        marginRight: isProfessorOpen ? '440px' : '0'
+        minHeight: '100vh',
+        position: 'relative',
       }}>
-        <div style={{ maxWidth: '1000px' }}>
-          {/* Welcome */}
-          <div style={{ marginBottom: '28px' }}>
-            <h1 style={{ fontSize: '26px', fontWeight: 700, color: '#0D2C54', marginBottom: '6px' }}>
-              Good morning, {userName}
-            </h1>
-            <p style={{ color: '#64748b', fontSize: '15px' }}>
-              You chose <strong style={{ color: '#0097A9', fontWeight: 600 }}>Board Engagement</strong> as your focus area
-              <button style={{
-                marginLeft: '12px',
-                fontSize: '13px',
-                color: '#94a3b8',
-                textDecoration: 'underline',
-                textUnderlineOffset: '2px',
-                cursor: 'pointer',
-                background: 'none',
-                border: 'none'
-              }}>
-                Change focus
-              </button>
-            </p>
-          </div>
-
-          {/* Top Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '32px', alignItems: 'stretch' }}>
-            {/* Today's Insight Card */}
-            <div style={{
-              background: 'linear-gradient(135deg, #0097A9 0%, #00b4cc 100%)',
-              borderRadius: '16px',
-              padding: '28px',
-              color: 'white',
-              display: 'flex',
-              flexDirection: 'column',
-              height: '100%'
-            }}>
-              <div style={{
-                fontSize: '11px',
-                textTransform: 'uppercase',
-                letterSpacing: '1.5px',
-                opacity: 0.85,
-                marginBottom: '16px',
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <Lightbulb size={14} />
-                Today's Insight
-              </div>
-              <p style={{ fontSize: '16px', lineHeight: 1.65, flex: 1, marginBottom: '24px' }}>
-                The most effective boards don't just govern—they champion. When was the last time you asked your board members what excites them about your mission?
-              </p>
-
-              {/* Commitment Dropdown */}
-              <div style={{ position: 'relative', marginTop: 'auto' }}>
-                {!selectedCommitment ? (
-                  <button
-                    onClick={() => setIsCommitmentOpen(!isCommitmentOpen)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: '8px',
-                      background: 'rgba(255,255,255,0.2)',
-                      border: '1px solid rgba(255,255,255,0.3)',
-                      borderRadius: '10px',
-                      padding: '12px 18px',
-                      color: 'white',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: 500,
-                      width: '100%',
-                      fontFamily: 'inherit'
-                    }}
-                  >
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Target size={16} />
-                      Make a Commitment
-                    </span>
-                    <ChevronDown size={16} style={{ transform: isCommitmentOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s ease' }} />
+        {/* Dashboard Content - Hidden when Professor is open */}
+        {!isProfessorOpen && (
+          <div style={{ padding: '32px 40px' }}>
+            <div style={{ maxWidth: '1000px' }}>
+              {/* Welcome */}
+              <div style={{ marginBottom: '28px' }}>
+                <h1 style={{ fontSize: '26px', fontWeight: 700, color: '#0D2C54', marginBottom: '6px' }}>
+                  {getTimeGreeting()}, {userName}
+                </h1>
+                <p style={{ color: '#64748b', fontSize: '15px' }}>
+                  You chose <strong style={{ color: '#0097A9', fontWeight: 600 }}>Board Engagement</strong> as your focus area
+                  <button style={{
+                    marginLeft: '12px',
+                    fontSize: '13px',
+                    color: '#94a3b8',
+                    textDecoration: 'underline',
+                    textUnderlineOffset: '2px',
+                    cursor: 'pointer',
+                    background: 'none',
+                    border: 'none',
+                    fontFamily: 'inherit',
+                  }}>
+                    Change focus
                   </button>
-                ) : (
+                </p>
+              </div>
+
+              {/* Top Cards */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '32px', alignItems: 'stretch' }}>
+                {/* Today's Insight Card */}
+                <div style={{
+                  background: 'linear-gradient(135deg, #0097A9 0%, #00b4cc 100%)',
+                  borderRadius: '16px',
+                  padding: '28px',
+                  color: 'white',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: '100%'
+                }}>
+                  <div style={{
+                    fontSize: '11px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '1.5px',
+                    opacity: 0.85,
+                    marginBottom: '16px',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <Lightbulb size={14} />
+                    Today's Insight
+                  </div>
+                  <p style={{ fontSize: '16px', lineHeight: 1.65, flex: 1, marginBottom: '24px' }}>
+                    The most effective boards don't just govern—they champion. When was the last time you asked your board members what excites them about your mission?
+                  </p>
+
+                  {/* Commitment Dropdown */}
+                  <div style={{ position: 'relative', marginTop: 'auto' }}>
+                    {!selectedCommitment ? (
+                      <button
+                        onClick={() => setIsCommitmentOpen(!isCommitmentOpen)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '8px',
+                          background: 'rgba(255,255,255,0.2)',
+                          border: '1px solid rgba(255,255,255,0.3)',
+                          borderRadius: '10px',
+                          padding: '12px 18px',
+                          color: 'white',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          fontWeight: 500,
+                          width: '100%',
+                          fontFamily: 'inherit'
+                        }}
+                      >
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <Target size={16} />
+                          Make a Commitment
+                        </span>
+                        <ChevronDown size={16} style={{ transform: isCommitmentOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s ease' }} />
+                      </button>
+                    ) : (
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        background: 'rgba(255,255,255,0.2)',
+                        border: '1px solid rgba(255,255,255,0.3)',
+                        borderRadius: '10px',
+                        padding: '12px 18px'
+                      }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
+                          <Check size={16} style={{ color: '#4ade80' }} />
+                          {selectedCommitment}
+                        </span>
+                        <button
+                          onClick={() => setSelectedCommitment(null)}
+                          style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', padding: '4px' }}
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Dropdown Menu */}
+                    {isCommitmentOpen && (
+                      <div style={{
+                        position: 'absolute',
+                        top: 'calc(100% + 8px)',
+                        left: 0,
+                        right: 0,
+                        background: 'white',
+                        borderRadius: '12px',
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+                        overflow: 'hidden',
+                        zIndex: 100
+                      }}>
+                        {commitmentOptions.map((option, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleCommitmentSelect(option.text)}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '12px',
+                              width: '100%',
+                              padding: '14px 18px',
+                              border: 'none',
+                              background: 'none',
+                              cursor: 'pointer',
+                              fontSize: '14px',
+                              color: '#0D2C54',
+                              textAlign: 'left',
+                              fontFamily: 'inherit',
+                              borderBottom: index < commitmentOptions.length - 1 ? '1px solid #f1f5f9' : 'none'
+                            }}
+                            onMouseEnter={(e) => (e.currentTarget.style.background = '#f8f9fa')}
+                            onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+                          >
+                            <option.icon size={16} style={{ color: '#0097A9' }} />
+                            {option.text}
+                          </button>
+                        ))}
+                        
+                        {!showCustomInput ? (
+                          <button
+                            onClick={() => setShowCustomInput(true)}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '12px',
+                              width: '100%',
+                              padding: '14px 18px',
+                              border: 'none',
+                              background: '#f8f9fa',
+                              cursor: 'pointer',
+                              fontSize: '14px',
+                              color: '#64748b',
+                              textAlign: 'left',
+                              fontFamily: 'inherit',
+                              fontStyle: 'italic'
+                            }}
+                          >
+                            <PenLine size={16} />
+                            Write my own commitment...
+                          </button>
+                        ) : (
+                          <div style={{ padding: '12px 18px', background: '#f8f9fa' }}>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                              <input
+                                type="text"
+                                placeholder="I will..."
+                                value={customCommitment}
+                                onChange={(e) => setCustomCommitment(e.target.value)}
+                                style={{
+                                  flex: 1,
+                                  padding: '10px 14px',
+                                  border: '1px solid #e2e8f0',
+                                  borderRadius: '8px',
+                                  fontSize: '14px',
+                                  outline: 'none',
+                                  fontFamily: 'inherit'
+                                }}
+                                autoFocus
+                              />
+                              <button
+                                onClick={() => {
+                                  if (customCommitment.trim()) {
+                                    handleCommitmentSelect(customCommitment);
+                                    setCustomCommitment('');
+                                  }
+                                }}
+                                style={{
+                                  background: '#0097A9',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '8px',
+                                  padding: '10px 14px',
+                                  cursor: 'pointer',
+                                  fontSize: '14px',
+                                  fontWeight: 500,
+                                  fontFamily: 'inherit',
+                                }}
+                              >
+                                Save
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Ask the Professor Card */}
+                <div
+                  onClick={() => setIsProfessorOpen(true)}
+                  style={{
+                    background: 'linear-gradient(135deg, #0D2C54 0%, #1a4175 100%)',
+                    borderRadius: '16px',
+                    padding: '28px',
+                    color: 'white',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    height: '100%'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 12px 32px rgba(13,44,84,0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  <div style={{
+                    fontSize: '11px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '1.5px',
+                    opacity: 0.85,
+                    marginBottom: '16px',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <MessageCircle size={14} style={{ color: '#0097A9' }} />
+                    Ask the Professor
+                  </div>
+                  <p style={{ fontSize: '16px', lineHeight: 1.65, flex: 1, marginBottom: '24px' }}>
+                    Your personal nonprofit leadership advisor, available 24/7. Get strategic guidance tailored to your challenges.
+                  </p>
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
+                    gap: '8px',
                     background: 'rgba(255,255,255,0.2)',
                     border: '1px solid rgba(255,255,255,0.3)',
                     borderRadius: '10px',
-                    padding: '12px 18px'
+                    padding: '12px 18px',
+                    color: 'white',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    marginTop: 'auto'
                   }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
-                      <Check size={16} style={{ color: '#4ade80' }} />
-                      {selectedCommitment}
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <MessageCircle size={16} />
+                      Ask me anything
                     </span>
-                    <button
-                      onClick={() => setSelectedCommitment(null)}
-                      style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', padding: '4px' }}
-                    >
-                      <X size={14} />
-                    </button>
+                    <ArrowRight size={16} />
                   </div>
-                )}
-
-                {/* Dropdown Menu */}
-                {isCommitmentOpen && (
-                  <div style={{
-                    position: 'absolute',
-                    top: 'calc(100% + 8px)',
-                    left: 0,
-                    right: 0,
-                    background: 'white',
-                    borderRadius: '12px',
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
-                    overflow: 'hidden',
-                    zIndex: 100
-                  }}>
-                    {commitmentOptions.map((option, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleCommitmentSelect(option.text)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '12px',
-                          width: '100%',
-                          padding: '14px 18px',
-                          border: 'none',
-                          background: 'none',
-                          cursor: 'pointer',
-                          fontSize: '14px',
-                          color: '#0D2C54',
-                          textAlign: 'left',
-                          fontFamily: 'inherit',
-                          borderBottom: index < commitmentOptions.length - 1 ? '1px solid #f1f5f9' : 'none'
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = '#f8f9fa')}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
-                      >
-                        <option.icon size={16} style={{ color: '#0097A9' }} />
-                        {option.text}
-                      </button>
-                    ))}
-                    
-                    {!showCustomInput ? (
-                      <button
-                        onClick={() => setShowCustomInput(true)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '12px',
-                          width: '100%',
-                          padding: '14px 18px',
-                          border: 'none',
-                          background: '#f8f9fa',
-                          cursor: 'pointer',
-                          fontSize: '14px',
-                          color: '#64748b',
-                          textAlign: 'left',
-                          fontFamily: 'inherit',
-                          fontStyle: 'italic'
-                        }}
-                      >
-                        <PenLine size={16} />
-                        Write my own commitment...
-                      </button>
-                    ) : (
-                      <div style={{ padding: '12px 18px', background: '#f8f9fa' }}>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <input
-                            type="text"
-                            placeholder="I will..."
-                            value={customCommitment}
-                            onChange={(e) => setCustomCommitment(e.target.value)}
-                            style={{
-                              flex: 1,
-                              padding: '10px 14px',
-                              border: '1px solid #e2e8f0',
-                              borderRadius: '8px',
-                              fontSize: '14px',
-                              outline: 'none',
-                              fontFamily: 'inherit'
-                            }}
-                            autoFocus
-                          />
-                          <button
-                            onClick={() => {
-                              if (customCommitment.trim()) {
-                                handleCommitmentSelect(customCommitment);
-                                setCustomCommitment('');
-                              }
-                            }}
-                            style={{
-                              background: '#0097A9',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '8px',
-                              padding: '10px 14px',
-                              cursor: 'pointer',
-                              fontSize: '14px',
-                              fontWeight: 500
-                            }}
-                          >
-                            Save
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                </div>
               </div>
-            </div>
 
-            {/* Ask the Professor Card */}
-            <div
-              onClick={() => setIsProfessorOpen(true)}
-              style={{
-                background: 'linear-gradient(135deg, #0D2C54 0%, #1a4175 100%)',
-                borderRadius: '16px',
-                padding: '28px',
-                color: 'white',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                display: 'flex',
-                flexDirection: 'column',
-                height: '100%'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 12px 32px rgba(13,44,84,0.3)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-            >
-              <div style={{
-                fontSize: '11px',
-                textTransform: 'uppercase',
-                letterSpacing: '1.5px',
-                opacity: 0.85,
-                marginBottom: '16px',
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <MessageCircle size={14} style={{ color: '#0097A9' }} />
-                Ask the Professor
+              {/* Tools Section */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0D2C54' }}>Your Tools</h2>
+                <a href="/tools" style={{
+                  fontSize: '14px',
+                  color: '#0097A9',
+                  textDecoration: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontWeight: 500
+                }}>
+                  View All <ChevronRight size={16} />
+                </a>
               </div>
-              <p style={{ fontSize: '16px', lineHeight: 1.65, flex: 1, marginBottom: '24px' }}>
-                Your personal nonprofit leadership advisor, available 24/7. Get strategic guidance tailored to your challenges.
-              </p>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '8px',
-                background: 'rgba(255,255,255,0.2)',
-                border: '1px solid rgba(255,255,255,0.3)',
-                borderRadius: '10px',
-                padding: '12px 18px',
-                color: 'white',
-                fontSize: '14px',
-                fontWeight: 500,
-                marginTop: 'auto'
-              }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <MessageCircle size={16} />
-                  Ask me anything
-                </span>
-                <ArrowRight size={16} />
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+                {tools.map((tool, index) => (
+                  <ToolCard key={index} name={tool.name} image={tool.image} route={tool.route} />
+                ))}
               </div>
             </div>
           </div>
+        )}
 
-          {/* Tools Section */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0D2C54' }}>Your Tools</h2>
-            <a href="/tools" style={{
-              fontSize: '14px',
-              color: '#0097A9',
-              textDecoration: 'none',
+        {/* Ask the Professor Full Overlay - Covers entire main area */}
+        {isProfessorOpen && (
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: '#f8fafc',
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: '100vh',
+          }}>
+            {/* Professor Header */}
+            <header style={{
+              background: 'linear-gradient(135deg, #0D2C54 0%, #1a4175 100%)',
+              padding: '16px 32px',
               display: 'flex',
               alignItems: 'center',
-              gap: '4px',
-              fontWeight: 500
+              justifyContent: 'space-between',
             }}>
-              View All <ChevronRight size={16} />
-            </a>
-          </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '24px',
+                }}>
+                  🎓
+                </div>
+                <div>
+                  <h2 style={{ color: 'white', fontSize: '20px', fontWeight: 700, margin: 0 }}>
+                    Ask the Professor
+                  </h2>
+                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', margin: 0 }}>
+                    Available 24/7
+                  </p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={startNewConversation}
+                  style={{
+                    background: 'rgba(255,255,255,0.15)',
+                    color: 'white',
+                    border: '1px solid rgba(255,255,255,0.3)',
+                    padding: '10px 20px',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  New Conversation
+                </button>
+                <button
+                  onClick={closeProfessor}
+                  style={{
+                    background: 'rgba(255,255,255,0.15)',
+                    color: 'white',
+                    border: 'none',
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '8px',
+                    fontSize: '20px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </header>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
-            {tools.map((tool, index) => (
-              <ToolCard key={index} name={tool.name} image={tool.image} route={tool.route} />
-            ))}
+            {/* Chat Area */}
+            <div style={{
+              flex: 1,
+              overflowY: 'auto',
+              padding: '32px',
+              display: 'flex',
+              justifyContent: 'center',
+            }}>
+              <div style={{ width: '100%', maxWidth: '800px' }}>
+                {chatMessages.map((message, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      display: 'flex',
+                      justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
+                      marginBottom: '20px',
+                    }}
+                  >
+                    <div style={{
+                      maxWidth: '75%',
+                      padding: '16px 20px',
+                      borderRadius: message.role === 'user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
+                      background: message.role === 'user' 
+                        ? 'linear-gradient(135deg, #0D2C54 0%, #1a4175 100%)' 
+                        : 'white',
+                      color: message.role === 'user' ? 'white' : '#0D2C54',
+                      boxShadow: message.role === 'assistant' ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
+                      fontSize: '15px',
+                      lineHeight: 1.7,
+                    }}>
+                      {message.role === 'assistant' && (
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '8px',
+                          marginBottom: '10px',
+                          color: '#0097A9',
+                          fontWeight: 600,
+                          fontSize: '13px'
+                        }}>
+                          🎓 The Professor
+                        </div>
+                      )}
+                      <div style={{ whiteSpace: 'pre-wrap' }}>{message.content}</div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Loading */}
+                {isLoading && (
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'flex-start',
+                    marginBottom: '20px',
+                  }}>
+                    <div style={{
+                      background: 'white',
+                      padding: '16px 20px',
+                      borderRadius: '20px 20px 20px 4px',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                    }}>
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '8px',
+                        marginBottom: '10px',
+                        color: '#0097A9',
+                        fontWeight: 600,
+                        fontSize: '13px'
+                      }}>
+                        🎓 The Professor
+                      </div>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <div style={{
+                          width: '10px',
+                          height: '10px',
+                          background: '#0097A9',
+                          borderRadius: '50%',
+                          animation: 'bounce 1s infinite',
+                        }} />
+                        <div style={{
+                          width: '10px',
+                          height: '10px',
+                          background: '#0097A9',
+                          borderRadius: '50%',
+                          animation: 'bounce 1s infinite',
+                          animationDelay: '150ms',
+                        }} />
+                        <div style={{
+                          width: '10px',
+                          height: '10px',
+                          background: '#0097A9',
+                          borderRadius: '50%',
+                          animation: 'bounce 1s infinite',
+                          animationDelay: '300ms',
+                        }} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
+              </div>
+            </div>
+
+            {/* Input Area */}
+            <div style={{
+              borderTop: '1px solid #e2e8f0',
+              background: 'white',
+              padding: '20px 32px',
+            }}>
+              <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage();
+                      }
+                    }}
+                    placeholder="Ask about board engagement, strategic planning, fundraising, leadership..."
+                    disabled={isLoading}
+                    style={{
+                      flex: 1,
+                      padding: '14px 20px',
+                      border: '2px solid #e2e8f0',
+                      borderRadius: '12px',
+                      fontSize: '15px',
+                      fontFamily: 'inherit',
+                      outline: 'none',
+                      transition: 'border-color 0.2s',
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#0097A9'}
+                    onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                  />
+                  <button
+                    onClick={handleSendMessage}
+                    disabled={!chatInput.trim() || isLoading}
+                    style={{
+                      background: !chatInput.trim() || isLoading 
+                        ? '#94a3b8' 
+                        : 'linear-gradient(135deg, #0097A9 0%, #00b4cc 100%)',
+                      color: 'white',
+                      border: 'none',
+                      padding: '14px 28px',
+                      borderRadius: '12px',
+                      fontSize: '15px',
+                      fontWeight: 600,
+                      cursor: !chatInput.trim() || isLoading ? 'not-allowed' : 'pointer',
+                      fontFamily: 'inherit',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    Send
+                    <Send size={16} />
+                  </button>
+                </div>
+                <p style={{
+                  color: '#94a3b8',
+                  fontSize: '12px',
+                  textAlign: 'center',
+                  marginTop: '12px',
+                  marginBottom: 0,
+                }}>
+                  AI can make mistakes. Please double-check important information.
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </main>
 
-      {/* Panel Overlay */}
-      {isProfessorOpen && (
-        <div
-          onClick={() => setIsProfessorOpen(false)}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: '280px',
-            right: '440px',
-            bottom: 0,
-            background: 'rgba(0,0,0,0.05)',
-            zIndex: 999,
-            cursor: 'pointer'
-          }}
-        />
-      )}
-
-      {/* Ask the Professor Slide-out Panel */}
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        right: 0,
-        width: '440px',
-        height: '100vh',
-        background: 'white',
-        boxShadow: isProfessorOpen ? '-8px 0 40px rgba(0,0,0,0.12)' : 'none',
-        transform: isProfessorOpen ? 'translateX(0)' : 'translateX(100%)',
-        transition: 'transform 0.3s ease',
-        display: 'flex',
-        flexDirection: 'column',
-        zIndex: 1000
-      }}>
-        {/* Panel Header */}
-        <div style={{
-          padding: '20px 24px',
-          borderBottom: '1px solid #e2e8f0',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          background: 'linear-gradient(135deg, #0D2C54 0%, #1a4175 100%)',
-          color: 'white'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              background: 'rgba(255,255,255,0.15)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <MessageCircle size={20} style={{ color: '#0097A9' }} />
-            </div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: '16px' }}>Ask the Professor</div>
-              <div style={{ fontSize: '12px', opacity: 0.8 }}>Available 24/7</div>
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              onClick={startNewConversation}
-              style={{
-                background: 'rgba(255,255,255,0.15)',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '8px 12px',
-                cursor: 'pointer',
-                color: 'white',
-                fontSize: '12px',
-                fontWeight: 500
-              }}
-            >
-              New
-            </button>
-            <button
-              onClick={() => setIsProfessorOpen(false)}
-              style={{
-                background: 'rgba(255,255,255,0.15)',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '8px',
-                cursor: 'pointer',
-                color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <X size={18} />
-            </button>
-          </div>
-        </div>
-
-        {/* Chat Messages */}
-        <div style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: '24px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '20px'
-        }}>
-          {chatMessages.map((message, index) => (
-            <div
-              key={index}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: message.role === 'user' ? 'flex-end' : 'flex-start'
-              }}
-            >
-              <div style={{
-                maxWidth: '85%',
-                padding: '14px 18px',
-                borderRadius: message.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                background: message.role === 'user' 
-                  ? 'linear-gradient(135deg, #0097A9 0%, #00b4cc 100%)' 
-                  : '#f1f5f9',
-                color: message.role === 'user' ? 'white' : '#0D2C54',
-                fontSize: '14px',
-                lineHeight: 1.6
-              }}>
-                {message.content}
-              </div>
-            </div>
-          ))}
-          
-          {/* Loading indicator */}
-          {isLoading && (
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'flex-start'
-            }}>
-              <div style={{
-                maxWidth: '85%',
-                padding: '14px 18px',
-                borderRadius: '16px 16px 16px 4px',
-                background: '#f1f5f9',
-                color: '#64748b',
-                fontSize: '14px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
-                Thinking...
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Chat Input */}
-        <div style={{
-          padding: '20px 24px',
-          borderTop: '1px solid #e2e8f0',
-          background: '#f8f9fa'
-        }}>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
-            <textarea
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              placeholder="Ask about board engagement, strategy, funding..."
-              disabled={isLoading}
-              style={{
-                flex: 1,
-                padding: '14px 16px',
-                border: '1px solid #e2e8f0',
-                borderRadius: '12px',
-                fontSize: '14px',
-                resize: 'none',
-                minHeight: '48px',
-                maxHeight: '120px',
-                outline: 'none',
-                fontFamily: 'inherit',
-                lineHeight: 1.5,
-                opacity: isLoading ? 0.6 : 1
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-            />
-            <button
-              onClick={handleSendMessage}
-              disabled={isLoading || !chatInput.trim()}
-              style={{
-                background: isLoading || !chatInput.trim() 
-                  ? '#94a3b8' 
-                  : 'linear-gradient(135deg, #0D2C54 0%, #1a4175 100%)',
-                border: 'none',
-                borderRadius: '12px',
-                padding: '14px',
-                cursor: isLoading || !chatInput.trim() ? 'not-allowed' : 'pointer',
-                color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <Send size={18} />
-            </button>
-          </div>
-          <div style={{ marginTop: '12px', textAlign: 'center' }}>
-            <a href="/conversations" style={{
-              background: 'none',
-              border: 'none',
-              color: '#64748b',
-              fontSize: '13px',
-              cursor: 'pointer',
-              textDecoration: 'underline',
-              textUnderlineOffset: '3px'
-            }}>
-              View All Conversations
-            </a>
-          </div>
-        </div>
-      </div>
-
-      {/* CSS for loading spinner */}
+      {/* CSS for loading animation */}
       <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+        @keyframes bounce {
+          0%, 60%, 100% { transform: translateY(0); }
+          30% { transform: translateY(-8px); }
         }
       `}</style>
     </div>
