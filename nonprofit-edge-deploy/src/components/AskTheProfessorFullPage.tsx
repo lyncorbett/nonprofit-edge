@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { 
   FolderOpen, User, Target, Settings, MessageCircle,
-  RefreshCw, ArrowLeft, X
+  RefreshCw, ArrowLeft, X, Home
 } from 'lucide-react';
 
 interface Message {
@@ -193,27 +193,80 @@ const AskTheProfessorFullPage: React.FC = () => {
           }}>
             Quick Actions
           </div>
-          <NavLink href="/dashboard" icon={ArrowLeft} active>Back to Dashboard</NavLink>
+          <NavLink href="/dashboard" icon={Home}>Dashboard</NavLink>
           <NavLink href="/member-resources" icon={FolderOpen}>Member Resources</NavLink>
           <NavLink href="/leadership-profile" icon={User}>My Leadership Profile</NavLink>
           <NavLink href="/constraint-report" icon={Target}>Our Constraint Report</NavLink>
         </nav>
 
-        {/* Current Session */}
+        {/* Recent Activity */}
+        <div style={{ marginBottom: '20px' }}>
+          <div style={{
+            fontSize: '11px',
+            textTransform: 'uppercase',
+            letterSpacing: '1.2px',
+            color: '#94a3b8',
+            marginBottom: '12px',
+            fontWeight: 600
+          }}>
+            Recent Activity
+          </div>
+          <ActivityItem name="Board Assessment started" time="Today" />
+          <ActivityItem name="Strategic Plan completed" time="3 days ago" completed />
+        </div>
+
+        {/* Upcoming Events */}
+        <div style={{ marginBottom: '20px' }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '12px'
+          }}>
+            <span style={{
+              fontSize: '11px',
+              textTransform: 'uppercase',
+              letterSpacing: '1.2px',
+              color: '#94a3b8',
+              fontWeight: 600
+            }}>
+              Upcoming Events
+            </span>
+            <a href="/events" style={{ fontSize: '12px', color: '#0097A9', textDecoration: 'none', fontWeight: 500 }}>
+              View All
+            </a>
+          </div>
+          <EventItem day="21" month="Jan" name="Live Q&A Session" time="2:00 PM EST" />
+          <EventItem day="24" month="Feb" name="🚀 Platform Launch" time="12:00 PM EST" />
+        </div>
+
+        {/* Downloads */}
         <div style={{
           marginBottom: '20px',
           padding: '16px',
-          background: 'linear-gradient(135deg, #0097A9 0%, #00b4cc 100%)',
+          background: '#0097A9',
           borderRadius: '10px',
           color: 'white'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <MessageCircle size={16} />
-            <span style={{ fontSize: '13px', fontWeight: 600 }}>Ask the Professor</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600 }}>Remaining Downloads</span>
+            <span style={{ fontSize: '12px', fontWeight: 600 }}>18 of 25</span>
           </div>
-          <p style={{ fontSize: '12px', opacity: 0.9, margin: 0 }}>
-            Your 24/7 nonprofit leadership advisor
-          </p>
+          <div style={{ height: '6px', background: 'rgba(255,255,255,0.3)', borderRadius: '3px', marginBottom: '10px' }}>
+            <div style={{ width: '72%', height: '100%', background: 'white', borderRadius: '3px' }} />
+          </div>
+          <span style={{
+            display: 'inline-block',
+            fontSize: '10px',
+            fontWeight: 700,
+            background: 'white',
+            color: '#0D2C54',
+            padding: '4px 10px',
+            borderRadius: '4px',
+            letterSpacing: '0.5px'
+          }}>
+            PROFESSIONAL
+          </span>
         </div>
 
         {/* Settings */}
@@ -539,6 +592,50 @@ const NavLink: React.FC<{ href: string; icon: React.ElementType; children: React
     <Icon size={20} />
     {children}
   </a>
+);
+
+// ActivityItem helper component
+const ActivityItem: React.FC<{ name: string; time: string; completed?: boolean }> = ({ name, time, completed }) => (
+  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '8px 0' }}>
+    <span style={{
+      width: '8px',
+      height: '8px',
+      borderRadius: '50%',
+      background: completed ? '#D4A84B' : '#0097A9',
+      marginTop: '5px',
+      flexShrink: 0
+    }} />
+    <div>
+      <div style={{ fontSize: '13px', fontWeight: 500, color: '#334155' }}>{name}</div>
+      <div style={{ fontSize: '11px', color: '#94a3b8' }}>{time}</div>
+    </div>
+  </div>
+);
+
+// EventItem helper component
+const EventItem: React.FC<{ day: string; month: string; name: string; time: string }> = ({ day, month, name, time }) => (
+  <div style={{
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '10px 0',
+    borderBottom: '1px solid #f1f5f9'
+  }}>
+    <div style={{
+      background: '#0D2C54',
+      borderRadius: '6px',
+      padding: '6px 10px',
+      textAlign: 'center',
+      minWidth: '44px'
+    }}>
+      <div style={{ fontSize: '14px', fontWeight: 700, color: 'white' }}>{day}</div>
+      <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase' }}>{month}</div>
+    </div>
+    <div>
+      <div style={{ fontSize: '13px', fontWeight: 500, color: '#334155' }}>{name}</div>
+      <div style={{ fontSize: '11px', color: '#94a3b8' }}>{time}</div>
+    </div>
+  </div>
 );
 
 export default AskTheProfessorFullPage;
