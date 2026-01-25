@@ -8,7 +8,8 @@
  * 
  * All tools receive tracking props to connect with Dashboard counters
  * 
- * UPDATED: January 23, 2026
+ * UPDATED: January 24, 2026
+ * - Added Marketing Command Center at /admin/command-center
  * - Added /ask-professor route for full-page Ask the Professor
  * - Fixed logo scaling issue
  * - Added DashboardV2 (new design)
@@ -31,6 +32,7 @@ import ResourceLibrary from './components/ResourceLibrary';
 import EventsCalendar from './components/EventsCalendar';
 import EnhancedOwnerDashboard from './components/EnhancedOwnerDashboard';
 import MarketingDashboard from './components/MarketingDashboard';
+import MarketingCommandCenter from './components/MarketingCommandCenter';  // NEW COMMAND CENTER
 import LinkManager from './components/LinkManager';
 import TeamAccessManager from './components/TeamAccessManager';
 import ContentManager from './components/ContentManager';
@@ -669,6 +671,7 @@ const App: React.FC = () => {
       'owner-dashboard': '/admin/owner',
       'enhanced-owner': '/admin/enhanced',
       'marketing': '/admin/marketing',
+      'command-center': '/admin/command-center',
       'link-manager': '/admin/links',
       'team-access': '/admin/team',
       'homepage-editor': '/admin/homepage',
@@ -933,6 +936,9 @@ const App: React.FC = () => {
       case '/admin/marketing':
         return requireAuth(<MarketingDashboard />);
 
+      case '/admin/command-center':
+        return requireAuth(<MarketingCommandCenter />);
+
       case '/admin/users':
         return requireAuth(<UserManager supabase={supabase} onNavigate={navigate} />);
 
@@ -1002,6 +1008,10 @@ const App: React.FC = () => {
 
       case '/owner/team':
         navigate('/admin/team');
+        return null;
+
+      case '/command-center':
+        navigate('/admin/command-center');
         return null;
 
       // ========================================
