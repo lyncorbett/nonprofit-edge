@@ -72,6 +72,7 @@ const AskTheProfessorFullPage: React.FC = () => {
     setIsLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
+      const localHour = new Date().getHours(); // User's local time
       
       const response = await fetch('/api/ask-professor', {
         method: 'POST',
@@ -79,6 +80,7 @@ const AskTheProfessorFullPage: React.FC = () => {
         body: JSON.stringify({
           messages: [{ role: 'user', content: '[GREETING]' }],
           accessToken: session?.access_token,
+          localHour, // Pass user's local hour
         }),
       });
 
@@ -119,6 +121,7 @@ const AskTheProfessorFullPage: React.FC = () => {
         body: JSON.stringify({
           messages: apiMessages,
           accessToken: session?.access_token,
+          localHour: new Date().getHours(),
         }),
       });
 
