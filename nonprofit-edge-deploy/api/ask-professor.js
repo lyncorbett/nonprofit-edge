@@ -245,7 +245,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { messages, accessToken } = req.body;
+    const { messages, accessToken, localHour } = req.body;
 
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
@@ -284,8 +284,8 @@ export default async function handler(req, res) {
       }
     }
 
-    // Time greeting
-    const hour = new Date().getHours();
+    // Time greeting - use user's local hour if provided, fallback to server time
+    const hour = localHour !== undefined ? localHour : new Date().getHours();
     const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
     // Context block
