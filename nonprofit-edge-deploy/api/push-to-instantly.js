@@ -3,17 +3,24 @@
 
 import { createClient } from '@supabase/supabase-js';
 
+// Debug: Log all relevant env vars
+console.log('=== Environment Variable Debug ===');
+console.log('INSTANTLY_API_KEY exists:', !!process.env.INSTANTLY_API_KEY);
+console.log('INSTANTLY_API_KEY length:', process.env.INSTANTLY_API_KEY?.length || 0);
+console.log('SUPABASE_URL exists:', !!process.env.SUPABASE_URL);
+console.log('VITE_SUPABASE_URL exists:', !!process.env.VITE_SUPABASE_URL);
+console.log('All env var keys:', Object.keys(process.env).filter(k => 
+  !k.startsWith('npm_') && !k.startsWith('NODE_') && !k.startsWith('PATH')
+).join(', '));
+console.log('=================================');
+
 // Use fallbacks for environment variables
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-  console.error('Missing Supabase credentials!');
-}
+const INSTANTLY_API_KEY = process.env.INSTANTLY_API_KEY;
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const INSTANTLY_API_KEY = process.env.INSTANTLY_API_KEY;
 const INSTANTLY_API_URL = 'https://api.instantly.ai/api/v1';
 
 export default async function handler(req, res) {
@@ -33,13 +40,24 @@ export default async function handler(req, res) {
   // Check for required environment variables
   if (!supabaseUrl || !supabaseKey) {
     return res.status(500).json({ 
-      error: 'Server configuration error - missing database credentials'
+      error: 'Server configuration error - missing database credentials',
+      debug: {
+        hasSupabaseUrl: !!process.env.SUPABASE_URL,
+        hasViteSupabaseUrl: !!process.env.VITE_SUPABASE_URL,
+      }
     });
   }
 
   if (!INSTANTLY_API_KEY) {
     return res.status(500).json({ 
-      error: 'Server configuration error - missing Instantly API key'
+      error: 'Server configuration error - missing Instantly API key',
+      debug: {
+        envVarExists: !!process.env.INSTANTLY_API_KEY,
+        envVarLength: process.env.INSTANTLY_API_KEY?.length || 0,
+        availableKeys: Object.keys(process.env).filter(k => 
+          k.includes('INSTANTLY') || k.includes('API')
+        )
+      }
     });
   }
 
@@ -149,7 +167,6 @@ export default async function handler(req, res) {
 
     if (saveError) {
       console.error('Failed to save campaign to database:', saveError);
-      // Don't fail the whole request, campaign is already in Instantly
     }
 
     // Step 4: Update email status
