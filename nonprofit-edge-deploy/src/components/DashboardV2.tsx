@@ -1,36 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import ToolIntroModal from './ToolIntroModal';
 import { 
   FolderOpen, User, Target, Calendar, Users, Clock, 
   ChevronRight, Settings, MessageCircle, Lightbulb,
   ArrowRight, RefreshCw
 } from 'lucide-react';
 
-// Logo component - DOUBLED SIZE (320px width)
-const Logo = ({ width = 320 }: { width?: number }) => (
-  <svg width={width} height={width * 0.4} viewBox="250 270 500 220">
-    <g>
-      <path fill="#0D2C54" d="M438.46,469.14c-18.16,14.03-40.93,22.38-65.64,22.38c-30.79,0-58.55-12.94-78.16-33.69c2.85,0.46,5.7,0.81,8.57,1.06c9.13,0.79,17.9,0.49,26.26-0.63c12.72,7.44,27.53,11.71,43.33,11.71c17.17,0,33.17-5.03,46.59-13.71C422.94,460.11,428.93,465.14,438.46,469.14z"/>
-      <path fill="#0D2C54" d="M294.86,420.29c-8.64,2.53-16.05,3.61-21.74,4.02c-5.05-12.44-7.82-26.05-7.82-40.31c0-59.37,48.14-107.52,107.52-107.52c25.62,0,49.15,8.96,67.62,23.94c-9.33,2.92-16.19,7.85-20.47,11.69c-13.54-8.9-29.74-14.08-47.15-14.08c-47.48,0-85.97,38.49-85.97,85.97C286.85,396.97,289.72,409.27,294.86,420.29z"/>
-      <path fill="#0097A9" d="M258.67,434.74c0,0,61.28,14.58,121.38-60.61l-18.3-13.11l72.86-22.42l0.39,71.06l-18.78-13.01C416.22,396.64,340.29,479.82,258.67,434.74z"/>
-      <g>
-        <path fill="#0D2C54" d="M491.43,298.55v7.98h-9.88v32.91h-9.08v-32.91h-9.88v-7.98H491.43z"/>
-        <path fill="#0D2C54" d="M528.3,298.55v40.89h-9.08V322.6h-14.13v16.83H496v-40.89h9.08v16.02h14.13v-16.02H528.3z"/>
-        <path fill="#0D2C54" d="M543.91,306.53v8.27h12.17v7.69h-12.17v8.97h13.76v7.98h-22.84v-40.89h22.84v7.98H543.91z"/>
-      </g>
-      <g>
-        <path fill="#0097A9" d="M495.94,392.68h-9.08l-15.19-25.22v25.22h-9.08v-40.89h9.08l15.19,25.34v-25.34h9.08V392.68z"/>
-        <path fill="#0097A9" d="M510.53,390.41c-2.92-1.79-5.24-4.28-6.96-7.48c-1.72-3.2-2.58-6.8-2.58-10.8c0-4,0.86-7.59,2.58-10.78c1.72-3.18,4.04-5.67,6.96-7.46c2.92-1.79,6.14-2.68,9.64-2.68c3.51,0,6.72,0.89,9.64,2.68c2.92,1.79,5.22,4.27,6.91,7.46c1.68,3.18,2.52,6.78,2.52,10.78c0,4-0.85,7.6-2.55,10.8c-1.7,3.2-4,5.7-6.91,7.48c-2.9,1.79-6.11,2.68-9.62,2.68C516.66,393.09,513.45,392.19,510.53,390.41z"/>
-        <path fill="#0097A9" d="M577.65,392.68h-9.08l-15.19-25.22v25.22h-9.08v-40.89h9.08l15.19,25.34v-25.34h9.08V392.68z"/>
-      </g>
-      <g>
-        <path fill="#0D2C54" d="M476.97,418.87v13.1h19.27v12.18h-19.27v14.21h21.8v12.64h-36.19v-64.78h36.19v12.64H476.97z"/>
-        <path fill="#0D2C54" d="M546.58,410.29c4.66,2.71,8.26,6.51,10.82,11.4c2.55,4.89,3.83,10.54,3.83,16.93c0,6.34-1.28,11.97-3.83,16.89c-2.55,4.92-6.17,8.74-10.86,11.44c-4.69,2.71-10.11,4.06-16.29,4.06h-22.14v-64.78h22.14C536.48,406.23,541.92,407.58,546.58,410.29z"/>
-        <path fill="#0D2C54" d="M608.53,426.71c-1.07-2.15-2.6-3.8-4.59-4.94c-1.99-1.14-4.33-1.71-7.03-1.71c-4.66,0-8.39,1.68-11.19,5.03c-2.81,3.35-4.21,7.83-4.21,13.43c0,5.97,1.47,10.63,4.42,13.98c2.95,3.35,7,5.03,12.16,5.03c3.54,0,6.52-0.98,8.96-2.95c2.44-1.97,4.22-4.8,5.34-8.49h-18.26v-11.63h31.31v14.67c-1.07,3.94-2.88,7.6-5.43,10.98c-2.55,3.38-5.79,6.12-9.72,8.21c-3.93,2.09-8.36,3.14-13.3,3.14c-5.84,0-11.04-1.4-15.61-4.2c-4.57-2.8-8.14-6.69-10.69-11.67c-2.55-4.98-3.83-10.67-3.83-17.07c0-6.4,1.28-12.1,3.83-17.12c2.55-5.01,6.1-8.92,10.65-11.72c4.55-2.8,9.73-4.2,15.57-4.2c7.07,0,13.03,1.88,17.89,5.63c4.85,3.75,8.07,8.95,9.64,15.6H608.53z"/>
-        <path fill="#0D2C54" d="M647.83,418.87v13.1h19.27v12.18h-19.27v14.21h21.8v12.64h-36.19v-64.78h36.19v12.64H647.83z"/>
-      </g>
-    </g>
-  </svg>
+// Logo component - Uses PNG image for clean scaling
+const Logo = ({ width = 200 }: { width?: number }) => (
+  <img 
+    src="/logo-color.png" 
+    alt="The Nonprofit Edge" 
+    style={{ 
+      width: width, 
+      height: 'auto',
+      objectFit: 'contain'
+    }} 
+  />
 );
 
 // Challenges by focus area
@@ -139,13 +126,17 @@ const DashboardV2: React.FC = () => {
   }, []);
 
   const tools = [
-    { name: 'Board Assessment', image: toolImages.boardAssessment, route: '/tools/board-assessment' },
-    { name: 'Strategic Plan Check-Up', image: toolImages.strategicPlan, route: '/tools/strategic-plan' },
-    { name: 'Grant Review', image: toolImages.grantReview, route: '/tools/grant-review' },
-    { name: 'CEO Evaluation', image: toolImages.ceoEvaluation, route: '/tools/ceo-evaluation' },
-    { name: 'Scenario Planner', image: toolImages.scenarioPlanner, route: '/tools/scenario-planner' },
-    { name: 'Dashboards', image: toolImages.dashboards, route: '/tools/dashboards' },
+    { name: 'Board Assessment', image: toolImages.boardAssessment, toolId: 'board-assessment', route: '/board-assessment/use', setupRoute: '/board-assessment/setup' },
+    { name: 'Strategic Plan Check-Up', image: toolImages.strategicPlan, toolId: 'strategic-plan', route: '/strategic-plan-checkup/use' },
+    { name: 'Grant Review', image: toolImages.grantReview, toolId: 'grant-review', route: '/grant-review/use' },
+    { name: 'CEO Evaluation', image: toolImages.ceoEvaluation, toolId: 'ceo-evaluation', route: '/ceo-evaluation/use', setupRoute: '/ceo-evaluation/setup' },
+    { name: 'Scenario Planner', image: toolImages.scenarioPlanner, toolId: 'scenario-planner', route: '/scenario-planner/use' },
+    { name: 'Ask the Professor', image: toolImages.dashboards, toolId: 'ask-professor', route: '/ask-professor' },
   ];
+
+  // Modal state
+  const [activeToolModal, setActiveToolModal] = useState<string | null>(null);
+  const [pendingNavigation, setPendingNavigation] = useState<{ route: string; setupRoute?: string } | null>(null);
 
   const challenges = challengesByFocus[focusArea] || challengesByFocus['Board Engagement'];
   const tagStyle = focusTagStyles[focusArea] || focusTagStyles['Board Engagement'];
@@ -562,9 +553,65 @@ const DashboardV2: React.FC = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
             {tools.map((tool, index) => (
-              <ToolCard key={index} name={tool.name} image={tool.image} route={tool.route} />
+              <div
+                key={index}
+                onClick={() => {
+                  setActiveToolModal(tool.toolId);
+                  setPendingNavigation({ route: tool.route, setupRoute: tool.setupRoute });
+                }}
+                style={{
+                  background: 'white',
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  border: '1px solid #e2e8f0',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <div style={{
+                  height: '120px',
+                  backgroundImage: `linear-gradient(to bottom, rgba(13,44,84,0) 0%, rgba(13,44,84,0.85) 100%), url(${tool.image})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  display: 'flex',
+                  alignItems: 'flex-end',
+                  padding: '16px'
+                }}>
+                  <span style={{ color: 'white', fontWeight: 600, fontSize: '15px' }}>{tool.name}</span>
+                </div>
+              </div>
             ))}
           </div>
+
+          {/* Tool Intro Modal */}
+          {activeToolModal && (
+            <ToolIntroModal
+              toolId={activeToolModal as any}
+              isOpen={true}
+              onClose={() => {
+                setActiveToolModal(null);
+                setPendingNavigation(null);
+              }}
+              onStart={() => {
+                setActiveToolModal(null);
+                if (pendingNavigation?.route) {
+                  window.location.href = pendingNavigation.route;
+                }
+              }}
+              onSetup={pendingNavigation?.setupRoute ? () => {
+                setActiveToolModal(null);
+                window.location.href = pendingNavigation.setupRoute!;
+              } : undefined}
+            />
+          )}
 
           {/* Quote of the Day */}
           <div style={{
@@ -693,42 +740,6 @@ const EventItem: React.FC<{ day: string; month: string; name: string; time: stri
       <div style={{ fontSize: '11px', color: '#94a3b8' }}>{time}</div>
     </div>
   </div>
-);
-
-const ToolCard: React.FC<{ name: string; image: string; route: string }> = ({ name, image, route }) => (
-  <a
-    href={route}
-    style={{
-      background: 'white',
-      borderRadius: '12px',
-      overflow: 'hidden',
-      border: '1px solid #e2e8f0',
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-      textDecoration: 'none',
-      display: 'block'
-    }}
-    onMouseEnter={(e) => {
-      e.currentTarget.style.transform = 'translateY(-4px)';
-      e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.1)';
-    }}
-    onMouseLeave={(e) => {
-      e.currentTarget.style.transform = 'translateY(0)';
-      e.currentTarget.style.boxShadow = 'none';
-    }}
-  >
-    <div style={{
-      height: '120px',
-      backgroundImage: `linear-gradient(to bottom, rgba(13,44,84,0) 0%, rgba(13,44,84,0.85) 100%), url(${image})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      display: 'flex',
-      alignItems: 'flex-end',
-      padding: '16px'
-    }}>
-      <span style={{ color: 'white', fontWeight: 600, fontSize: '15px' }}>{name}</span>
-    </div>
-  </a>
 );
 
 export default DashboardV2;

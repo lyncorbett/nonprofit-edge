@@ -8,8 +8,7 @@
  * 
  * All tools receive tracking props to connect with Dashboard counters
  * 
- * UPDATED: January 25, 2026
- * - Added Marketing Command Center at /admin/command-center
+ * UPDATED: January 23, 2026
  * - Added /ask-professor route for full-page Ask the Professor
  * - Fixed logo scaling issue
  * - Added DashboardV2 (new design)
@@ -32,10 +31,10 @@ import ResourceLibrary from './components/ResourceLibrary';
 import TemplateVault from './components/TemplateVault';  // USER TEMPLATE LIBRARY
 import TemplateManager from './components/TemplateManager';  // ADMIN TEMPLATE UPLOAD
 import ConversationHistory from './components/ConversationHistory';  // PROFESSOR CHAT HISTORY
+import AssessmentSetup from './components/AssessmentSetup';  // ASSESSMENT ADMIN SETUP
 import EventsCalendar from './components/EventsCalendar';
 import EnhancedOwnerDashboard from './components/EnhancedOwnerDashboard';
 import MarketingDashboard from './components/MarketingDashboard';
-import MarketingCommandCenter from './components/MarketingCommandCenter';  // MARKETING COMMAND CENTER
 import LinkManager from './components/LinkManager';
 import TeamAccessManager from './components/TeamAccessManager';
 import ContentManager from './components/ContentManager';
@@ -674,7 +673,6 @@ const App: React.FC = () => {
       'owner-dashboard': '/admin/owner',
       'enhanced-owner': '/admin/enhanced',
       'marketing': '/admin/marketing',
-      'command-center': '/admin/command-center',
       'link-manager': '/admin/links',
       'team-access': '/admin/team',
       'homepage-editor': '/admin/homepage',
@@ -765,12 +763,18 @@ const App: React.FC = () => {
           </ToolPageWrapper>
         );
       
+      case '/board-assessment/setup':
+        return requireAuth(<AssessmentSetup type="board-assessment" />);
+      
       case '/ceo-evaluation/use':
         return requireAuth(
           <ToolPageWrapper toolId="ceo-evaluation" toolName="CEO Evaluation">
             <CEOEvaluation />
           </ToolPageWrapper>
         );
+      
+      case '/ceo-evaluation/setup':
+        return requireAuth(<AssessmentSetup type="ceo-evaluation" />);
       
       case '/scenario-planner/use':
         return requireAuth(
@@ -918,6 +922,15 @@ const App: React.FC = () => {
           </div>
         );
       
+      case '/conversations':
+        return requireAuth(
+          <div style={{ padding: '40px', textAlign: 'center' }}>
+            <h1>Conversation History</h1>
+            <p>Coming soon...</p>
+            <button onClick={() => navigate('/dashboard')}>← Back to Dashboard</button>
+          </div>
+        );
+      
       case '/settings':
         return requireAuth(
           <div style={{ padding: '40px', textAlign: 'center' }}>
@@ -940,9 +953,6 @@ const App: React.FC = () => {
 
       case '/admin/marketing':
         return requireAuth(<MarketingDashboard />);
-
-      case '/admin/command-center':
-        return requireAuth(<MarketingCommandCenter />);
 
       case '/admin/users':
         return requireAuth(<UserManager supabase={supabase} onNavigate={navigate} />);
@@ -1013,10 +1023,6 @@ const App: React.FC = () => {
 
       case '/owner/team':
         navigate('/admin/team');
-        return null;
-
-      case '/command-center':
-        navigate('/admin/command-center');
         return null;
 
       // ========================================
