@@ -4,11 +4,25 @@
 import { createClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
 
+// Debug: Log environment variable status
+console.log('SUPABASE_URL exists:', !!process.env.SUPABASE_URL);
+console.log('VITE_SUPABASE_URL exists:', !!process.env.VITE_SUPABASE_URL);
+console.log('SUPABASE_SERVICE_ROLE_KEY exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+console.log('ANTHROPIC_API_KEY exists:', !!process.env.ANTHROPIC_API_KEY);
+
+// Use fallbacks for environment variables
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Missing Supabase credentials!');
+  console.error('Available env vars:', Object.keys(process.env).filter(k => 
+    k.includes('SUPA') || k.includes('VITE') || k.includes('ANTHROPIC')
+  ));
+}
+
 // Initialize clients
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -112,6 +126,19 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Check for required environment variables
+  if (!supabaseUrl || !supabaseKey) {
+    return res.status(500).json({ 
+      error: 'Server configuration error - missing database credentials',
+      debug: {
+        hasSupabaseUrl: !!process.env.SUPABASE_URL,
+        hasViteSupabaseUrl: !!process.env.VITE_SUPABASE_URL,
+        hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+        hasAnonKey: !!process.env.VITE_SUPABASE_ANON_KEY
+      }
+    });
   }
 
   try {
