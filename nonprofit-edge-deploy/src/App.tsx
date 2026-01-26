@@ -28,8 +28,11 @@ import DashboardV2 from './components/DashboardV2';  // NEW DASHBOARD
 import AskTheProfessorFullPage from './components/AskTheProfessorFullPage';  // NEW FULL PAGE
 import OnboardingQuestionnaire from './components/OnboardingQuestionnaire';  // NEW ONBOARDING
 import ResourceLibrary from './components/ResourceLibrary';
+import ResourceCategoryPage from './components/ResourceCategoryPage';  // RESOURCE CATEGORY PAGES
 import TemplateVault from './components/TemplateVault';  // USER TEMPLATE LIBRARY
 import TemplateManager from './components/TemplateManager';  // ADMIN TEMPLATE UPLOAD
+import BulkTemplateUploader from './components/BulkTemplateUploader';  // BULK TEMPLATE UPLOAD WITH AI
+import MagicLinkAdmin from './components/MagicLinkAdmin';  // BETA TESTER MANAGEMENT
 import ConversationHistory from './components/ConversationHistory';  // PROFESSOR CHAT HISTORY
 import AssessmentSetup from './components/AssessmentSetup';  // ASSESSMENT ADMIN SETUP
 import EventsCalendar from './components/EventsCalendar';
@@ -870,6 +873,39 @@ const App: React.FC = () => {
           />
         );
 
+      // Resource Category Pages
+      case '/resources/guides':
+        return requireAuth(
+          <ResourceCategoryPage 
+            category="guides"
+            onNavigate={navigate}
+          />
+        );
+
+      case '/resources/book-summaries':
+        return requireAuth(
+          <ResourceCategoryPage 
+            category="book-summaries"
+            onNavigate={navigate}
+          />
+        );
+
+      case '/resources/playbooks':
+        return requireAuth(
+          <ResourceCategoryPage 
+            category="playbooks"
+            onNavigate={navigate}
+          />
+        );
+
+      case '/resources/facilitation-kits':
+        return requireAuth(
+          <ResourceCategoryPage 
+            category="facilitation-kits"
+            onNavigate={navigate}
+          />
+        );
+
       case '/templates':
       case '/template-vault':
         return requireAuth(<TemplateVault />);
@@ -922,21 +958,237 @@ const App: React.FC = () => {
           </div>
         );
       
-      case '/conversations':
-        return requireAuth(
-          <div style={{ padding: '40px', textAlign: 'center' }}>
-            <h1>Conversation History</h1>
-            <p>Coming soon...</p>
-            <button onClick={() => navigate('/dashboard')}>← Back to Dashboard</button>
-          </div>
-        );
-      
       case '/settings':
         return requireAuth(
           <div style={{ padding: '40px', textAlign: 'center' }}>
             <h1>Settings</h1>
             <p>Coming soon...</p>
             <button onClick={() => navigate('/dashboard')}>← Back to Dashboard</button>
+          </div>
+        );
+
+      // ========================================
+      // DASHBOARDS & ACTIVITY ROUTES
+      // ========================================
+
+      case '/dashboards':
+        return requireAuth(
+          <div style={{ 
+            padding: '40px', 
+            maxWidth: '1200px', 
+            margin: '0 auto',
+            fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif"
+          }}>
+            <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#0D2C54', marginBottom: '8px' }}>
+              Dashboards
+            </h1>
+            <p style={{ color: '#64748b', marginBottom: '32px' }}>
+              Visualize your organization's progress and key metrics.
+            </p>
+            
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+              gap: '20px' 
+            }}>
+              {/* Strategic Plan Progress */}
+              <div style={{
+                background: 'white',
+                borderRadius: '12px',
+                padding: '24px',
+                border: '1px solid #e2e8f0'
+              }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0D2C54', marginBottom: '16px' }}>
+                  Strategic Plan Progress
+                </h3>
+                <div style={{ 
+                  height: '200px', 
+                  background: '#f8fafc', 
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#94a3b8'
+                }}>
+                  Chart coming soon
+                </div>
+              </div>
+
+              {/* Board Engagement */}
+              <div style={{
+                background: 'white',
+                borderRadius: '12px',
+                padding: '24px',
+                border: '1px solid #e2e8f0'
+              }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0D2C54', marginBottom: '16px' }}>
+                  Board Engagement
+                </h3>
+                <div style={{ 
+                  height: '200px', 
+                  background: '#f8fafc', 
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#94a3b8'
+                }}>
+                  Chart coming soon
+                </div>
+              </div>
+
+              {/* Tool Usage */}
+              <div style={{
+                background: 'white',
+                borderRadius: '12px',
+                padding: '24px',
+                border: '1px solid #e2e8f0'
+              }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0D2C54', marginBottom: '16px' }}>
+                  Tool Usage
+                </h3>
+                <div style={{ 
+                  height: '200px', 
+                  background: '#f8fafc', 
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#94a3b8'
+                }}>
+                  Chart coming soon
+                </div>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => navigate('/dashboard')}
+              style={{
+                marginTop: '32px',
+                padding: '12px 24px',
+                background: '#f1f5f9',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: 500,
+                color: '#64748b',
+                cursor: 'pointer'
+              }}
+            >
+              ← Back to Dashboard
+            </button>
+          </div>
+        );
+
+      case '/my-activity':
+      case '/activity':
+        return requireAuth(
+          <div style={{ 
+            padding: '40px', 
+            maxWidth: '800px', 
+            margin: '0 auto',
+            fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif"
+          }}>
+            <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#0D2C54', marginBottom: '8px' }}>
+              My Activity
+            </h1>
+            <p style={{ color: '#64748b', marginBottom: '32px' }}>
+              Your recent tool usage and challenge commitments.
+            </p>
+            
+            {/* Tool Usage History */}
+            <div style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '24px',
+              border: '1px solid #e2e8f0',
+              marginBottom: '24px'
+            }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0D2C54', marginBottom: '16px' }}>
+                Tool Usage
+              </h3>
+              <p style={{ color: '#94a3b8', fontSize: '14px' }}>
+                Your tool usage history will appear here.
+              </p>
+            </div>
+
+            {/* Challenge Commitments */}
+            <div style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '24px',
+              border: '1px solid #e2e8f0'
+            }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0D2C54', marginBottom: '16px' }}>
+                Challenge Commitments
+              </h3>
+              <p style={{ color: '#94a3b8', fontSize: '14px' }}>
+                Your daily challenge commitments will appear here.
+              </p>
+            </div>
+
+            <button 
+              onClick={() => navigate('/dashboard')}
+              style={{
+                marginTop: '32px',
+                padding: '12px 24px',
+                background: '#f1f5f9',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: 500,
+                color: '#64748b',
+                cursor: 'pointer'
+              }}
+            >
+              ← Back to Dashboard
+            </button>
+          </div>
+        );
+
+      case '/my-commitments':
+      case '/commitments':
+        return requireAuth(
+          <div style={{ 
+            padding: '40px', 
+            maxWidth: '800px', 
+            margin: '0 auto',
+            fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif"
+          }}>
+            <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#0D2C54', marginBottom: '8px' }}>
+              My Commitments
+            </h1>
+            <p style={{ color: '#64748b', marginBottom: '32px' }}>
+              Track your daily challenge commitments and progress.
+            </p>
+            
+            <div style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '24px',
+              border: '1px solid #e2e8f0'
+            }}>
+              <p style={{ color: '#94a3b8', fontSize: '14px' }}>
+                Your commitment history will appear here once you start committing to daily challenges.
+              </p>
+            </div>
+
+            <button 
+              onClick={() => navigate('/dashboard')}
+              style={{
+                marginTop: '32px',
+                padding: '12px 24px',
+                background: '#f1f5f9',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: 500,
+                color: '#64748b',
+                cursor: 'pointer'
+              }}
+            >
+              ← Back to Dashboard
+            </button>
           </div>
         );
 
@@ -968,6 +1220,13 @@ const App: React.FC = () => {
 
       case '/admin/platform':
         return requireAuth(<AdminDashboard />);
+
+      case '/admin/beta-testers':
+        return requireAuth(<MagicLinkAdmin />);
+
+      case '/admin/bulk-upload':
+      case '/admin/templates/bulk':
+        return requireAuth(<BulkTemplateUploader />);
 
       // ========================================
       // LEGACY ROUTE REDIRECTS
@@ -1030,6 +1289,26 @@ const App: React.FC = () => {
       // ========================================
       
       default:
+        // Handle /resources/* routes
+        if (currentRoute.startsWith('/resources/')) {
+          const category = currentRoute.replace('/resources/', '');
+          if (['guides', 'book-summaries', 'playbooks', 'facilitation-kits'].includes(category)) {
+            return requireAuth(
+              <ResourceCategoryPage 
+                category={category}
+                onNavigate={navigate}
+              />
+            );
+          }
+        }
+        
+        // Handle /admin/* routes that might not be explicitly listed
+        if (currentRoute.startsWith('/admin/')) {
+          // Redirect unknown admin routes to main admin
+          navigate('/admin');
+          return null;
+        }
+        
         if (currentRoute.startsWith('/tools/')) {
           navigate('/dashboard');
           return null;
