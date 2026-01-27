@@ -33,6 +33,7 @@ import TemplateVault from './components/TemplateVault';  // USER TEMPLATE LIBRAR
 import TemplateManager from './components/TemplateManager';  // ADMIN TEMPLATE UPLOAD
 import BulkTemplateUploader from './components/BulkTemplateUploader';  // BULK TEMPLATE UPLOAD WITH AI
 import MagicLinkAdmin from './components/MagicLinkAdmin';  // BETA TESTER MANAGEMENT
+import InsiderDashboard from './components/InsiderDashboard';  // INSIDER/BETA TESTER TRACKING
 import ConversationHistory from './components/ConversationHistory';  // PROFESSOR CHAT HISTORY
 import AssessmentSetup from './components/AssessmentSetup';  // ASSESSMENT ADMIN SETUP
 import EventsCalendar from './components/EventsCalendar';
@@ -1227,6 +1228,10 @@ const App: React.FC = () => {
       case '/admin/bulk-upload':
       case '/admin/templates/bulk':
         return requireAuth(<BulkTemplateUploader />);
+
+      case '/insider-dashboard':
+      case '/admin/insiders':
+        return requireAuth(<InsiderDashboard />);
 
       // ========================================
       // LEGACY ROUTE REDIRECTS
