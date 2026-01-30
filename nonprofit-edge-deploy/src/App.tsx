@@ -8,9 +8,9 @@
  * 
  * All tools receive tracking props to connect with Dashboard counters
  * 
- * UPDATED: January 29, 2026
- * - Added Settings, MyDownloads, SavedFavorites pages
- * - Added ConstraintAssessment and ConstraintReport pages
+ * UPDATED: January 30, 2026
+ * - Removed AIGuideChatbot
+ * - Added MemberResources route
  */
 
 import React, { useState, useEffect } from 'react';
@@ -51,7 +51,7 @@ import Homepage from './components/Homepage';
 import Sidebar from './components/Sidebar';
 import ProductTour from './components/ProductTour';
 import WelcomeModal from './components/WelcomeModal';
-import AIGuideChatbot from './components/AIGuideChatbot';
+// REMOVED: AIGuideChatbot - chatbot functionality removed
 
 // Tool Components (Actual Tools)
 import StrategicPlanCheckup from './StrategicPlanCheckup';
@@ -453,6 +453,8 @@ const App: React.FC = () => {
     const routeMap: Record<string, string> = {
       'dashboard': '/dashboard',
       'library': '/resources',
+      'member-resources': '/member-resources',
+      'resources': '/member-resources',
       'events': '/events',
       'team': '/team',
       'reports': '/reports',
@@ -472,6 +474,7 @@ const App: React.FC = () => {
       'board-assessment': '/board-assessment/use',
       'scenario-planner': '/scenario-planner/use',
       'grant-review': '/grant-review/use',
+      'ask-the-professor': '/ask-the-professor/use',
       // Admin
       'content-manager': '/admin/content',
       'platform-admin': '/admin/platform',
@@ -639,7 +642,6 @@ const App: React.FC = () => {
             }}
             organization={organization}
             usage={usage}
-            teamCount={1}
             onNavigate={(page: string) => navigate(mapDashboardNavigation(page))}
             onDownload={handleDownload}
             onStartProfessor={handleStartProfessor}
@@ -648,11 +650,13 @@ const App: React.FC = () => {
         );
 
       case '/resources':
+      case '/member-resources':
         return requireAuth(
           <ResourceLibrary 
             user={{ ...user!, full_name: user!.name }}
             organization={organization!}
             onNavigate={(page: string) => navigate(mapDashboardNavigation(page))}
+            onStartProfessor={handleStartProfessor}
             onLogout={handleLogout}
           />
         );
