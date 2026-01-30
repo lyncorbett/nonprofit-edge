@@ -4,10 +4,15 @@ import React, { useEffect, useState } from 'react';
 import { 
   Target, Calendar, RefreshCw, Mail, Package, Users, Moon, 
   MessageSquare, FileText, Smile, BarChart3, Share2, Zap, 
-  HelpCircle, Heart, PieChart, ChevronRight, Download, Loader2
+  HelpCircle, Heart, PieChart, ChevronRight, Download, Loader2,
+  ArrowLeft
 } from 'lucide-react';
 
 // Types
+interface ConstraintReportProps {
+  onNavigate?: (route: string) => void;
+}
+
 interface DomainScore {
   domain: string;
   name: string;
@@ -139,9 +144,17 @@ const interactionDescriptions: Record<string, string> = {
   "Fragile Foundation": "One shock away from crisis. No reserves, no cushion, no margin for error."
 };
 
-const ConstraintReport: React.FC = () => {
+const ConstraintReport: React.FC<ConstraintReportProps> = ({ onNavigate }) => {
   const [results, setResults] = useState<AssessmentResults | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const navigate = (route: string) => {
+    if (onNavigate) {
+      onNavigate(route);
+    } else {
+      window.location.href = route;
+    }
+  };
 
   useEffect(() => {
     // Load from localStorage (in production, fetch from Supabase)
@@ -162,18 +175,25 @@ const ConstraintReport: React.FC = () => {
 
   if (!results) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="absolute top-6 left-6 inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Dashboard
+        </button>
         <div className="text-center px-6">
           <Target className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">No Assessment Found</h2>
           <p className="text-gray-500 mb-6">Take the ONE Thing Assessment to see your diagnosis.</p>
-          <a
-            href="/dashboard/constraint-assessment"
+          <button
+            onClick={() => navigate('/constraint-assessment')}
             className="inline-flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-white font-semibold px-6 py-3 rounded-lg transition-all"
           >
             Start Assessment
             <ChevronRight className="w-5 h-5" />
-          </a>
+          </button>
         </div>
       </div>
     );
@@ -197,6 +217,16 @@ const ConstraintReport: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto">
+        {/* Back to Dashboard */}
+        <div className="px-6 pt-6">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Dashboard
+          </button>
+        </div>
         
         {/* HEADER */}
         <div className="bg-gradient-to-br from-[#1e3a5a] to-[#0f2744] px-12 py-12 relative overflow-hidden">
