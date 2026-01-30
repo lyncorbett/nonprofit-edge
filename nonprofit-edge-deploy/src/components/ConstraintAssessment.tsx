@@ -1,9 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ChevronRight, ChevronLeft, Target, Loader2, CheckCircle } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Target, Loader2, CheckCircle, ArrowLeft } from 'lucide-react';
 
 // Types
+interface ConstraintAssessmentProps {
+  onNavigate?: (route: string) => void;
+}
+
 interface IntakeData {
   name: string;
   email: string;
@@ -138,7 +142,7 @@ const interactionPatterns: Record<string, string> = {
   "OR-OC": "Spirit Without Systems",
 };
 
-const ConstraintAssessment: React.FC = () => {
+const ConstraintAssessment: React.FC<ConstraintAssessmentProps> = ({ onNavigate }) => {
   const [screen, setScreen] = useState<'intro' | 'intake' | 'questions' | 'processing' | 'complete'>('intro');
   const [intake, setIntake] = useState<IntakeData>({
     name: '',
@@ -152,6 +156,14 @@ const ConstraintAssessment: React.FC = () => {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [processingStep, setProcessingStep] = useState(0);
+
+  const navigate = (route: string) => {
+    if (onNavigate) {
+      onNavigate(route);
+    } else {
+      window.location.href = route;
+    }
+  };
 
   const handleIntakeChange = (field: keyof IntakeData, value: string) => {
     setIntake(prev => ({ ...prev, [field]: value }));
@@ -299,7 +311,18 @@ const ConstraintAssessment: React.FC = () => {
   if (screen === 'intro') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-        <div className="max-w-3xl mx-auto px-6 py-16">
+        {/* Back to Dashboard */}
+        <div className="max-w-3xl mx-auto px-6 pt-6">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Dashboard
+          </button>
+        </div>
+        
+        <div className="max-w-3xl mx-auto px-6 py-12">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 bg-cyan-500/10 text-cyan-400 px-4 py-2 rounded-full text-sm font-medium mb-6">
               <Target className="w-4 h-4" />
