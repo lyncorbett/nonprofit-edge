@@ -1,555 +1,694 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
 import { 
-  FolderOpen, User, Target, Settings, Home,
-  Search, BookOpen, FileText, Bookmark, Award, Users, Presentation,
-  ChevronRight, Clock, ArrowRight
+  Search, X, MessageSquare, Wrench, FileText, BookOpen, 
+  Bookmark, PlayCircle, Users, Award, Download, ChevronRight,
+  Star
 } from 'lucide-react';
 
-// Resource categories with their details
-const RESOURCE_CATEGORIES = [
-  {
-    id: 'guides',
-    name: 'Leadership Guides',
-    description: 'In-depth guides on nonprofit leadership, from board governance to strategic decision-making.',
-    count: 15,
-    icon: BookOpen,
+// ============================================
+// TYPES
+// ============================================
+
+interface ResourceLibraryProps {
+  user?: {
+    id: string;
+    name: string;
+    full_name?: string;
+  };
+  organization?: {
+    id: string;
+    name: string;
+    tier: string;
+  };
+  onNavigate?: (path: string) => void;
+  onStartProfessor?: () => void;
+  onLogout?: () => void;
+}
+
+interface Resource {
+  name: string;
+  type: string;
+  url: string;
+  tags: string[];
+  description?: string;
+  price?: string;
+  partner?: string | null;
+}
+
+interface CategoryConfig {
+  label: string;
+  icon: React.ElementType;
+  color: string;
+  hoverColor: string;
+  route: string;
+  count: string;
+  description: string;
+  sampleItems: string[];
+}
+
+// ============================================
+// DATA
+// ============================================
+
+const categoryConfig: Record<string, CategoryConfig> = {
+  tools: {
+    label: 'Tools',
+    icon: Wrench,
     color: '#0097A9',
-    route: '/resources/guides'
+    hoverColor: '#0097A9',
+    route: '/tools',
+    count: '9 tools',
+    description: 'AI-powered assessments and analysis tools for leadership and organizational development.',
+    sampleItems: ['Leadership Profile', 'Board Assessment', 'Grant Review', 'Dashboards']
   },
-  {
-    id: 'book-summaries',
-    name: 'Book Summaries',
-    description: 'Key insights from essential leadership and nonprofit books, distilled into actionable summaries.',
-    count: 52,
-    icon: Bookmark,
-    color: '#f59e0b',
-    route: '/resources/book-summaries'
-  },
-  {
-    id: 'templates',
-    name: 'Templates',
-    description: 'Ready-to-use templates for strategic plans, board packets, evaluations, and more.',
-    count: 147,
+  templates: {
+    label: 'Templates',
     icon: FileText,
     color: '#0D2C54',
-    route: '/templates'
+    hoverColor: '#0D2C54',
+    route: '/resources/templates',
+    count: '147+ templates',
+    description: 'Ready-to-use templates for strategic plans, board packets, evaluations, and more.',
+    sampleItems: ['Governance', 'Strategic Planning', 'HR']
   },
-  {
-    id: 'playbooks',
-    name: 'Playbooks',
-    description: 'Step-by-step playbooks for common nonprofit challenges, from fundraising to succession planning.',
-    count: 27,
-    icon: Target,
-    color: '#6366f1',
-    route: '/resources/playbooks'
+  guides: {
+    label: 'Leadership Guides',
+    icon: BookOpen,
+    color: '#0097A9',
+    hoverColor: '#0097A9',
+    route: '/resources/guides',
+    count: '30+ guides',
+    description: 'In-depth guides on nonprofit leadership, from board governance to strategic decision-making.',
+    sampleItems: ['Governance', 'Delegation', 'Team Building']
   },
-  {
-    id: 'certifications',
-    name: 'Certifications',
-    description: 'Earn credentials in DiSC, Five Behaviors, governance, consulting, and strategic leadership.',
-    count: 5,
-    icon: Award,
-    color: '#10b981',
-    route: '/certifications'
+  books: {
+    label: 'Book Summaries',
+    icon: Bookmark,
+    color: '#b45309',
+    hoverColor: '#b45309',
+    route: '/resources/book-summaries',
+    count: '52+ summaries',
+    description: 'Key insights from essential leadership books, distilled into actionable summaries.',
+    sampleItems: ['Leadership', 'Strategy', 'Management']
   },
-  {
-    id: 'facilitation-kits',
-    name: 'Facilitation Kits',
+  playbooks: {
+    label: 'Playbooks',
+    icon: PlayCircle,
+    color: '#7c3aed',
+    hoverColor: '#7c3aed',
+    route: '/resources/playbooks',
+    count: '27+ playbooks',
+    description: 'Step-by-step playbooks for fundraising, succession planning, and board retreats.',
+    sampleItems: ['Fundraising', 'Succession', 'Board Retreats']
+  },
+  kits: {
+    label: 'Facilitation Kits',
+    icon: Users,
+    color: '#be185d',
+    hoverColor: '#be185d',
+    route: '/resources/facilitation-kits',
+    count: '20+ kits',
     description: 'Complete kits for running board retreats, strategic planning sessions, and team workshops.',
-    count: 20,
-    icon: Presentation,
-    color: '#ec4899',
-    route: '/resources/facilitation-kits'
+    sampleItems: ['Board Retreats', 'Team Workshops', 'Planning Sessions']
   },
+  certs: {
+    label: 'Certifications',
+    icon: Award,
+    color: '#22c55e',
+    hoverColor: '#22c55e',
+    route: '/certifications',
+    count: '5 programs',
+    description: 'Earn credentials in DiSC, Five Behaviors, governance, and strategic leadership.',
+    sampleItems: ['DiSC', 'Five Behaviors', 'Governance']
+  }
+};
+
+const resources: Resource[] = [
+  // Tools
+  { name: 'Edge Leadership Profile™', type: 'tools', url: '/tools/leadership-profile', tags: ['leadership', 'assessment'] },
+  { name: 'Board Assessment', type: 'tools', url: '/tools/board-assessment', tags: ['board', 'governance', 'assessment'] },
+  { name: 'Core Constraint Assessment', type: 'tools', url: '/tools/core-constraint', tags: ['strategy', 'assessment'] },
+  { name: 'Grant/RFP Review', type: 'tools', url: '/tools/grant-review', tags: ['grants', 'fundraising'] },
+  { name: 'Scenario Planner', type: 'tools', url: '/tools/scenario-planner', tags: ['strategy', 'planning'] },
+  { name: 'Strategic Planning Tracker', type: 'tools', url: '/tools/strategic-tracker', tags: ['strategy', 'planning'] },
+  { name: 'Dashboards', type: 'tools', url: '/tools/dashboards', tags: ['data', 'tracking'] },
+  { name: 'CEO Evaluation', type: 'tools', url: '/tools/ceo-evaluation', tags: ['leadership', 'evaluation'] },
+  { name: 'Strategic Plan Check-Up', type: 'tools', url: '/tools/strategic-checkup', tags: ['strategy', 'assessment'] },
+  
+  // Templates
+  { name: 'Board Meeting Agenda', type: 'templates', url: '/templates/board-agenda', tags: ['board', 'governance', 'meetings'] },
+  { name: 'Board Member Agreement', type: 'templates', url: '/templates/board-agreement', tags: ['board', 'governance'] },
+  { name: 'Board Self-Assessment Survey', type: 'templates', url: '/templates/board-self-assessment', tags: ['board', 'governance', 'assessment'] },
+  { name: 'Board Recruitment Matrix', type: 'templates', url: '/templates/board-recruitment', tags: ['board', 'governance', 'recruitment'] },
+  { name: 'Board Committee Charters', type: 'templates', url: '/templates/committee-charters', tags: ['board', 'governance'] },
+  { name: 'Conflict of Interest Policy', type: 'templates', url: '/templates/conflict-interest', tags: ['board', 'governance', 'policy'] },
+  { name: 'Strategic Plan Template', type: 'templates', url: '/templates/strategic-plan', tags: ['strategy', 'planning'] },
+  { name: 'SWOT Analysis Worksheet', type: 'templates', url: '/templates/swot', tags: ['strategy', 'planning'] },
+  { name: 'Annual Report Template', type: 'templates', url: '/templates/annual-report', tags: ['reporting', 'communications'] },
+  { name: 'Job Description Template', type: 'templates', url: '/templates/job-description', tags: ['hr', 'hiring'] },
+  { name: 'Performance Review Form', type: 'templates', url: '/templates/performance-review', tags: ['hr', 'evaluation'] },
+  { name: 'Employee Handbook Template', type: 'templates', url: '/templates/employee-handbook', tags: ['hr', 'policy'] },
+  { name: 'Grant Budget Template', type: 'templates', url: '/templates/grant-budget', tags: ['grants', 'fundraising', 'finance'] },
+  { name: 'Donor Acknowledgment Letters', type: 'templates', url: '/templates/donor-letters', tags: ['fundraising', 'donors'] },
+  { name: 'Board Governance Policies', type: 'templates', url: '/templates/governance-policies', tags: ['board', 'governance', 'policy'] },
+  
+  // Leadership Guides
+  { name: 'Board Governance Essentials', type: 'guides', url: '/guides/governance-essentials', tags: ['board', 'governance'] },
+  { name: 'Effective Delegation', type: 'guides', url: '/guides/delegation', tags: ['leadership', 'management'] },
+  { name: 'Difficult Conversations', type: 'guides', url: '/guides/difficult-conversations', tags: ['leadership', 'communication'] },
+  { name: 'Building High-Performing Teams', type: 'guides', url: '/guides/team-building', tags: ['leadership', 'teams'] },
+  { name: 'ED First 90 Days', type: 'guides', url: '/guides/ed-first-90-days', tags: ['leadership', 'transition'] },
+  { name: 'Working with Your Board Chair', type: 'guides', url: '/guides/board-chair', tags: ['board', 'governance', 'relationships'] },
+  
+  // Book Summaries
+  { name: 'Governance as Leadership', type: 'books', url: '/books/governance-as-leadership', tags: ['board', 'governance'] },
+  { name: 'Good to Great (Social Sector)', type: 'books', url: '/books/good-to-great', tags: ['strategy', 'leadership'] },
+  { name: 'The Five Dysfunctions of a Team', type: 'books', url: '/books/five-dysfunctions', tags: ['teams', 'leadership'] },
+  { name: 'Forces for Good', type: 'books', url: '/books/forces-for-good', tags: ['nonprofit', 'impact'] },
+  
+  // Playbooks
+  { name: 'Board Retreat Playbook', type: 'playbooks', url: '/playbooks/board-retreat', tags: ['board', 'governance', 'facilitation'] },
+  { name: 'Grant Writing Playbook', type: 'playbooks', url: '/playbooks/grant-writing', tags: ['grants', 'fundraising'] },
+  { name: 'Succession Planning Playbook', type: 'playbooks', url: '/playbooks/succession', tags: ['leadership', 'planning'] },
+  { name: 'Fundraising Campaign Playbook', type: 'playbooks', url: '/playbooks/fundraising-campaign', tags: ['fundraising'] },
+  
+  // Facilitation Kits
+  { name: 'Board Retreat Facilitation Kit', type: 'kits', url: '/kits/board-retreat', tags: ['board', 'governance', 'facilitation'] },
+  { name: 'Strategic Planning Workshop Kit', type: 'kits', url: '/kits/strategic-planning', tags: ['strategy', 'planning', 'facilitation'] },
+  { name: 'Team Building Workshop Kit', type: 'kits', url: '/kits/team-building', tags: ['teams', 'facilitation'] },
 ];
 
-// Mock recent items (would come from Supabase in production)
-const RECENT_ITEMS = [
-  { type: 'TEMPLATE', name: 'Board Member Expectations Agreement', time: '2 days ago', color: '#0D2C54' },
-  { type: 'BOOK', name: 'Governance as Leadership', time: '3 days ago', color: '#f59e0b' },
-  { type: 'GUIDE', name: 'CEO Succession Planning', time: '1 week ago', color: '#0097A9' },
-  { type: 'PLAYBOOK', name: '90-Day Strategic Reset', time: '1 week ago', color: '#6366f1' },
+const certifications: Resource[] = [
+  { name: 'DiSC Certification', type: 'certs', url: '/certifications/disc', tags: ['assessment', 'certification'], description: 'Become certified to administer and interpret DiSC assessments.', price: '$1,495', partner: 'Wiley' },
+  { name: 'Five Behaviors Certification', type: 'certs', url: '/certifications/five-behaviors', tags: ['teams', 'certification'], description: 'Lead teams using Patrick Lencioni\'s proven model.', price: '$1,695', partner: 'Wiley' },
+  { name: 'Nonprofit Governance Certificate', type: 'certs', url: '/certifications/governance', tags: ['board', 'governance', 'certification'], description: 'Master board governance best practices and earn your credential.', price: '$497', partner: null },
+  { name: 'Strategic Leadership Certificate', type: 'certs', url: '/certifications/strategic-leadership', tags: ['leadership', 'certification'], description: 'Develop strategic thinking and decision-making skills.', price: '$397', partner: null },
+  { name: 'Nonprofit Consulting Certificate', type: 'certs', url: '/certifications/consulting', tags: ['consulting', 'certification'], description: 'Learn to consult effectively with nonprofit organizations.', price: '$597', partner: null },
 ];
 
-const ResourceLibrary: React.FC = () => {
-  const [userName, setUserName] = useState('there');
+const subcategories: Record<string, string[]> = {
+  tools: [],
+  templates: ['All', 'Governance', 'Strategic Planning', 'HR', 'Operations', 'Fundraising', 'Finance'],
+  guides: ['All', 'Governance', 'Leadership', 'Management', 'Communication'],
+  books: ['All', 'Leadership', 'Strategy', 'Management', 'Nonprofit'],
+  playbooks: ['All', 'Fundraising', 'Board', 'Succession', 'Crisis'],
+  kits: ['All', 'Board Retreats', 'Strategic Planning', 'Team Workshops'],
+  certs: []
+};
+
+const topDownloads = [
+  { name: 'Board Meeting Agenda', type: 'Template', downloads: 2847, url: '/templates/board-agenda' },
+  { name: 'Strategic Plan Template', type: 'Template', downloads: 2156, url: '/templates/strategic-plan' },
+  { name: 'Board Retreat Playbook', type: 'Playbook', downloads: 1823, url: '/playbooks/board-retreat' },
+  { name: 'ED First 90 Days', type: 'Guide', downloads: 1654, url: '/guides/ed-first-90-days' },
+];
+
+// ============================================
+// COMPONENT
+// ============================================
+
+const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
+  user = { id: '1', name: 'Lyn' },
+  organization = { id: '1', name: 'The Pivotal Group', tier: 'professional' },
+  onNavigate,
+  onStartProfessor,
+  onLogout
+}) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Resource[]>([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [activeSubcategory, setActiveSubcategory] = useState('all');
+  const [modalSearchQuery, setModalSearchQuery] = useState('');
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('full_name, first_name')
-          .eq('id', user.id)
-          .single();
-        if (profile) {
-          setUserName(profile.full_name || profile.first_name || 'there');
-        }
-      }
-    };
-    fetchUser();
-  }, []);
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    window.location.href = '/';
+  // Navigation helper
+  const navigate = (path: string) => {
+    if (onNavigate) {
+      onNavigate(path);
+    } else {
+      window.location.href = path;
+    }
   };
 
-  const totalResources = RESOURCE_CATEGORIES.reduce((acc, cat) => acc + cat.count, 0);
+  // Search handler
+  useEffect(() => {
+    if (searchQuery.length < 2) {
+      setShowSearchResults(false);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase();
+    const matches = resources.filter(r =>
+      r.name.toLowerCase().includes(query) ||
+      r.tags.some(tag => tag.includes(query))
+    );
+    setSearchResults(matches);
+    setShowSearchResults(true);
+  }, [searchQuery]);
+
+  // Group search results by category
+  const groupedResults = searchResults.reduce((acc, item) => {
+    if (!acc[item.type]) acc[item.type] = [];
+    acc[item.type].push(item);
+    return acc;
+  }, {} as Record<string, Resource[]>);
+
+  // Modal handlers
+  const openModal = (category: string) => {
+    setActiveModal(category);
+    setActiveSubcategory('all');
+    setModalSearchQuery('');
+  };
+
+  const closeModal = () => {
+    setActiveModal(null);
+    setActiveSubcategory('all');
+    setModalSearchQuery('');
+  };
+
+  // Get filtered items for modal
+  const getModalItems = () => {
+    if (!activeModal) return [];
+    
+    if (activeModal === 'certs') {
+      return modalSearchQuery
+        ? certifications.filter(c => c.name.toLowerCase().includes(modalSearchQuery.toLowerCase()))
+        : certifications;
+    }
+
+    let items = resources.filter(r => r.type === activeModal);
+    
+    if (activeSubcategory !== 'all') {
+      items = items.filter(r =>
+        r.tags.some(tag => tag.toLowerCase().includes(activeSubcategory.replace('-', ' ')))
+      );
+    }
+    
+    if (modalSearchQuery) {
+      items = items.filter(r => r.name.toLowerCase().includes(modalSearchQuery.toLowerCase()));
+    }
+    
+    return items;
+  };
+
+  // Close search on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.search-section')) {
+        setShowSearchResults(false);
+      }
+    };
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, []);
+
+  // Close modal on escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeModal();
+        setShowSearchResults(false);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const isFullPageModal = activeModal === 'templates' || activeModal === 'certs';
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      backgroundColor: '#f8fafc',
-      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
-      display: 'flex',
-    }}>
-      {/* Left Sidebar */}
-      <aside style={{
-        width: '280px',
-        background: 'white',
-        borderRight: '1px solid #e2e8f0',
-        padding: '24px',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        height: '100vh',
-        overflowY: 'auto'
-      }}>
-        {/* Logo */}
-        <div style={{ marginBottom: '32px' }}>
-          <img src="/logo.png" alt="The Nonprofit Edge" style={{ width: '220px', height: 'auto' }} />
+    <div className="min-h-screen bg-slate-50" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+      {/* Header */}
+      <header className="bg-[#0D2C54] py-3 px-8 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <a href="/dashboard" onClick={(e) => { e.preventDefault(); navigate('/dashboard'); }}>
+            <img src="/images/nonprofit-edge-logo-white.png" alt="The Nonprofit Edge" className="h-9" />
+          </a>
+          <nav className="flex items-center gap-6">
+            {['Dashboard', 'Tools', 'Resources', 'Events', 'Profile'].map((item) => (
+              <a
+                key={item}
+                href={`/${item.toLowerCase()}`}
+                onClick={(e) => { e.preventDefault(); navigate(`/${item.toLowerCase()}`); }}
+                className={`text-sm font-medium transition-colors ${
+                  item === 'Resources' ? 'text-[#0097A9]' : 'text-white/80 hover:text-white'
+                }`}
+              >
+                {item}
+              </a>
+            ))}
+          </nav>
+        </div>
+      </header>
+
+      <main className="max-w-6xl mx-auto px-8 py-8">
+        {/* Page Header */}
+        <div className="mb-6">
+          <a
+            href="/dashboard"
+            onClick={(e) => { e.preventDefault(); navigate('/dashboard'); }}
+            className="inline-flex items-center gap-2 text-slate-500 hover:text-[#0097A9] text-sm mb-4"
+          >
+            <ChevronRight className="w-4 h-4 rotate-180" />
+            Return to Dashboard
+          </a>
+          <h1 className="text-3xl font-bold text-[#0D2C54] mb-2">Member Resources</h1>
+          <p className="text-slate-500">Everything you need to lead your organization forward</p>
         </div>
 
-        {/* Quick Actions */}
-        <nav style={{ marginBottom: '24px' }}>
-          <div style={{
-            fontSize: '11px',
-            textTransform: 'uppercase',
-            letterSpacing: '1.2px',
-            color: '#94a3b8',
-            marginBottom: '12px',
-            fontWeight: 600
-          }}>
-            Quick Actions
-          </div>
-          <NavLink href="/dashboard" icon={Home}>Dashboard</NavLink>
-          <NavLink href="/member-resources" icon={FolderOpen} active>Member Resources</NavLink>
-          <NavLink href="/leadership-profile" icon={User}>My Leadership Profile</NavLink>
-          <NavLink href="/constraint-report" icon={Target}>Our Constraint Report</NavLink>
-        </nav>
-
-        {/* Resource Categories */}
-        <div style={{ marginBottom: '20px' }}>
-          <div style={{
-            fontSize: '11px',
-            textTransform: 'uppercase',
-            letterSpacing: '1.2px',
-            color: '#94a3b8',
-            marginBottom: '12px',
-            fontWeight: 600
-          }}>
-            Resources
-          </div>
-          <ResourceNavLink href="/resources/guides" icon={BookOpen} count={15}>Leadership Guides</ResourceNavLink>
-          <ResourceNavLink href="/resources/book-summaries" icon={Bookmark} count={52}>Book Summaries</ResourceNavLink>
-          <ResourceNavLink href="/templates" icon={FileText} count={147}>Templates</ResourceNavLink>
-          <ResourceNavLink href="/resources/playbooks" icon={Target} count={27}>Playbooks</ResourceNavLink>
-          <ResourceNavLink href="/certifications" icon={Award} count={5}>Certifications</ResourceNavLink>
-          <ResourceNavLink href="/resources/facilitation-kits" icon={Presentation} count={20}>Facilitation Kits</ResourceNavLink>
-        </div>
-
-        {/* Settings */}
-        <div style={{ marginBottom: '16px' }}>
-          <NavLink href="/settings" icon={Settings}>Settings</NavLink>
-        </div>
-
-        {/* User Profile */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          padding: '16px 0',
-          borderTop: '1px solid #e2e8f0',
-          marginTop: 'auto'
-        }}>
-          <div style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '8px',
-            background: '#0097A9',
-            color: 'white',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 600,
-            fontSize: '14px'
-          }}>
-            {userName.charAt(0).toUpperCase()}
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>{userName}</div>
-            <div style={{ fontSize: '12px', color: '#94a3b8' }}>The Pivotal Group</div>
-          </div>
-        </div>
-        <button 
-          onClick={handleSignOut}
-          style={{
-            fontSize: '13px',
-            color: '#94a3b8',
-            textDecoration: 'none',
-            paddingLeft: '48px',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            textAlign: 'left'
-          }}
-        >
-          Sign Out
-        </button>
-      </aside>
-
-      {/* Main Content */}
-      <main style={{
-        flex: 1,
-        marginLeft: '280px',
-        padding: '32px 40px',
-      }}>
-        <div style={{ maxWidth: '1100px' }}>
-          {/* Header */}
-          <div style={{ marginBottom: '28px' }}>
-            <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#0D2C54', marginBottom: '8px' }}>
-              Resource Library
-            </h1>
-            <p style={{ color: '#64748b', fontSize: '16px', lineHeight: 1.6 }}>
-              {totalResources}+ resources to help you lead with clarity, build stronger teams, and drive lasting impact.
-            </p>
-          </div>
-
-          {/* Search Bar */}
-          <div style={{ 
-            position: 'relative', 
-            marginBottom: '32px',
-            maxWidth: '500px'
-          }}>
-            <Search size={20} style={{ 
-              position: 'absolute', 
-              left: '16px', 
-              top: '50%', 
-              transform: 'translateY(-50%)', 
-              color: '#94a3b8' 
-            }} />
+        {/* Search */}
+        <div className="search-section relative mb-6">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
             <input
               type="text"
-              placeholder="Search templates, guides, playbooks..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '14px 14px 14px 48px',
-                border: '1px solid #e2e8f0',
-                borderRadius: '12px',
-                fontSize: '15px',
-                background: 'white',
-                outline: 'none',
-                transition: 'border-color 0.2s',
-              }}
-              onFocus={(e) => e.target.style.borderColor = '#0097A9'}
-              onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+              placeholder="Search all resources..."
+              className="w-full pl-12 pr-4 py-3 border-2 border-slate-200 rounded-xl text-base focus:outline-none focus:border-[#0097A9] transition-colors"
             />
           </div>
 
-          {/* Resource Categories Grid */}
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(3, 1fr)', 
-            gap: '20px',
-            marginBottom: '40px'
-          }}>
-            {RESOURCE_CATEGORIES.map((category) => (
-              <CategoryCard key={category.id} category={category} />
-            ))}
+          {/* Search Results Dropdown */}
+          {showSearchResults && (
+            <div className="absolute top-full left-0 right-0 bg-white border-2 border-[#0097A9] border-t-0 rounded-b-xl max-h-[450px] overflow-y-auto z-50 shadow-lg">
+              {Object.keys(groupedResults).length === 0 ? (
+                <div className="p-6 text-center text-slate-500">
+                  No resources found for "{searchQuery}"
+                </div>
+              ) : (
+                Object.entries(groupedResults).map(([type, items]) => {
+                  const config = categoryConfig[type];
+                  if (!config) return null;
+                  const Icon = config.icon;
+                  return (
+                    <div key={type} className="border-b border-slate-100 last:border-b-0">
+                      <div className="px-4 py-2 bg-slate-50 flex items-center gap-2">
+                        <div
+                          className="w-5 h-5 rounded flex items-center justify-center"
+                          style={{ backgroundColor: config.color }}
+                        >
+                          <Icon className="w-3 h-3 text-white" />
+                        </div>
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                          {config.label}
+                        </span>
+                        <span className="text-xs text-slate-400 ml-auto">
+                          {items.length} result{items.length > 1 ? 's' : ''}
+                        </span>
+                      </div>
+                      {items.slice(0, 4).map((item, idx) => (
+                        <a
+                          key={idx}
+                          href={item.url}
+                          onClick={(e) => { e.preventDefault(); navigate(item.url); }}
+                          className="block px-4 py-3 pl-10 hover:bg-[#e6f7f8] transition-colors"
+                        >
+                          <span className="text-sm font-medium text-[#0D2C54]">{item.name}</span>
+                        </a>
+                      ))}
+                      {items.length > 4 && (
+                        <a
+                          href={config.route}
+                          onClick={(e) => { e.preventDefault(); openModal(type); setShowSearchResults(false); }}
+                          className="block px-4 py-2 pl-10 text-sm font-semibold text-[#0097A9] hover:bg-[#e6f7f8]"
+                        >
+                          View all {items.length} {config.label.toLowerCase()} →
+                        </a>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Category Cards Grid */}
+        <div className="grid grid-cols-3 gap-5 mb-8">
+          {/* Ask the Professor - Spans 2 columns */}
+          <div
+            onClick={() => onStartProfessor ? onStartProfessor() : navigate('/ask-the-professor/use')}
+            className="col-span-2 bg-gradient-to-br from-[#0D2C54] to-[#1a3a5c] rounded-2xl p-6 cursor-pointer hover:-translate-y-1 hover:shadow-xl transition-all relative overflow-hidden group"
+          >
+            <div className="absolute top-[-50%] right-[-20%] w-[300px] h-[300px] bg-[radial-gradient(circle,rgba(0,151,169,0.15)_0%,transparent_70%)]" />
+            <div className="relative z-10">
+              <span className="inline-flex items-center gap-1.5 bg-[#0097A9] text-white px-3 py-1 rounded-full text-xs font-semibold mb-4">
+                <Star className="w-3 h-3" />
+                AI-Powered
+              </span>
+              <div className="flex items-center gap-4 mb-3">
+                <div className="w-12 h-12 rounded-xl bg-[rgba(0,151,169,0.2)] border-2 border-[#0097A9] flex items-center justify-center">
+                  <MessageSquare className="w-6 h-6 text-[#5fd4e0]" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Ask the Professor</h3>
+                  <p className="text-sm text-[#5fd4e0]">Your nonprofit leadership advisor</p>
+                </div>
+              </div>
+              <p className="text-white/70 text-sm mb-5 leading-relaxed">
+                Get instant expert guidance on strategy, governance, fundraising, and any leadership challenge. Drawing from 15+ years of consulting experience with 800+ nonprofits.
+              </p>
+              <span className="inline-flex items-center gap-2 bg-[#0097A9] text-white px-5 py-2.5 rounded-lg text-sm font-semibold group-hover:bg-[#5fd4e0] transition-colors">
+                Start a Conversation
+                <ChevronRight className="w-4 h-4" />
+              </span>
+            </div>
           </div>
 
-          {/* Recently Accessed */}
-          <div>
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center',
-              marginBottom: '16px'
-            }}>
-              <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0D2C54', margin: 0 }}>
-                Recently Accessed
-              </h2>
-              <a href="/resources/history" style={{
-                fontSize: '14px',
-                color: '#0097A9',
-                textDecoration: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                fontWeight: 500
-              }}>
-                View history <ArrowRight size={16} />
+          {/* Tools */}
+          <CategoryCard category="tools" config={categoryConfig.tools} onClick={() => openModal('tools')} />
+          
+          {/* Templates */}
+          <CategoryCard category="templates" config={categoryConfig.templates} onClick={() => openModal('templates')} />
+          
+          {/* Leadership Guides */}
+          <CategoryCard category="guides" config={categoryConfig.guides} onClick={() => openModal('guides')} />
+          
+          {/* Book Summaries */}
+          <CategoryCard category="books" config={categoryConfig.books} onClick={() => openModal('books')} />
+          
+          {/* Playbooks */}
+          <CategoryCard category="playbooks" config={categoryConfig.playbooks} onClick={() => openModal('playbooks')} />
+          
+          {/* Facilitation Kits */}
+          <CategoryCard category="kits" config={categoryConfig.kits} onClick={() => openModal('kits')} />
+          
+          {/* Certifications */}
+          <CategoryCard category="certs" config={categoryConfig.certs} onClick={() => openModal('certs')} />
+        </div>
+
+        {/* Top Downloads */}
+        <section>
+          <h2 className="text-lg font-bold text-[#0D2C54] mb-4">Top Downloads</h2>
+          <div className="grid grid-cols-4 gap-4">
+            {topDownloads.map((item, idx) => (
+              <a
+                key={idx}
+                href={item.url}
+                onClick={(e) => { e.preventDefault(); navigate(item.url); }}
+                className="bg-white rounded-xl p-4 border border-slate-200 hover:border-[#0097A9] hover:shadow-md transition-all"
+              >
+                <span className={`inline-block text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded mb-3 ${
+                  item.type === 'Template' ? 'bg-slate-100 text-slate-600' :
+                  item.type === 'Playbook' ? 'bg-purple-100 text-purple-600' :
+                  'bg-teal-50 text-teal-600'
+                }`}>
+                  {item.type}
+                </span>
+                <h4 className="text-sm font-semibold text-[#0D2C54] mb-2 leading-tight">{item.name}</h4>
+                <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                  <Download className="w-3 h-3" />
+                  {item.downloads.toLocaleString()} downloads
+                </div>
               </a>
+            ))}
+          </div>
+        </section>
+      </main>
+
+      {/* Modal */}
+      {activeModal && (
+        <div
+          className="fixed inset-0 bg-[#0D2C54]/70 flex items-center justify-center z-[100] p-4"
+          onClick={closeModal}
+        >
+          <div
+            className={`bg-white rounded-2xl w-full overflow-hidden shadow-2xl flex flex-col ${
+              isFullPageModal ? 'max-w-[1000px] max-h-[90vh]' : 'max-w-[700px] max-h-[85vh]'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+            style={{ animation: 'modalSlideIn 0.25s ease' }}
+          >
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between flex-shrink-0">
+              <h2 className="text-xl font-bold text-[#0D2C54] flex items-center gap-3">
+                <span
+                  className="w-9 h-9 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: categoryConfig[activeModal]?.color }}
+                >
+                  {(() => {
+                    const Icon = categoryConfig[activeModal]?.icon;
+                    return Icon ? <Icon className="w-5 h-5 text-white" /> : null;
+                  })()}
+                </span>
+                {categoryConfig[activeModal]?.label}
+              </h2>
+              <button
+                onClick={closeModal}
+                className="w-9 h-9 rounded-lg bg-slate-100 hover:bg-red-100 hover:text-red-500 flex items-center justify-center text-slate-400 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(4, 1fr)', 
-              gap: '16px' 
-            }}>
-              {RECENT_ITEMS.map((item, index) => (
-                <RecentCard key={index} item={item} />
-              ))}
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto flex-1">
+              {/* Search within modal */}
+              <input
+                type="text"
+                value={modalSearchQuery}
+                onChange={(e) => setModalSearchQuery(e.target.value)}
+                placeholder={`Search within ${categoryConfig[activeModal]?.label.toLowerCase()}...`}
+                className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg text-sm mb-4 focus:outline-none focus:border-[#0097A9]"
+              />
+
+              {/* Subcategory tabs */}
+              {subcategories[activeModal]?.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {subcategories[activeModal].map((sub) => {
+                    const subKey = sub.toLowerCase().replace(' ', '-');
+                    const isActive = (activeSubcategory === 'all' && sub === 'All') || activeSubcategory === subKey;
+                    return (
+                      <button
+                        key={sub}
+                        onClick={() => setActiveSubcategory(subKey)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium border-2 transition-all ${
+                          isActive
+                            ? 'bg-[#0097A9] border-[#0097A9] text-white'
+                            : 'border-slate-200 text-slate-500 hover:border-[#0097A9] hover:text-[#0097A9]'
+                        }`}
+                      >
+                        {sub}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Items list */}
+              {activeModal === 'certs' ? (
+                <div className={isFullPageModal ? 'grid grid-cols-2 gap-4' : 'space-y-3'}>
+                  {getModalItems().map((item, idx) => (
+                    <a
+                      key={idx}
+                      href={item.url}
+                      onClick={(e) => { e.preventDefault(); navigate(item.url); }}
+                      className="block bg-white border-2 border-slate-100 rounded-xl p-5 hover:border-[#0097A9] hover:shadow-md transition-all"
+                    >
+                      <h4 className="text-base font-semibold text-[#0D2C54] mb-2">{item.name}</h4>
+                      <p className="text-sm text-slate-500 mb-3">{item.description}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-lg font-bold text-[#0097A9]">{item.price}</span>
+                        <span className={`text-xs font-semibold px-2 py-1 rounded ${
+                          item.partner ? 'bg-amber-100 text-amber-700' : 'bg-teal-50 text-teal-600'
+                        }`}>
+                          {item.partner ? `${item.partner} Partner` : 'Edge Original'}
+                        </span>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <div className={isFullPageModal ? 'grid grid-cols-2 gap-3' : 'space-y-2'}>
+                  {getModalItems().length === 0 ? (
+                    <div className="col-span-2 text-center py-8 text-slate-400">
+                      No {categoryConfig[activeModal]?.label.toLowerCase()} found
+                    </div>
+                  ) : (
+                    getModalItems().map((item, idx) => (
+                      <a
+                        key={idx}
+                        href={item.url}
+                        onClick={(e) => { e.preventDefault(); navigate(item.url); }}
+                        className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-[#e6f7f8] transition-colors"
+                      >
+                        <div>
+                          <h4 className="text-sm font-semibold text-[#0D2C54] mb-0.5">{item.name}</h4>
+                          <p className="text-xs text-slate-400">{item.tags.slice(0, 3).join(' • ')}</p>
+                        </div>
+                        <span className="px-3 py-1.5 bg-[#0D2C54] text-white text-xs font-semibold rounded hover:bg-[#0097A9] transition-colors flex-shrink-0">
+                          {activeModal === 'tools' ? 'Open' : 'View'}
+                        </span>
+                      </a>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
-      </main>
+      )}
+
+      <style>{`
+        @keyframes modalSlideIn {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   );
 };
 
 // Category Card Component
-interface CategoryCardProps {
-  category: {
-    id: string;
-    name: string;
-    description: string;
-    count: number;
-    icon: React.ElementType;
-    color: string;
-    route: string;
-  };
-}
-
-const CategoryCard: React.FC<CategoryCardProps> = ({ category }) => {
-  const Icon = category.icon;
+const CategoryCard: React.FC<{
+  category: string;
+  config: CategoryConfig;
+  onClick: () => void;
+}> = ({ category, config, onClick }) => {
+  const Icon = config.icon;
   
   return (
-    <a
-      href={category.route}
-      style={{
-        background: 'white',
-        borderRadius: '16px',
-        padding: '24px',
-        border: '1px solid #e2e8f0',
-        cursor: 'pointer',
-        transition: 'all 0.2s ease',
-        textDecoration: 'none',
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-4px)';
-        e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.1)';
-        e.currentTarget.style.borderColor = category.color;
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = 'none';
-        e.currentTarget.style.borderColor = '#e2e8f0';
-      }}
+    <div
+      onClick={onClick}
+      className="bg-white rounded-2xl p-5 border-2 border-transparent hover:border-current cursor-pointer hover:-translate-y-1 hover:shadow-lg transition-all"
+      style={{ '--hover-color': config.hoverColor } as React.CSSProperties}
     >
-      <div style={{
-        width: '48px',
-        height: '48px',
-        borderRadius: '12px',
-        background: category.color + '15',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: '16px',
-      }}>
-        <Icon size={24} color={category.color} />
-      </div>
-      
-      <h3 style={{ 
-        fontSize: '17px', 
-        fontWeight: 600, 
-        color: '#0D2C54', 
-        margin: '0 0 8px 0' 
-      }}>
-        {category.name}
-      </h3>
-      
-      <p style={{ 
-        fontSize: '14px', 
-        color: '#64748b', 
-        lineHeight: 1.5,
-        margin: '0 0 16px 0',
-        flex: 1
-      }}>
-        {category.description}
-      </p>
-      
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center' 
-      }}>
-        <span style={{ 
-          fontSize: '14px', 
-          color: category.color, 
-          fontWeight: 600 
-        }}>
-          {category.count}+ {category.id === 'certifications' ? 'programs' : category.id}
-        </span>
-        <div style={{
-          width: '32px',
-          height: '32px',
-          borderRadius: '8px',
-          background: '#f8fafc',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          <ChevronRight size={18} color="#94a3b8" />
+      <div className="flex items-center gap-3 mb-3">
+        <div
+          className="w-12 h-12 rounded-xl flex items-center justify-center"
+          style={{ background: `linear-gradient(135deg, ${config.color}, ${config.color}dd)` }}
+        >
+          <Icon className="w-6 h-6 text-white" />
+        </div>
+        <div>
+          <h3 className="text-base font-bold text-[#0D2C54]">{config.label}</h3>
+          <span className="text-xs text-slate-400">{config.count}</span>
         </div>
       </div>
-    </a>
+      <p className="text-sm text-slate-500 mb-3 leading-relaxed">{config.description}</p>
+      <div className="flex flex-wrap gap-1.5 mb-3">
+        {config.sampleItems.map((item, idx) => (
+          <span key={idx} className="text-xs px-2 py-1 bg-slate-100 text-slate-500 rounded">
+            {item}
+          </span>
+        ))}
+      </div>
+      <div className="flex items-center gap-1 text-sm font-semibold" style={{ color: config.color }}>
+        Browse {config.label}
+        <ChevronRight className="w-4 h-4" />
+      </div>
+    </div>
   );
 };
-
-// Recent Card Component
-interface RecentCardProps {
-  item: {
-    type: string;
-    name: string;
-    time: string;
-    color: string;
-  };
-}
-
-const RecentCard: React.FC<RecentCardProps> = ({ item }) => (
-  <a
-    href="#"
-    style={{
-      background: 'white',
-      borderRadius: '12px',
-      padding: '16px',
-      border: '1px solid #e2e8f0',
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-      textDecoration: 'none',
-      display: 'block',
-    }}
-    onMouseEnter={(e) => {
-      e.currentTarget.style.borderColor = item.color;
-      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
-    }}
-    onMouseLeave={(e) => {
-      e.currentTarget.style.borderColor = '#e2e8f0';
-      e.currentTarget.style.boxShadow = 'none';
-    }}
-  >
-    <span style={{
-      display: 'inline-block',
-      padding: '4px 8px',
-      borderRadius: '4px',
-      fontSize: '10px',
-      fontWeight: 700,
-      background: item.color + '15',
-      color: item.color,
-      marginBottom: '10px',
-      textTransform: 'uppercase',
-      letterSpacing: '0.5px',
-    }}>
-      {item.type}
-    </span>
-    <h4 style={{ 
-      fontSize: '14px', 
-      fontWeight: 600, 
-      color: '#0D2C54', 
-      margin: '0 0 6px 0',
-      lineHeight: 1.4
-    }}>
-      {item.name}
-    </h4>
-    <div style={{ 
-      display: 'flex', 
-      alignItems: 'center', 
-      gap: '4px',
-      fontSize: '12px', 
-      color: '#94a3b8' 
-    }}>
-      <Clock size={12} />
-      Accessed {item.time}
-    </div>
-  </a>
-);
-
-// NavLink Component
-const NavLink: React.FC<{ href: string; icon: React.ElementType; children: React.ReactNode; active?: boolean }> = ({ 
-  href, 
-  icon: Icon, 
-  children, 
-  active 
-}) => (
-  <a
-    href={href}
-    style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px',
-      padding: '12px 14px',
-      borderRadius: '10px',
-      color: active ? '#0097A9' : '#475569',
-      textDecoration: 'none',
-      fontSize: '14px',
-      fontWeight: active ? 600 : 500,
-      marginBottom: '4px',
-      background: active ? '#f0fdfa' : 'transparent',
-      transition: 'all 0.15s ease'
-    }}
-  >
-    <Icon size={20} />
-    {children}
-  </a>
-);
-
-// Resource NavLink with count
-const ResourceNavLink: React.FC<{ 
-  href: string; 
-  icon: React.ElementType; 
-  count: number;
-  children: React.ReactNode; 
-}> = ({ href, icon: Icon, count, children }) => (
-  <a
-    href={href}
-    style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px',
-      padding: '10px 14px',
-      borderRadius: '8px',
-      color: '#475569',
-      textDecoration: 'none',
-      fontSize: '13px',
-      fontWeight: 500,
-      marginBottom: '2px',
-      transition: 'all 0.15s ease'
-    }}
-  >
-    <Icon size={18} />
-    <span style={{ flex: 1 }}>{children}</span>
-    <span style={{ 
-      fontSize: '11px', 
-      color: '#94a3b8',
-      background: '#f1f5f9',
-      padding: '2px 8px',
-      borderRadius: '10px',
-    }}>
-      {count}
-    </span>
-  </a>
-);
 
 export default ResourceLibrary;
