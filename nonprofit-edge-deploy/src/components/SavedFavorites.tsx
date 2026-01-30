@@ -1,169 +1,492 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Star, FileText, BookOpen, Wrench, Trash2, ExternalLink, Search } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { 
+  Star, Search, FileText, Wrench, BookOpen, 
+  ArrowLeft, ExternalLink, Trash2, Filter, Calendar
+} from 'lucide-react';
 
 interface FavoriteItem {
   id: string;
   name: string;
   type: 'resource' | 'tool' | 'article';
-  category: string;
-  savedAt: string;
-  href: string;
+  description: string;
+  savedAt: string;  // ISO date string
+  url?: string;
 }
 
-const mockFavorites: FavoriteItem[] = [
-  { id: '1', name: 'Board Self-Assessment Template', type: 'resource', category: 'Board Governance', savedAt: '2026-01-27', href: '/resources/board-self-assessment' },
-  { id: '2', name: 'Strategic Plan Check-Up', type: 'tool', category: 'Strategic Planning', savedAt: '2026-01-25', href: '/tools/strategic-plan' },
-  { id: '3', name: '5 Signs Your Board Needs a Reset', type: 'article', category: 'Board Governance', savedAt: '2026-01-22', href: '/articles/board-reset-signs' },
-  { id: '4', name: 'Grant Review Tool', type: 'tool', category: 'Fundraising', savedAt: '2026-01-20', href: '/tools/grant-review' },
-  { id: '5', name: 'CEO Evaluation Framework', type: 'resource', category: 'Leadership', savedAt: '2026-01-18', href: '/resources/ceo-evaluation' },
-  { id: '6', name: 'Constraint Assessment', type: 'tool', category: 'Strategy', savedAt: '2026-01-15', href: '/dashboard/constraint-assessment' },
-];
+interface SavedFavoritesProps {
+  onNavigate?: (route: string) => void;
+}
 
-const SavedFavorites: React.FC = () => {
-  const [favorites, setFavorites] = useState(mockFavorites);
+const SavedFavorites: React.FC<SavedFavoritesProps> = ({ onNavigate }) => {
+  const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState<'all' | 'resource' | 'tool' | 'article'>('all');
+  const [filterType, setFilterType] = useState('all');
 
-  const filteredFavorites = favorites.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = typeFilter === 'all' || item.type === typeFilter;
-    return matchesSearch && matchesType;
-  });
+  // Load favorites from localStorage
+  useEffect(() => {
+    const savedFavorites = localStorage.getItem('nonprofit_edge_favorites');
+    if (savedFavorites) {
+      setFavorites(JSON.parse(savedFavorites));
+    } else {
+      // Initialize with sample data if none exists
+      const sampleFavorites: FavoriteItem[] = [
+        {
+          id: '1',
+          name: 'Strategic Planning Guide',
+          type: 'resource',
+          description: 'Comprehensive guide to creating a 3-year strategic plan',
+          savedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+          url: '/resources/strategic-planning-guide',
+        },
+        {
+          id: '2',
+          name: 'Board Assessment Tool',
+          type: 'tool',
+          description: 'Evaluate your board\'s effectiveness across 8 dimensions',
+          savedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+          url: '/board-assessment/use',
+        },
+        {
+          id: '3',
+          name: 'Good to Great Summary',
+          type: 'article',
+          description: 'Key takeaways from Jim Collins\' classic business book',
+          savedAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+          url: '/resources/book-summaries/good-to-great',
+        },
+        {
+          id: '4',
+          name: 'Scenario Planner',
+          type: 'tool',
+          description: 'PIVOT framework for strategic scenario planning',
+          savedAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+          url: '/scenario-planner/use',
+        },
+        {
+          id: '5',
+          name: 'Grant Writing Checklist',
+          type: 'resource',
+          description: '50-point checklist for winning grant proposals',
+          savedAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+          url: '/resources/grant-writing-checklist',
+        },
+      ];
+      setFavorites(sampleFavorites);
+      localStorage.setItem('nonprofit_edge_favorites', JSON.stringify(sampleFavorites));
+    }
+  }, []);
 
+  // Add to favorites (can be called from other components)
+  const addToFavorites = (item: Omit<FavoriteItem, 'id' | 'savedAt'>) => {
+    const newFavorite: FavoriteItem = {
+      ...item,
+      id: `fav_${Date.now()}`,
+      savedAt: new Date().toISOString(),
+    };
+    
+    const updatedFavorites = [newFavorite, ...favorites];
+    setFavorites(updatedFavorites);
+    localStorage.setItem('nonprofit_edge_favorites', JSON.stringify(updatedFavorites));
+    
+    return newFavorite;
+  };
+
+  // Remove from favorites
   const removeFavorite = (id: string) => {
-    setFavorites(prev => prev.filter(f => f.id !== id));
-  };
-
-  const getIcon = (type: string) => {
-    switch (type) {
-      case 'resource': return <FileText className="w-5 h-5" />;
-      case 'tool': return <Wrench className="w-5 h-5" />;
-      case 'article': return <BookOpen className="w-5 h-5" />;
-      default: return <FileText className="w-5 h-5" />;
+    if (confirm('Remove this item from your favorites?')) {
+      const updatedFavorites = favorites.filter(f => f.id !== id);
+      setFavorites(updatedFavorites);
+      localStorage.setItem('nonprofit_edge_favorites', JSON.stringify(updatedFavorites));
     }
   };
 
-  const getTypeStyle = (type: string) => {
-    switch (type) {
-      case 'resource': return 'bg-blue-100 text-blue-700';
-      case 'tool': return 'bg-purple-100 text-purple-700';
-      case 'article': return 'bg-amber-100 text-amber-700';
-      default: return 'bg-slate-100 text-slate-700';
+  // Format date for display
+  const formatDate = (isoString: string) => {
+    const date = new Date(isoString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      return 'Today';
+    } else if (diffDays === 1) {
+      return 'Yesterday';
+    } else if (diffDays < 7) {
+      return `${diffDays} days ago`;
+    } else {
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+      });
     }
   };
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric' 
+  // Format full date/time
+  const formatFullDate = (isoString: string) => {
+    const date = new Date(isoString);
+    return date.toLocaleString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
     });
   };
 
-  return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="max-w-5xl mx-auto px-6 py-12">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-[#0D2C54] mb-2">Saved Favorites</h1>
-            <p className="text-slate-500">Quick access to your bookmarked content</p>
-          </div>
-          <div className="flex items-center gap-2 text-slate-500">
-            <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
-            <span className="font-semibold">{favorites.length} items saved</span>
-          </div>
-        </div>
+  // Get icon and colors for type
+  const getTypeConfig = (type: string) => {
+    switch (type) {
+      case 'resource':
+        return { 
+          icon: <FileText size={20} color="#2563eb" />, 
+          bg: '#eff6ff', 
+          color: '#2563eb',
+          label: 'Resource'
+        };
+      case 'tool':
+        return { 
+          icon: <Wrench size={20} color="#0097A9" />, 
+          bg: '#ecfeff', 
+          color: '#0097A9',
+          label: 'Tool'
+        };
+      case 'article':
+        return { 
+          icon: <BookOpen size={20} color="#7c3aed" />, 
+          bg: '#f5f3ff', 
+          color: '#7c3aed',
+          label: 'Article'
+        };
+      default:
+        return { 
+          icon: <FileText size={20} color="#64748b" />, 
+          bg: '#f8fafc', 
+          color: '#64748b',
+          label: 'Item'
+        };
+    }
+  };
 
-        {/* Filters */}
-        <div className="bg-white rounded-xl border border-slate-200 p-4 mb-6">
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search favorites..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0097A9]"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              {(['all', 'resource', 'tool', 'article'] as const).map((type) => (
-                <button
-                  key={type}
-                  onClick={() => setTypeFilter(type)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    typeFilter === type
-                      ? 'bg-[#0097A9] text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  {type === 'all' ? 'All' : type.charAt(0).toUpperCase() + type.slice(1) + 's'}
-                </button>
-              ))}
-            </div>
+  // Filter favorites
+  const filteredFavorites = favorites.filter(item => {
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         item.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = filterType === 'all' || item.type === filterType;
+    return matchesSearch && matchesType;
+  });
+
+  const navigate = (route: string) => {
+    if (onNavigate) {
+      onNavigate(route);
+    } else {
+      window.location.href = route;
+    }
+  };
+
+  return (
+    <div style={{ 
+      minHeight: '100vh', 
+      background: '#f8fafc',
+      fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif"
+    }}>
+      {/* Header */}
+      <header style={{
+        background: 'white',
+        borderBottom: '1px solid #e2e8f0',
+        padding: '16px 32px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '16px',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <button
+            onClick={() => navigate('/dashboard')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 16px',
+              background: '#f1f5f9',
+              border: 'none',
+              borderRadius: '8px',
+              color: '#475569',
+              fontSize: '14px',
+              fontWeight: 500,
+              cursor: 'pointer',
+            }}
+          >
+            <ArrowLeft size={18} />
+            Back to Dashboard
+          </button>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0D2C54', margin: 0 }}>
+            Saved Favorites
+          </h1>
+        </div>
+        
+        {/* Count */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '8px 16px',
+          background: '#fef9c3',
+          borderRadius: '8px',
+        }}>
+          <Star size={18} color="#ca8a04" fill="#ca8a04" />
+          <span style={{ fontSize: '14px', color: '#854d0e', fontWeight: 500 }}>
+            {favorites.length} saved items
+          </span>
+        </div>
+      </header>
+
+      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px' }}>
+        {/* Search and Filter Bar */}
+        <div style={{ 
+          display: 'flex', 
+          gap: '12px', 
+          marginBottom: '24px',
+          flexWrap: 'wrap',
+        }}>
+          {/* Search */}
+          <div style={{ position: 'relative', flex: '1 1 300px' }}>
+            <Search size={18} color="#94a3b8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+            <input
+              type="text"
+              placeholder="Search favorites..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 14px 10px 40px',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                fontSize: '14px',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
+          
+          {/* Type Filter */}
+          <div style={{ position: 'relative' }}>
+            <Filter size={18} color="#94a3b8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              style={{
+                padding: '10px 14px 10px 40px',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                fontSize: '14px',
+                background: 'white',
+                cursor: 'pointer',
+                minWidth: '150px',
+              }}
+            >
+              <option value="all">All Types</option>
+              <option value="resource">Resources</option>
+              <option value="tool">Tools</option>
+              <option value="article">Articles</option>
+            </select>
           </div>
         </div>
 
         {/* Favorites Grid */}
         {filteredFavorites.length === 0 ? (
-          <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
-            <Star className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-slate-700 mb-2">No favorites found</h3>
-            <p className="text-slate-500 mb-6">
-              {favorites.length === 0
-                ? "You haven't saved any favorites yet"
-                : "Try adjusting your search or filter"}
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            border: '1px solid #e2e8f0',
+            padding: '48px',
+            textAlign: 'center',
+          }}>
+            <Star size={48} color="#cbd5e1" style={{ marginBottom: '16px' }} />
+            <p style={{ color: '#64748b', margin: 0 }}>
+              {searchQuery || filterType !== 'all' 
+                ? 'No favorites match your search' 
+                : 'No saved favorites yet'}
             </p>
-            <a
-              href="/member-resources"
-              className="inline-flex items-center gap-2 bg-[#0097A9] text-white font-semibold px-6 py-3 rounded-lg hover:bg-[#007A8A] transition-all"
+            <button
+              onClick={() => navigate('/resources')}
+              style={{
+                marginTop: '16px',
+                padding: '10px 20px',
+                background: '#0097A9',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: 500,
+                cursor: 'pointer',
+              }}
             >
               Browse Resources
-            </a>
+            </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4">
-            {filteredFavorites.map((item) => (
-              <div
-                key={item.id}
-                className="bg-white rounded-xl border border-slate-200 p-5 hover:border-[#0097A9] hover:shadow-md transition-all group"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${getTypeStyle(item.type)}`}>
-                    {getIcon(item.type)}
-                  </div>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+            gap: '16px',
+          }}>
+            {filteredFavorites.map((item) => {
+              const typeConfig = getTypeConfig(item.type);
+              return (
+                <div
+                  key={item.id}
+                  style={{
+                    background: 'white',
+                    borderRadius: '12px',
+                    border: '1px solid #e2e8f0',
+                    padding: '20px',
+                    position: 'relative',
+                    transition: 'box-shadow 0.2s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  {/* Remove button */}
                   <button
                     onClick={() => removeFavorite(item.id)}
-                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                    style={{
+                      position: 'absolute',
+                      top: '12px',
+                      right: '12px',
+                      padding: '6px',
+                      background: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      color: '#94a3b8',
+                      opacity: 0.7,
+                      transition: 'opacity 0.2s',
+                    }}
                     title="Remove from favorites"
+                    onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.7'; }}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 size={14} />
                   </button>
+                  
+                  {/* Type badge and icon */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '8px',
+                      background: typeConfig.bg,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
+                      {typeConfig.icon}
+                    </div>
+                    <span style={{
+                      padding: '4px 10px',
+                      background: typeConfig.bg,
+                      color: typeConfig.color,
+                      borderRadius: '4px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                    }}>
+                      {typeConfig.label}
+                    </span>
+                  </div>
+                  
+                  {/* Content */}
+                  <h3 style={{ 
+                    fontSize: '15px', 
+                    fontWeight: 600, 
+                    color: '#1e293b', 
+                    marginBottom: '8px',
+                    marginTop: 0,
+                    paddingRight: '30px',
+                  }}>
+                    {item.name}
+                  </h3>
+                  <p style={{ 
+                    fontSize: '13px', 
+                    color: '#64748b', 
+                    margin: '0 0 16px 0',
+                    lineHeight: '1.5',
+                  }}>
+                    {item.description}
+                  </p>
+                  
+                  {/* Footer */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    paddingTop: '12px',
+                    borderTop: '1px solid #f1f5f9',
+                  }}>
+                    {/* Saved date */}
+                    <div 
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                      title={formatFullDate(item.savedAt)}
+                    >
+                      <Calendar size={14} color="#94a3b8" />
+                      <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                        Saved {formatDate(item.savedAt)}
+                      </span>
+                    </div>
+                    
+                    {/* Open link */}
+                    <button
+                      onClick={() => item.url && navigate(item.url)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '6px 12px',
+                        background: typeConfig.bg,
+                        color: typeConfig.color,
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Open
+                      <ExternalLink size={12} />
+                    </button>
+                  </div>
                 </div>
+              );
+            })}
+          </div>
+        )}
 
-                <h3 className="font-semibold text-slate-800 mb-2 line-clamp-2">{item.name}</h3>
-                
-                <div className="flex items-center gap-3 mb-4">
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded capitalize ${getTypeStyle(item.type)}`}>
-                    {item.type}
-                  </span>
-                  <span className="text-xs text-slate-400">{item.category}</span>
-                </div>
-
-                <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                  <span className="text-xs text-slate-400">Saved {formatDate(item.savedAt)}</span>
-                  <a
-                    href={item.href}
-                    className="flex items-center gap-1 text-sm font-medium text-[#0097A9] hover:underline"
-                  >
-                    Open <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                </div>
-              </div>
-            ))}
+        {/* Browse More Link */}
+        {filteredFavorites.length > 0 && (
+          <div style={{ textAlign: 'center', marginTop: '32px' }}>
+            <button
+              onClick={() => navigate('/resources')}
+              style={{
+                padding: '10px 24px',
+                background: 'white',
+                color: '#0097A9',
+                border: '1px solid #0097A9',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: 500,
+                cursor: 'pointer',
+              }}
+            >
+              Discover More Resources
+            </button>
           </div>
         )}
       </div>
