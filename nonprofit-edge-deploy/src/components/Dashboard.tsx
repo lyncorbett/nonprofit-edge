@@ -52,7 +52,7 @@ const tools: Tool[] = [
     id: 'board-assessment',
     name: 'Board Assessment', 
     description: 'Evaluate your board\'s effectiveness across governance, engagement, and strategic contribution using BoardSource-aligned criteria.',
-    href: '/board-assessment/use', 
+    href: 'board-assessment', 
     img: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop',
     features: ['30-question assessment', 'Benchmark comparisons', 'Action recommendations', 'PDF report']
   },
@@ -60,7 +60,7 @@ const tools: Tool[] = [
     id: 'strategic-plan',
     name: 'Strategic Plan Check-Up', 
     description: 'Diagnose the health of your strategic plan and identify gaps before they become problems.',
-    href: '/strategic-plan-checkup/use', 
+    href: 'strategic-checkup', 
     img: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&h=300&fit=crop',
     features: ['Plan health score', 'Gap analysis', 'Implementation tracker', 'Quarterly check-ins']
   },
@@ -68,7 +68,7 @@ const tools: Tool[] = [
     id: 'grant-review',
     name: 'Grant Review', 
     description: 'Get AI-powered feedback on your grant proposals before you submit. Improve clarity, alignment, and competitiveness.',
-    href: '/grant-review/use', 
+    href: 'grant-review', 
     img: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=300&fit=crop',
     features: ['Proposal scoring', 'Alignment check', 'Narrative feedback', 'Budget review']
   },
@@ -76,7 +76,7 @@ const tools: Tool[] = [
     id: 'ceo-evaluation',
     name: 'CEO Evaluation', 
     description: 'Conduct comprehensive, fair CEO performance evaluations that strengthen board-ED relationships.',
-    href: '/ceo-evaluation/use', 
+    href: 'ceo-evaluation', 
     img: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=400&h=300&fit=crop',
     features: ['360° feedback', 'Goal alignment', 'Development plan', 'Board summary']
   },
@@ -84,7 +84,7 @@ const tools: Tool[] = [
     id: 'scenario-planner',
     name: 'Scenario Planner', 
     description: 'Use the PIVOT framework to stress-test your strategy against multiple future scenarios.',
-    href: '/scenario-planner/use', 
+    href: 'scenario-planner', 
     img: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&h=300&fit=crop',
     features: ['3 scenario models', 'Risk assessment', 'Decision matrix', 'Contingency plans']
   },
@@ -92,7 +92,7 @@ const tools: Tool[] = [
     id: 'constraint-assessment',
     name: 'Core Constraint', 
     description: 'Identify the ONE constraint holding your organization back using Theory of Constraints methodology.',
-    href: '/constraint-assessment', 
+    href: 'constraint-assessment', 
     img: 'https://images.unsplash.com/photo-1568992687947-868a62a9f521?w=400&h=300&fit=crop',
     features: ['Constraint diagnosis', 'Root cause analysis', 'Breakthrough strategy', '90-day action plan']
   },
@@ -125,12 +125,13 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   }, []);
 
-  // Navigation helper
-  const navigate = (path: string) => {
+  // Navigation helper - uses onNavigate prop from App.tsx
+  const navigate = (page: string) => {
     if (onNavigate) {
-      onNavigate(path);
+      onNavigate(page);
     } else {
-      window.location.href = path;
+      // Fallback for standalone use
+      window.location.href = page.startsWith('/') ? page : `/${page}`;
     }
   };
 
@@ -152,34 +153,54 @@ const Dashboard: React.FC<DashboardProps> = ({
     setSelectedTool(null);
   };
 
-  // Tour steps
+  // Tour steps with element targeting
   const tourSteps = [
     {
       title: 'Welcome to The Nonprofit Edge! 🎉',
       content: 'Let\'s take a quick tour to help you get the most out of your membership.',
-      target: null
+      target: null,
+      position: 'center'
     },
     {
       title: 'Your Tools',
       content: 'Access powerful AI-driven assessments and planning tools. Click any tool to learn more and get started.',
-      target: 'tools-section'
+      target: 'tools-section',
+      position: 'top'
     },
     {
       title: 'Ask the Professor',
       content: 'Your 24/7 nonprofit leadership advisor. Get strategic guidance tailored to your specific challenges.',
-      target: 'professor-card'
+      target: 'professor-card',
+      position: 'bottom'
     },
     {
       title: 'Member Resources',
       content: 'Browse templates, playbooks, book summaries, and facilitation kits in the sidebar.',
-      target: 'sidebar-resources'
+      target: 'sidebar-resources',
+      position: 'right'
     },
     {
       title: 'You\'re All Set!',
       content: 'Start by exploring a tool or asking the Professor a question. We\'re here to help you lead with confidence.',
-      target: null
+      target: null,
+      position: 'center'
     }
   ];
+
+  // State for highlight position
+  const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null);
+
+  // Update highlight when tour step changes
+  useEffect(() => {
+    if (showTour && tourSteps[tourStep].target) {
+      const element = document.getElementById(tourSteps[tourStep].target!);
+      if (element) {
+        setHighlightRect(element.getBoundingClientRect());
+      }
+    } else {
+      setHighlightRect(null);
+    }
+  }, [showTour, tourStep]);
 
   const handleTourNext = () => {
     if (tourStep < tourSteps.length - 1) {
@@ -216,30 +237,27 @@ const Dashboard: React.FC<DashboardProps> = ({
           <div className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold mb-3 pl-3">
             Quick Actions
           </div>
-          <a 
-            href="/member-resources" 
-            onClick={(e) => { e.preventDefault(); navigate('/member-resources'); }}
-            className="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-[#0D2C54] text-sm font-medium"
+          <button 
+            onClick={() => navigate('member-resources')}
+            className="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-[#0D2C54] text-sm font-medium w-full text-left"
           >
             <Folder className="w-5 h-5" />
             Member Resources
-          </a>
-          <a 
-            href="/my-downloads"
-            onClick={(e) => { e.preventDefault(); navigate('/my-downloads'); }}
-            className="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-[#0D2C54] text-sm font-medium"
+          </button>
+          <button 
+            onClick={() => navigate('my-downloads')}
+            className="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-[#0D2C54] text-sm font-medium w-full text-left"
           >
             <Download className="w-5 h-5" />
             My Downloads
-          </a>
-          <a 
-            href="/favorites"
-            onClick={(e) => { e.preventDefault(); navigate('/favorites'); }}
-            className="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-[#0D2C54] text-sm font-medium"
+          </button>
+          <button 
+            onClick={() => navigate('favorites')}
+            className="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-[#0D2C54] text-sm font-medium w-full text-left"
           >
             <Star className="w-5 h-5" />
             Saved Favorites
-          </a>
+          </button>
         </nav>
 
         {/* Recent Activity */}
@@ -269,13 +287,12 @@ const Dashboard: React.FC<DashboardProps> = ({
             <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
               Upcoming Events
             </span>
-            <a 
-              href="/events" 
-              onClick={(e) => { e.preventDefault(); navigate('/events'); }}
-              className="text-xs text-[#0097A9] font-medium"
+            <button 
+              onClick={() => navigate('events')}
+              className="text-xs text-[#0097A9] font-medium hover:underline"
             >
               View All
-            </a>
+            </button>
           </div>
           <div className="flex items-center gap-3 px-3 py-3 border-b border-slate-100">
             <div className="bg-[#0D2C54] rounded-lg px-3 py-2 text-center min-w-[48px]">
@@ -317,14 +334,13 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         {/* Settings & Tour */}
-        <a 
-          href="/settings"
-          onClick={(e) => { e.preventDefault(); navigate('/settings'); }}
-          className="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-[#0D2C54] text-sm font-medium"
+        <button 
+          onClick={() => navigate('settings')}
+          className="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-[#0D2C54] text-sm font-medium w-full text-left"
         >
           <Settings className="w-5 h-5" />
           Settings
-        </a>
+        </button>
         <button 
           onClick={() => { setTourStep(0); setShowTour(true); }}
           className="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-[#0D2C54] text-sm font-medium w-full text-left"
@@ -524,10 +540,60 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       {/* PRODUCT TOUR */}
       {showTour && (
-        <div className="fixed inset-0 bg-[#0D2C54]/80 flex items-center justify-center z-[100] p-4">
+        <>
+          {/* Dark overlay */}
           <div 
-            className="bg-white rounded-2xl w-full max-w-[450px] overflow-hidden shadow-2xl"
-            style={{ animation: 'modalSlideIn 0.3s ease' }}
+            className="fixed inset-0 z-[98]"
+            style={{
+              background: highlightRect 
+                ? 'transparent' 
+                : 'rgba(13, 44, 84, 0.8)'
+            }}
+          />
+
+          {/* Highlight box around target element */}
+          {highlightRect && (
+            <div 
+              className="fixed z-[99] pointer-events-none transition-all duration-300"
+              style={{
+                top: highlightRect.top - 8,
+                left: highlightRect.left - 8,
+                width: highlightRect.width + 16,
+                height: highlightRect.height + 16,
+                border: '3px solid #0097A9',
+                borderRadius: '16px',
+                boxShadow: '0 0 0 9999px rgba(13, 44, 84, 0.8)',
+              }}
+            />
+          )}
+          
+          {/* Tour tooltip */}
+          <div 
+            className="fixed z-[100] bg-white rounded-2xl w-[420px] overflow-hidden shadow-2xl"
+            style={{
+              ...(highlightRect ? {
+                top: tourSteps[tourStep].position === 'top' 
+                  ? highlightRect.top - 240
+                  : tourSteps[tourStep].position === 'bottom'
+                  ? highlightRect.bottom + 20
+                  : tourSteps[tourStep].position === 'right'
+                  ? highlightRect.top + highlightRect.height / 2
+                  : highlightRect.top + highlightRect.height / 2,
+                left: tourSteps[tourStep].position === 'right'
+                  ? highlightRect.right + 20
+                  : tourSteps[tourStep].position === 'top' || tourSteps[tourStep].position === 'bottom'
+                  ? Math.max(20, Math.min(highlightRect.left + highlightRect.width / 2 - 210, window.innerWidth - 440))
+                  : highlightRect.left - 440,
+                transform: tourSteps[tourStep].position === 'right' || tourSteps[tourStep].position === 'left'
+                  ? 'translateY(-50%)'
+                  : 'none'
+              } : {
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)'
+              }),
+              animation: 'modalSlideIn 0.3s ease'
+            }}
           >
             {/* Progress */}
             <div className="h-1 bg-slate-100">
@@ -537,43 +603,43 @@ const Dashboard: React.FC<DashboardProps> = ({
               />
             </div>
 
-            <div className="p-8 text-center">
-              <h3 className="text-xl font-bold text-[#0D2C54] mb-3">
+            <div className="p-6">
+              <h3 className="text-xl font-bold text-[#0D2C54] mb-2 text-center">
                 {tourSteps[tourStep].title}
               </h3>
-              <p className="text-slate-600 mb-8 leading-relaxed">
+              <p className="text-slate-600 mb-6 leading-relaxed text-center">
                 {tourSteps[tourStep].content}
               </p>
 
               <div className="flex gap-3">
                 <button
                   onClick={handleTourSkip}
-                  className="flex-1 px-4 py-3 border border-slate-200 rounded-lg text-slate-500 font-medium hover:bg-slate-50 transition-colors"
+                  className="flex-1 px-4 py-2.5 border border-slate-200 rounded-lg text-slate-500 font-medium hover:bg-slate-50 transition-colors text-sm"
                 >
                   Skip Tour
                 </button>
                 <button
                   onClick={handleTourNext}
-                  className="flex-1 px-4 py-3 bg-[#0097A9] hover:bg-[#007f8f] text-white rounded-lg font-medium transition-colors"
+                  className="flex-1 px-4 py-2.5 bg-[#0097A9] hover:bg-[#007f8f] text-white rounded-lg font-medium transition-colors text-sm"
                 >
                   {tourStep === tourSteps.length - 1 ? 'Get Started' : 'Next'}
                 </button>
               </div>
 
               {/* Step indicators */}
-              <div className="flex justify-center gap-2 mt-6">
+              <div className="flex justify-center gap-2 mt-4">
                 {tourSteps.map((_, idx) => (
                   <div 
                     key={idx}
                     className={`w-2 h-2 rounded-full transition-colors ${
-                      idx === tourStep ? 'bg-[#0097A9]' : 'bg-slate-200'
+                      idx === tourStep ? 'bg-[#0097A9]' : idx < tourStep ? 'bg-[#0097A9]/50' : 'bg-slate-200'
                     }`}
                   />
                 ))}
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Animation keyframes */}
