@@ -6,7 +6,7 @@ import {
   Lightbulb, MessageSquare, CheckCircle, LogOut, X, Play, HelpCircle,
   Target, Calendar, Heart
 } from 'lucide-react';
-import { CommitmentModal, CommitmentWidget } from './CommitmentTracker';
+import { CommitmentModal } from './CommitmentTracker';
 
 // ============================================
 // TYPES
@@ -312,6 +312,66 @@ const Dashboard: React.FC<DashboardProps> = ({
           </button>
         </nav>
 
+        {/* My Commitments - Sidebar Widget */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between px-3 mb-3">
+            <div className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
+              My Commitments
+            </div>
+            <button 
+              onClick={() => setShowCommitmentModal(true)}
+              className="text-xs text-[#0097A9] font-medium hover:underline"
+            >
+              + New
+            </button>
+          </div>
+          
+          {commitments.filter(c => c.status === 'active').length === 0 ? (
+            <button
+              onClick={() => setShowCommitmentModal(true)}
+              className="w-full px-3 py-3 bg-amber-50 border border-amber-200 rounded-lg text-left hover:bg-amber-100 transition-colors"
+            >
+              <div className="flex items-center gap-2 text-amber-700 text-sm font-medium mb-1">
+                <Target className="w-4 h-4" />
+                Make a commitment
+              </div>
+              <p className="text-xs text-amber-600">I'll check in to support you</p>
+            </button>
+          ) : (
+            <div className="space-y-2">
+              {commitments.filter(c => c.status === 'active').slice(0, 2).map((commitment) => {
+                const daysUntil = Math.ceil(
+                  (new Date(commitment.deadlineDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+                );
+                return (
+                  <div 
+                    key={commitment.id}
+                    className="px-3 py-2 bg-slate-50 rounded-lg"
+                  >
+                    <p className="text-sm text-slate-700 line-clamp-2 mb-1">{commitment.text}</p>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-xs ${daysUntil <= 1 ? 'text-red-500' : 'text-slate-400'}`}>
+                        {daysUntil <= 0 ? 'Due today' : `${daysUntil} days left`}
+                      </span>
+                      <button
+                        onClick={() => handleMarkComplete(commitment.id)}
+                        className="text-xs text-[#0097A9] font-medium hover:underline"
+                      >
+                        Done ✓
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+              {commitments.filter(c => c.status === 'active').length > 2 && (
+                <p className="text-xs text-slate-400 px-3">
+                  +{commitments.filter(c => c.status === 'active').length - 2} more
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Recent Activity */}
         <div className="mb-6">
           <div className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold mb-3 pl-3">
@@ -516,53 +576,45 @@ const Dashboard: React.FC<DashboardProps> = ({
             ))}
           </div>
 
-          {/* Commitment Section */}
-          <div className="grid grid-cols-2 gap-5 mb-8">
-            {/* Make a Commitment Card */}
-            <div 
-              onClick={() => setShowCommitmentModal(true)}
-              className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-5 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all"
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
-                  <Target className="w-5 h-5 text-amber-600" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-[#0D2C54]">Make a Commitment</h3>
-                  <p className="text-xs text-amber-600">I'll check in to support you</p>
+          {/* Quote of the Day - with rotating quotes */}
+          {(() => {
+            const quotes = [
+              { text: "You can't read the label from inside the jar.", author: "Unknown" },
+              { text: "Culture eats strategy for breakfast.", author: "Peter Drucker" },
+              { text: "If you want to go fast, go alone. If you want to go far, go together.", author: "African Proverb" },
+              { text: "The best time to plant a tree was 20 years ago. The second best time is now.", author: "Chinese Proverb" },
+              { text: "People don't care how much you know until they know how much you care.", author: "Theodore Roosevelt" },
+              { text: "Begin with the end in mind.", author: "Stephen Covey" },
+              { text: "What gets measured gets managed.", author: "Peter Drucker" },
+              { text: "The most important thing in communication is hearing what isn't said.", author: "Peter Drucker" },
+              { text: "Leadership is not about being in charge. It's about taking care of those in your charge.", author: "Simon Sinek" },
+              { text: "Vision without execution is hallucination.", author: "Thomas Edison" },
+              { text: "The bottleneck is always at the top of the bottle.", author: "Peter Drucker" },
+              { text: "A leader is one who knows the way, goes the way, and shows the way.", author: "John C. Maxwell" },
+              { text: "The greatest leader is not necessarily one who does the greatest things, but one who gets people to do the greatest things.", author: "Ronald Reagan" },
+              { text: "Strategy is about making choices, trade-offs; it's about deliberately choosing to be different.", author: "Michael Porter" },
+            ];
+            // Use day of year to rotate quotes
+            const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+            const todaysQuote = quotes[dayOfYear % quotes.length];
+            
+            return (
+              <div className="bg-gradient-to-r from-[#0D2C54] to-[#1a3a5c] rounded-2xl px-8 py-6 shadow-lg">
+                <div className="flex items-start gap-4">
+                  <div className="text-4xl text-[#0097A9] font-serif leading-none">"</div>
+                  <div className="flex-1">
+                    <p className="text-lg italic text-white/90 leading-relaxed mb-3">
+                      {todaysQuote.text}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-[#0097A9]">— {todaysQuote.author}</span>
+                      <span className="text-[10px] text-white/40 uppercase tracking-wider">Quote of the Day</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <p className="text-sm text-slate-600 mb-3">
-                What ONE thing will you commit to doing? Set a deadline and I'll send you a friendly check-in.
-              </p>
-              <div className="flex items-center gap-2 text-amber-600 text-sm font-medium">
-                <Heart className="w-4 h-4" />
-                Start a commitment
-                <ChevronRight className="w-4 h-4" />
-              </div>
-            </div>
-
-            {/* Active Commitments Widget */}
-            <CommitmentWidget 
-              commitments={commitments}
-              onMakeCommitment={() => setShowCommitmentModal(true)}
-              onMarkComplete={handleMarkComplete}
-            />
-          </div>
-
-          {/* Quote of the Day */}
-          <div className="bg-white rounded-2xl border border-slate-200 px-10 py-8 flex items-center justify-between">
-            <div className="flex items-start gap-5 flex-1">
-              <div className="text-5xl text-slate-200 font-serif leading-none">"</div>
-              <p className="text-xl italic text-slate-600 leading-relaxed">
-                You can't read the label from inside the jar.
-              </p>
-            </div>
-            <div className="text-right min-w-[120px]">
-              <div className="font-semibold text-[#0D2C54] text-[15px]">Unknown</div>
-              <div className="text-[11px] text-slate-400 uppercase tracking-wider">Quote of the Day</div>
-            </div>
-          </div>
+            );
+          })()}
         </div>
       </main>
 
