@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
 import { 
   BookOpen, Bookmark, Target, Presentation, FileText,
   Search, Clock, ArrowLeft, Download, Star, Filter,
@@ -99,7 +98,7 @@ const ResourceCategoryPage: React.FC<ResourceCategoryPageProps> = ({ category, o
     return (
       <div style={{ padding: '60px', textAlign: 'center' }}>
         <h1>Category not found</h1>
-        <button onClick={() => onNavigate('/member-resources')}>Back to Resources</button>
+        <button onClick={() => onNavigate('member-resources')}>Back to Resources</button>
       </div>
     );
   }
@@ -143,14 +142,14 @@ const ResourceCategoryPage: React.FC<ResourceCategoryPageProps> = ({ category, o
             color: '#64748b'
           }}>
             <span 
-              onClick={() => onNavigate('/dashboard')}
+              onClick={() => onNavigate('dashboard')}
               style={{ color: '#0097A9', cursor: 'pointer' }}
             >
               Dashboard
             </span>
             <span>→</span>
             <span 
-              onClick={() => onNavigate('/member-resources')}
+              onClick={() => onNavigate('member-resources')}
               style={{ color: '#0097A9', cursor: 'pointer' }}
             >
               Member Resources
@@ -510,7 +509,7 @@ const ResourceCategoryPage: React.FC<ResourceCategoryPageProps> = ({ category, o
 
         {/* Back Button */}
         <button
-          onClick={() => onNavigate('/member-resources')}
+          onClick={() => onNavigate('member-resources')}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
