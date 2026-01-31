@@ -300,6 +300,7 @@ const App: React.FC = () => {
     'scenario-planner': '/scenario-planner/use',
     'grant-review': '/grant-review/use',
     'ask-the-professor': '/ask-the-professor/use',
+    'dashboard-creator': '/dashboard-creator/use',
   };
 
   const handleNav = (page: string) => navigate(routeMap[page] || `/${page}`);
@@ -493,6 +494,13 @@ const App: React.FC = () => {
       return requireAuth(
         <ToolPageWrapper name="Grant Review" onBack={goToDashboard}>
           <ToolPlaceholder name="Grant Review" />
+        </ToolPageWrapper>
+      );
+
+    case '/dashboard-creator/use':
+      return requireAuth(
+        <ToolPageWrapper name="Dashboard Creator" onBack={goToDashboard}>
+          <ToolPlaceholder name="Dashboard Creator" />
         </ToolPageWrapper>
       );
 
