@@ -223,12 +223,12 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
   const [activeSubcategory, setActiveSubcategory] = useState('all');
   const [modalSearchQuery, setModalSearchQuery] = useState('');
 
-  // Navigation helper
-  const navigate = (path: string) => {
+  // Navigation helper - uses onNavigate prop from App.tsx
+  const navigate = (page: string) => {
     if (onNavigate) {
-      onNavigate(path);
+      onNavigate(page);
     } else {
-      window.location.href = path;
+      window.location.href = page.startsWith('/') ? page : `/${page}`;
     }
   };
 
@@ -324,21 +324,26 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
       {/* Header */}
       <header className="bg-[#0D2C54] py-3 px-8 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <a href="/dashboard" onClick={(e) => { e.preventDefault(); navigate('/dashboard'); }}>
+          <button onClick={() => navigate('dashboard')} className="hover:opacity-80 transition-opacity">
             <img src="/images/nonprofit-edge-logo-white.png" alt="The Nonprofit Edge" className="h-9" />
-          </a>
+          </button>
           <nav className="flex items-center gap-6">
-            {['Dashboard', 'Tools', 'Resources', 'Events', 'Profile'].map((item) => (
-              <a
-                key={item}
-                href={`/${item.toLowerCase()}`}
-                onClick={(e) => { e.preventDefault(); navigate(`/${item.toLowerCase()}`); }}
+            {[
+              { label: 'Dashboard', page: 'dashboard' },
+              { label: 'Tools', page: 'dashboard' },
+              { label: 'Resources', page: 'member-resources' },
+              { label: 'Events', page: 'events' },
+              { label: 'Profile', page: 'settings' }
+            ].map((item) => (
+              <button
+                key={item.label}
+                onClick={() => navigate(item.page)}
                 className={`text-sm font-medium transition-colors ${
-                  item === 'Resources' ? 'text-[#0097A9]' : 'text-white/80 hover:text-white'
+                  item.label === 'Resources' ? 'text-[#0097A9]' : 'text-white/80 hover:text-white'
                 }`}
               >
-                {item}
-              </a>
+                {item.label}
+              </button>
             ))}
           </nav>
         </div>
@@ -347,14 +352,13 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
       <main className="max-w-6xl mx-auto px-8 py-8">
         {/* Page Header */}
         <div className="mb-6">
-          <a
-            href="/dashboard"
-            onClick={(e) => { e.preventDefault(); navigate('/dashboard'); }}
+          <button
+            onClick={() => navigate('dashboard')}
             className="inline-flex items-center gap-2 text-slate-500 hover:text-[#0097A9] text-sm mb-4"
           >
             <ChevronRight className="w-4 h-4 rotate-180" />
             Return to Dashboard
-          </a>
+          </button>
           <h1 className="text-3xl font-bold text-[#0D2C54] mb-2">Member Resources</h1>
           <p className="text-slate-500">Everything you need to lead your organization forward</p>
         </div>
@@ -431,7 +435,6 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
         <div className="grid grid-cols-3 gap-5 mb-8">
           {/* Ask the Professor - Spans 2 columns */}
           <div
-            onClick={() => onStartProfessor ? onStartProfessor() : navigate('/ask-the-professor/use')}
             className="col-span-2 bg-gradient-to-br from-[#0D2C54] to-[#1a3a5c] rounded-2xl p-6 cursor-pointer hover:-translate-y-1 hover:shadow-xl transition-all relative overflow-hidden group"
           >
             <div className="absolute top-[-50%] right-[-20%] w-[300px] h-[300px] bg-[radial-gradient(circle,rgba(0,151,169,0.15)_0%,transparent_70%)]" />
@@ -452,10 +455,13 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
               <p className="text-white/70 text-sm mb-5 leading-relaxed">
                 Get instant expert guidance on strategy, governance, fundraising, and any leadership challenge. Drawing from 15+ years of consulting experience with 800+ nonprofits.
               </p>
-              <span className="inline-flex items-center gap-2 bg-[#0097A9] text-white px-5 py-2.5 rounded-lg text-sm font-semibold group-hover:bg-[#5fd4e0] transition-colors">
+              <button
+                onClick={() => onStartProfessor ? onStartProfessor() : navigate('ask-the-professor')}
+                className="inline-flex items-center gap-2 bg-[#0097A9] text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#5fd4e0] transition-colors"
+              >
                 Start a Conversation
                 <ChevronRight className="w-4 h-4" />
-              </span>
+              </button>
             </div>
           </div>
 
@@ -486,11 +492,10 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
           <h2 className="text-lg font-bold text-[#0D2C54] mb-4">Top Downloads</h2>
           <div className="grid grid-cols-4 gap-4">
             {topDownloads.map((item, idx) => (
-              <a
+              <button
                 key={idx}
-                href={item.url}
-                onClick={(e) => { e.preventDefault(); navigate(item.url); }}
-                className="bg-white rounded-xl p-4 border border-slate-200 hover:border-[#0097A9] hover:shadow-md transition-all"
+                onClick={() => navigate(item.url.replace('/', ''))}
+                className="bg-white rounded-xl p-4 border border-slate-200 hover:border-[#0097A9] hover:shadow-md transition-all text-left"
               >
                 <span className={`inline-block text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded mb-3 ${
                   item.type === 'Template' ? 'bg-slate-100 text-slate-600' :
@@ -504,7 +509,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
                   <Download className="w-3 h-3" />
                   {item.downloads.toLocaleString()} downloads
                 </div>
-              </a>
+              </button>
             ))}
           </div>
         </section>
