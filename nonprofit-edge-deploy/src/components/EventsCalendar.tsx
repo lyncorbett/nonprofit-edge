@@ -87,15 +87,23 @@ const EventsCalendar: React.FC<EventsCalendarProps> = ({ onNavigate }) => {
           <div className="flex items-center gap-4">
             <button 
               onClick={() => navigate('dashboard')}
-              className="text-slate-400 hover:text-[#0097A9] transition-colors"
+              className="hover:opacity-80 transition-opacity"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <img src="/images/nonprofit-edge-logo.png" alt="The Nonprofit Edge" style={{ height: '36px', width: 'auto' }} />
             </button>
+            <span className="text-slate-300">|</span>
             <div>
-              <h1 className="text-xl font-bold text-[#0D2C54]">Events & Webinars</h1>
+              <h1 className="text-lg font-bold text-[#0D2C54]">Events & Webinars</h1>
               <p className="text-sm text-slate-500">Live sessions, workshops, and community events</p>
             </div>
           </div>
+          <button
+            onClick={() => navigate('dashboard')}
+            className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-[#0097A9] font-medium"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Dashboard
+          </button>
         </div>
       </header>
 
