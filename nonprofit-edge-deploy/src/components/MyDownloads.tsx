@@ -52,17 +52,27 @@ const MyDownloads: React.FC<MyDownloadsProps> = ({ onNavigate }) => {
     <div className="min-h-screen bg-slate-50" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
       {/* Header */}
       <header className="bg-white border-b border-slate-200 px-8 py-4">
-        <div className="max-w-5xl mx-auto flex items-center gap-4">
-          <button 
-            onClick={() => navigate('dashboard')}
-            className="text-slate-400 hover:text-[#0097A9] transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className="text-xl font-bold text-[#0D2C54]">My Downloads</h1>
-            <p className="text-sm text-slate-500">Access all your downloaded resources</p>
+        <div className="max-w-5xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => navigate('dashboard')}
+              className="hover:opacity-80 transition-opacity"
+            >
+              <img src="/images/nonprofit-edge-logo.png" alt="The Nonprofit Edge" style={{ height: '36px', width: 'auto' }} />
+            </button>
+            <span className="text-slate-300">|</span>
+            <div>
+              <h1 className="text-lg font-bold text-[#0D2C54]">My Downloads</h1>
+              <p className="text-sm text-slate-500">Access all your downloaded resources</p>
+            </div>
           </div>
+          <button
+            onClick={() => navigate('dashboard')}
+            className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-[#0097A9] font-medium"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Dashboard
+          </button>
         </div>
       </header>
 
