@@ -2,8 +2,6 @@
  * THE NONPROFIT EDGE - App.tsx
  * Stable version with all components
  * UPDATED: January 30, 2026
- * 
- * LOGO: Uses /images/nonprofit-edge-logo.png from public folder
  */
 
 import React, { useState, useEffect } from 'react';
@@ -12,8 +10,7 @@ import ResourceLibrary from './components/ResourceLibrary';
 import ResourceCategoryPage from './components/ResourceCategoryPage';
 import EventsCalendar from './components/EventsCalendar';
 import Settings from './components/Settings';
-import MyDownloads from './components/MyDownloads';
-import SavedFavorites from './components/SavedFavorites';
+import MyLibrary from './components/MyLibrary';
 import ConstraintAssessment from './components/ConstraintAssessment';
 import ConstraintReport from './components/ConstraintReport';
 import AskTheProfessor from './components/AskTheProfessor';
@@ -35,14 +32,47 @@ interface Organization {
 const NAVY = '#0D2C54';
 const TEAL = '#0097A9';
 
-// Use actual logo image from public folder
-const Logo: React.FC<{ width?: number; variant?: 'dark' | 'white' }> = ({ width = 180, variant = 'dark' }) => (
-  <img 
-    src={variant === 'white' ? '/images/nonprofit-edge-logo-white.png' : '/images/nonprofit-edge-logo.png'} 
-    alt="The Nonprofit Edge" 
-    style={{ height: width * 0.35, width: 'auto' }}
-  />
-);
+// SVG Logo component - reliable, no external files needed
+const Logo: React.FC<{ width?: number; variant?: 'dark' | 'white' }> = ({ width = 180, variant = 'dark' }) => {
+  const textColor = variant === 'white' ? '#FFFFFF' : NAVY;
+  const accentColor = TEAL;
+  
+  return (
+    <svg width={width} height={width * 0.28} viewBox="0 0 500 140" fill="none">
+      {/* Arrow Circle Icon */}
+      <g transform="translate(0, 10)">
+        {/* Outer arc */}
+        <path 
+          d="M60 10 A50 50 0 1 1 20 70" 
+          stroke={textColor} 
+          strokeWidth="8" 
+          fill="none"
+          strokeLinecap="round"
+        />
+        {/* Arrow */}
+        <path 
+          d="M15 45 L45 70 L75 35" 
+          stroke={accentColor} 
+          strokeWidth="8" 
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path 
+          d="M45 70 L45 25" 
+          stroke={accentColor} 
+          strokeWidth="8" 
+          fill="none"
+          strokeLinecap="round"
+        />
+      </g>
+      {/* Text */}
+      <text x="115" y="42" fontFamily="system-ui, -apple-system, sans-serif" fontSize="28" fontWeight="700" fill={textColor}>THE</text>
+      <text x="115" y="78" fontFamily="system-ui, -apple-system, sans-serif" fontSize="32" fontWeight="800" fill={accentColor}>NONPROFIT</text>
+      <text x="115" y="115" fontFamily="system-ui, -apple-system, sans-serif" fontSize="32" fontWeight="800" fill={textColor}>EDGE</text>
+    </svg>
+  );
+};
 
 const Homepage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate }) => (
   <div style={{ 
@@ -285,8 +315,9 @@ const App: React.FC = () => {
     'resources': '/member-resources',
     'events': '/events',
     'settings': '/settings',
-    'my-downloads': '/my-downloads',
-    'favorites': '/favorites',
+    'my-library': '/my-library',
+    'my-downloads': '/my-library', // Redirect old route
+    'favorites': '/my-library', // Redirect old route
     'constraint-assessment': '/constraint-assessment',
     'constraint-report': '/constraint-report',
     'guides': '/resources/guides',
@@ -429,14 +460,11 @@ const App: React.FC = () => {
         <Settings onNavigate={handleNav} onLogout={handleLogout} />
       );
 
+    case '/my-library':
     case '/my-downloads':
-      return requireAuth(
-        <MyDownloads onNavigate={handleNav} />
-      );
-
     case '/favorites':
       return requireAuth(
-        <SavedFavorites onNavigate={handleNav} />
+        <MyLibrary onNavigate={handleNav} />
       );
 
     case '/constraint-assessment':
