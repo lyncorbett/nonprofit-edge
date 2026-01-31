@@ -111,11 +111,21 @@ const ConstraintAssessment: React.FC<ConstraintAssessmentProps> = ({ onNavigate,
     return (
       <div className="min-h-screen bg-slate-50" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
         <header className="bg-white border-b border-slate-200 px-8 py-4">
-          <div className="max-w-3xl mx-auto flex items-center gap-4">
-            <button onClick={() => navigate('dashboard')} className="text-slate-400 hover:text-[#0097A9]">
-              <ArrowLeft className="w-5 h-5" />
+          <div className="max-w-3xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button onClick={() => navigate('dashboard')} className="hover:opacity-80 transition-opacity">
+                <img src="/images/nonprofit-edge-logo.png" alt="The Nonprofit Edge" style={{ height: '36px', width: 'auto' }} />
+              </button>
+              <span className="text-slate-300">|</span>
+              <h1 className="text-lg font-bold text-[#0D2C54]">Core Constraint Assessment</h1>
+            </div>
+            <button
+              onClick={() => navigate('dashboard')}
+              className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-[#0097A9] font-medium"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Dashboard
             </button>
-            <h1 className="text-xl font-bold text-[#0D2C54]">Core Constraint Assessment</h1>
           </div>
         </header>
 
@@ -176,17 +186,20 @@ const ConstraintAssessment: React.FC<ConstraintAssessmentProps> = ({ onNavigate,
   return (
     <div className="min-h-screen bg-slate-50" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
       <header className="bg-white border-b border-slate-200 px-8 py-4">
-        <div className="max-w-3xl mx-auto flex items-center gap-4">
-          <button onClick={() => navigate('dashboard')} className="text-slate-400 hover:text-[#0097A9]">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold text-[#0D2C54]">Core Constraint Assessment</h1>
-            <div className="h-1.5 bg-slate-100 rounded-full mt-2">
-              <div 
-                className="h-full bg-[#0097A9] rounded-full transition-all duration-300"
-                style={{ width: `${progress}%` }}
-              />
+        <div className="max-w-3xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button onClick={() => navigate('dashboard')} className="hover:opacity-80 transition-opacity">
+              <img src="/images/nonprofit-edge-logo.png" alt="The Nonprofit Edge" style={{ height: '36px', width: 'auto' }} />
+            </button>
+            <span className="text-slate-300">|</span>
+            <div className="flex-1">
+              <h1 className="text-lg font-bold text-[#0D2C54]">Core Constraint Assessment</h1>
+              <div className="h-1.5 bg-slate-100 rounded-full mt-2 w-48">
+                <div 
+                  className="h-full bg-[#0097A9] rounded-full transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
             </div>
           </div>
           <span className="text-sm text-slate-500">{step + 1} of {questions.length}</span>
