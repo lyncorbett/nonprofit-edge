@@ -8,9 +8,9 @@
  * 
  * All tools receive tracking props to connect with Dashboard counters
  * 
- * UPDATED: January 29, 2026
- * - Added Settings, MyDownloads, SavedFavorites pages
- * - Added ConstraintAssessment and ConstraintReport pages
+ * UPDATED: January 30, 2026
+ * - Removed AIGuideChatbot
+ * - Added MemberResources route
  */
 
 import React, { useState, useEffect } from 'react';
@@ -37,6 +37,7 @@ import MyDownloads from './components/MyDownloads';
 import SavedFavorites from './components/SavedFavorites';
 import ConstraintAssessment from './components/ConstraintAssessment';
 import ConstraintReport from './components/ConstraintReport';
+import ResourceCategoryPage from './components/ResourceCategoryPage';
 
 // Auth Components
 import Login from './components/Login';
@@ -51,7 +52,7 @@ import Homepage from './components/Homepage';
 import Sidebar from './components/Sidebar';
 import ProductTour from './components/ProductTour';
 import WelcomeModal from './components/WelcomeModal';
-import AIGuideChatbot from './components/AIGuideChatbot';
+// REMOVED: AIGuideChatbot - chatbot functionality removed
 
 // Tool Components (Actual Tools)
 import StrategicPlanCheckup from './StrategicPlanCheckup';
@@ -452,13 +453,18 @@ const App: React.FC = () => {
   const mapDashboardNavigation = (page: string): string => {
     const routeMap: Record<string, string> = {
       'dashboard': '/dashboard',
-      'library': '/resources',
+      'library': '/member-resources',
+      'member-resources': '/member-resources',
+      'resources': '/member-resources',
       'events': '/events',
       'team': '/team',
       'reports': '/reports',
       'settings': '/settings',
       'templates': '/templates',
-      'book-summaries': '/book-summaries',
+      'book-summaries': '/resources/book-summaries',
+      'guides': '/resources/guides',
+      'playbooks': '/resources/playbooks',
+      'facilitation-kits': '/resources/facilitation-kits',
       'certifications': '/certifications',
       'pricing': '/pricing',
       'constraint-assessment': '/constraint-assessment',
@@ -472,6 +478,7 @@ const App: React.FC = () => {
       'board-assessment': '/board-assessment/use',
       'scenario-planner': '/scenario-planner/use',
       'grant-review': '/grant-review/use',
+      'ask-the-professor': '/ask-the-professor/use',
       // Admin
       'content-manager': '/admin/content',
       'platform-admin': '/admin/platform',
@@ -599,22 +606,13 @@ const App: React.FC = () => {
       // ========================================
 
       case '/settings':
-        return requireAuth(
-          <Settings 
-            onNavigate={(route: string) => navigate(route)} 
-            onLogout={handleLogout}
-          />
-        );
+        return requireAuth(<Settings />);
 
       case '/my-downloads':
-        return requireAuth(
-          <MyDownloads onNavigate={(route: string) => navigate(route)} />
-        );
+        return requireAuth(<MyDownloads />);
 
       case '/favorites':
-        return requireAuth(
-          <SavedFavorites onNavigate={(route: string) => navigate(route)} />
-        );
+        return requireAuth(<SavedFavorites />);
 
       // ========================================
       // CONSTRAINT ASSESSMENT & REPORT
@@ -622,15 +620,11 @@ const App: React.FC = () => {
 
       case '/constraint-assessment':
       case '/dashboard/constraint-assessment':
-        return requireAuth(
-          <ConstraintAssessment onNavigate={(route: string) => navigate(route)} />
-        );
+        return requireAuth(<ConstraintAssessment />);
 
       case '/constraint-report':
       case '/dashboard/constraint-report':
-        return requireAuth(
-          <ConstraintReport onNavigate={(route: string) => navigate(route)} />
-        );
+        return requireAuth(<ConstraintReport />);
 
       // ========================================
       // DASHBOARD & MAIN APP (Require Auth)
@@ -652,7 +646,6 @@ const App: React.FC = () => {
             }}
             organization={organization}
             usage={usage}
-            teamCount={1}
             onNavigate={(page: string) => navigate(mapDashboardNavigation(page))}
             onDownload={handleDownload}
             onStartProfessor={handleStartProfessor}
@@ -661,12 +654,50 @@ const App: React.FC = () => {
         );
 
       case '/resources':
+      case '/member-resources':
         return requireAuth(
           <ResourceLibrary 
             user={{ ...user!, full_name: user!.name }}
             organization={organization!}
             onNavigate={(page: string) => navigate(mapDashboardNavigation(page))}
+            onStartProfessor={handleStartProfessor}
             onLogout={handleLogout}
+          />
+        );
+
+      // ========================================
+      // RESOURCE CATEGORY PAGES
+      // ========================================
+
+      case '/resources/guides':
+        return requireAuth(
+          <ResourceCategoryPage 
+            category="guides"
+            onNavigate={(page: string) => navigate(mapDashboardNavigation(page))}
+          />
+        );
+
+      case '/resources/book-summaries':
+        return requireAuth(
+          <ResourceCategoryPage 
+            category="book-summaries"
+            onNavigate={(page: string) => navigate(mapDashboardNavigation(page))}
+          />
+        );
+
+      case '/resources/playbooks':
+        return requireAuth(
+          <ResourceCategoryPage 
+            category="playbooks"
+            onNavigate={(page: string) => navigate(mapDashboardNavigation(page))}
+          />
+        );
+
+      case '/resources/facilitation-kits':
+        return requireAuth(
+          <ResourceCategoryPage 
+            category="facilitation-kits"
+            onNavigate={(page: string) => navigate(mapDashboardNavigation(page))}
           />
         );
 
