@@ -3,12 +3,24 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Folder, Download, Star, Settings, ChevronRight, ChevronDown,
-  Lightbulb, MessageSquare, CheckCircle, LogOut, X, Play, HelpCircle
+  Lightbulb, MessageSquare, CheckCircle, LogOut, X, Play, HelpCircle,
+  Target, Calendar, Heart
 } from 'lucide-react';
+import { CommitmentModal, CommitmentWidget } from './CommitmentTracker';
 
 // ============================================
 // TYPES
 // ============================================
+
+interface Commitment {
+  id: string;
+  text: string;
+  deadline: 'today' | 'this_week' | 'this_month' | 'custom';
+  deadlineDate: Date;
+  createdAt: Date;
+  completedAt?: Date;
+  status: 'active' | 'completed' | 'missed';
+}
 
 interface DashboardProps {
   user?: {
@@ -90,7 +102,7 @@ const tools: Tool[] = [
   },
   { 
     id: 'constraint-assessment',
-    name: 'Core Constraint', 
+    name: 'Core Constraint Assessment', 
     description: 'Identify the ONE constraint holding your organization back using Theory of Constraints methodology.',
     href: 'constraint-assessment', 
     img: 'https://images.unsplash.com/photo-1568992687947-868a62a9f521?w=400&h=300&fit=crop',
@@ -114,6 +126,46 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const [showTour, setShowTour] = useState(false);
   const [tourStep, setTourStep] = useState(0);
+  const [showCommitmentModal, setShowCommitmentModal] = useState(false);
+  const [commitments, setCommitments] = useState<Commitment[]>([]);
+
+  // Load commitments from localStorage
+  useEffect(() => {
+    try {
+      const savedCommitments = localStorage.getItem('nonprofit_edge_commitments');
+      if (savedCommitments) {
+        const parsed = JSON.parse(savedCommitments);
+        setCommitments(parsed.map((c: any) => ({
+          ...c,
+          deadlineDate: new Date(c.deadlineDate),
+          createdAt: new Date(c.createdAt),
+          completedAt: c.completedAt ? new Date(c.completedAt) : undefined
+        })));
+      }
+    } catch (e) {
+      console.error('Error loading commitments:', e);
+    }
+  }, []);
+
+  // Save commitment
+  const handleSaveCommitment = (commitment: Commitment) => {
+    const updated = [...commitments, commitment];
+    setCommitments(updated);
+    localStorage.setItem('nonprofit_edge_commitments', JSON.stringify(updated));
+    
+    // TODO: Send to backend to schedule check-in emails
+    console.log('Commitment saved:', commitment);
+    console.log('Check-in scheduled for:', commitment.deadline);
+  };
+
+  // Mark commitment complete
+  const handleMarkComplete = (id: string) => {
+    const updated = commitments.map(c => 
+      c.id === id ? { ...c, status: 'completed' as const, completedAt: new Date() } : c
+    );
+    setCommitments(updated);
+    localStorage.setItem('nonprofit_edge_commitments', JSON.stringify(updated));
+  };
 
   // Check for first-time visitor
   useEffect(() => {
@@ -397,7 +449,13 @@ const Dashboard: React.FC<DashboardProps> = ({
               <p className="text-base leading-relaxed flex-1 mb-6">
                 The most effective boards don't just govern—they champion. When was the last time you asked your board members what excites them about your mission?
               </p>
-              <button className="flex items-center justify-between gap-2 bg-white/20 border border-white/30 rounded-lg px-4 py-3 text-white text-sm font-medium w-full hover:bg-white/30 transition-colors">
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowCommitmentModal(true);
+                }}
+                className="flex items-center justify-between gap-2 bg-white/20 border border-white/30 rounded-lg px-4 py-3 text-white text-sm font-medium w-full hover:bg-white/30 transition-colors"
+              >
                 <span className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4" />
                   Make a Commitment
@@ -409,7 +467,13 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* Ask the Professor */}
             <div 
               id="professor-card"
-              onClick={() => onStartProfessor ? onStartProfessor() : navigate('/ask-the-professor/use')}
+              onClick={() => {
+                if (onStartProfessor) {
+                  onStartProfessor();
+                } else {
+                  navigate('ask-the-professor');
+                }
+              }}
               className="bg-gradient-to-br from-[#0D2C54] to-[#164677] rounded-2xl p-7 text-white flex flex-col hover:-translate-y-0.5 hover:shadow-xl transition-all cursor-pointer"
             >
               <div className="text-[11px] uppercase tracking-widest opacity-85 mb-4 font-semibold flex items-center gap-2">
@@ -450,6 +514,40 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Commitment Section */}
+          <div className="grid grid-cols-2 gap-5 mb-8">
+            {/* Make a Commitment Card */}
+            <div 
+              onClick={() => setShowCommitmentModal(true)}
+              className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-5 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+                  <Target className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-[#0D2C54]">Make a Commitment</h3>
+                  <p className="text-xs text-amber-600">I'll check in to support you</p>
+                </div>
+              </div>
+              <p className="text-sm text-slate-600 mb-3">
+                What ONE thing will you commit to doing? Set a deadline and I'll send you a friendly check-in.
+              </p>
+              <div className="flex items-center gap-2 text-amber-600 text-sm font-medium">
+                <Heart className="w-4 h-4" />
+                Start a commitment
+                <ChevronRight className="w-4 h-4" />
+              </div>
+            </div>
+
+            {/* Active Commitments Widget */}
+            <CommitmentWidget 
+              commitments={commitments}
+              onMakeCommitment={() => setShowCommitmentModal(true)}
+              onMarkComplete={handleMarkComplete}
+            />
           </div>
 
           {/* Quote of the Day */}
@@ -641,6 +739,15 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </>
       )}
+
+      {/* Commitment Modal */}
+      <CommitmentModal
+        isOpen={showCommitmentModal}
+        onClose={() => setShowCommitmentModal(false)}
+        onSave={handleSaveCommitment}
+        existingCommitments={commitments}
+        userEmail={user?.email}
+      />
 
       {/* Animation keyframes */}
       <style>{`
