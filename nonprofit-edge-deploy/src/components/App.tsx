@@ -402,48 +402,24 @@ const App: React.FC = () => {
       case '/certifications':
         return <CertificationsLanding onNavigate={navigate} />;
 
-      // TOOL PAGES (Require Auth, Tracked)
+      // TOOL PAGES (Require Auth) - Direct render without wrapper
       case '/strategic-plan-checkup/use':
-        return requireAuth(
-          <ToolPageWrapper toolId="strategic-checkup" toolName="Strategic Plan Check-Up">
-            <StrategicPlanCheckup onNavigate={navigate} />
-          </ToolPageWrapper>
-        );
+        return requireAuth(<StrategicPlanCheckup onNavigate={navigate} />);
       
       case '/board-assessment/use':
-        return requireAuth(
-          <ToolPageWrapper toolId="board-assessment" toolName="Board Assessment">
-            <BoardAssessment onNavigate={navigate} />
-          </ToolPageWrapper>
-        );
+        return requireAuth(<BoardAssessment onNavigate={navigate} />);
       
       case '/ceo-evaluation/use':
-        return requireAuth(
-          <ToolPageWrapper toolId="ceo-evaluation" toolName="CEO Evaluation">
-            <CEOEvaluation onNavigate={navigate} />
-          </ToolPageWrapper>
-        );
+        return requireAuth(<CEOEvaluation onNavigate={navigate} />);
       
       case '/scenario-planner/use':
-        return requireAuth(
-          <ToolPageWrapper toolId="scenario-planner" toolName="PIVOT Scenario Planner">
-            <ScenarioPlanner onNavigate={navigate} />
-          </ToolPageWrapper>
-        );
+        return requireAuth(<ScenarioPlanner onNavigate={navigate} />);
       
       case '/grant-review/use':
-        return requireAuth(
-          <ToolPageWrapper toolId="grant-review" toolName="Grant/RFP Review">
-            <GrantReview onNavigate={navigate} />
-          </ToolPageWrapper>
-        );
+        return requireAuth(<GrantReview onNavigate={navigate} />);
       
       case '/ask-the-professor/use':
-        return requireAuth(
-          <ToolPageWrapper toolId="ask-professor" toolName="Ask The Professor">
-            <AskTheProfessor onNavigate={navigate} />
-          </ToolPageWrapper>
-        );
+        return requireAuth(<AskTheProfessor onNavigate={navigate} />);
 
       // LEADERSHIP ASSESSMENT (NEW)
       case '/leadership-assessment':
