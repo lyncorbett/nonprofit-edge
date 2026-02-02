@@ -279,9 +279,9 @@ const Dashboard: React.FC<DashboardProps> = ({
     <div className="min-h-screen bg-slate-50 flex">
       {/* LEFT SIDEBAR */}
       <aside className="w-[280px] bg-white border-r border-slate-200 p-6 flex flex-col fixed top-0 left-0 h-screen overflow-y-auto">
-        {/* Logo */}
+        {/* Logo - FIXED: Changed from /images/nonprofit-edge-logo.png to /logo.svg */}
         <div className="mb-8">
-          <img src="/images/nonprofit-edge-logo.png" alt="The Nonprofit Edge" className="w-[220px] h-auto" />
+          <img src="/logo.svg" alt="The Nonprofit Edge" className="w-[220px] h-auto" />
         </div>
 
         {/* Quick Actions */}
