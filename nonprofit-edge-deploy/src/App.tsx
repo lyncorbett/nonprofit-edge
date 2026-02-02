@@ -550,54 +550,25 @@ const App: React.FC = () => {
       // TOOL PAGES (Require Auth, Tracked)
       // ========================================
       
+      // TOOL PAGES (Require Auth) - Direct render
+
       case '/strategic-plan-checkup/use':
-        return requireAuth(
-          <ToolPageWrapper toolId="strategic-checkup" toolName="Strategic Plan Check-Up">
-            <StrategicPlanCheckup />
-          </ToolPageWrapper>
-        );
-      
+        return requireAuth(<StrategicPlanCheckup onNavigate={navigate} />);
+
       case '/board-assessment/use':
-        return requireAuth(
-          <ToolPageWrapper toolId="board-assessment" toolName="Board Assessment">
-            <BoardAssessment />
-          </ToolPageWrapper>
-        );
-      
+        return requireAuth(<BoardAssessment onNavigate={navigate} />);
+
       case '/ceo-evaluation/use':
-        return requireAuth(
-          <ToolPageWrapper toolId="ceo-evaluation" toolName="CEO Evaluation">
-            <CEOEvaluation />
-          </ToolPageWrapper>
-        );
-      
+        return requireAuth(<CEOEvaluation onNavigate={navigate} />);
+
       case '/scenario-planner/use':
-        return requireAuth(
-          <ToolPageWrapper toolId="scenario-planner" toolName="PIVOT Scenario Planner">
-            <ScenarioPlanner />
-          </ToolPageWrapper>
-        );
-      
+        return requireAuth(<ScenarioPlanner onNavigate={navigate} />);
+
       case '/grant-review/use':
-        return requireAuth(
-          <ToolPageWrapper toolId="grant-review" toolName="Grant/RFP Review">
-            <GrantReview />
-          </ToolPageWrapper>
-        );
-      
+        return requireAuth(<GrantReview onNavigate={navigate} />);
+
       case '/ask-the-professor/use':
-        return requireAuth(
-          <ToolPageWrapper toolId="ask-professor" toolName="Ask The Professor">
-            <AskTheProfessor />
-          </ToolPageWrapper>
-        );
-      
-      case '/ai-summary/use':
-        return requireAuth(
-          <ToolPageWrapper toolId="ai-summary" toolName="AI Summary">
-            <AISummary />
-          </ToolPageWrapper>
-        );
+        return requireAuth(<AskTheProfessor onNavigate={navigate} />);
 
       // ========================================
       // NEW PAGES - Settings, Downloads, Favorites
