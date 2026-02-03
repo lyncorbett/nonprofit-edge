@@ -1,0 +1,119 @@
+/**
+ * Privacy Policy - The Nonprofit Edge
+ * Route: /privacy
+ */
+
+import React from 'react';
+
+const NAVY = '#0D2C54';
+const TEAL = '#0097A9';
+
+interface PrivacyPolicyProps {
+  onNavigate?: (route: string) => void;
+}
+
+const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onNavigate }) => {
+  const navigate = (path: string) => {
+    if (onNavigate) onNavigate(path);
+    else window.location.href = path;
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white border-b">
+        <div className="max-w-3xl mx-auto px-6 py-6 flex items-center gap-4">
+          <button onClick={() => navigate('/')} className="p-2 hover:bg-gray-100 rounded-lg bg-transparent border-none cursor-pointer">
+            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <h1 className="text-xl font-bold" style={{ color: NAVY }}>Privacy Policy</h1>
+        </div>
+      </header>
+
+      <div className="max-w-3xl mx-auto px-6 py-10">
+        <div className="bg-white rounded-2xl p-8 shadow-sm">
+          <p className="text-sm text-gray-500 mb-8">Last Updated: February 1, 2026</p>
+
+          <div className="prose prose-gray max-w-none space-y-6 text-gray-700 text-sm leading-relaxed">
+            <p>
+              The Pivotal Group Consultants Inc. ("we," "our," or "us") operates The Nonprofit Edge platform 
+              (thenonprofitedge.org). This Privacy Policy explains how we collect, use, disclose, and safeguard 
+              your information when you visit our website and use our services.
+            </p>
+
+            <h2 className="text-lg font-bold mt-8 mb-3" style={{ color: NAVY }}>Information We Collect</h2>
+            <p>
+              We collect information you provide directly to us, including your name, email address, organization name, 
+              and any content you submit through our tools (strategic plans, assessments, grant materials). We also 
+              collect standard usage data such as browser type, pages visited, and time spent on the platform.
+            </p>
+
+            <h2 className="text-lg font-bold mt-8 mb-3" style={{ color: NAVY }}>How We Use Your Information</h2>
+            <p>We use the information we collect to:</p>
+            <p className="pl-4">
+              • Provide, maintain, and improve our services and tools.
+              • Send you account-related communications and service updates.
+              • Deliver the assessment results and reports you request.
+              • Respond to your questions via Ask the Professor and other tools.
+              • Send marketing communications (with your consent), which you can opt out of at any time.
+              • Analyze usage patterns to improve our platform.
+            </p>
+
+            <h2 className="text-lg font-bold mt-8 mb-3" style={{ color: NAVY }}>Data Protection</h2>
+            <p>
+              We implement industry-standard security measures to protect your personal information. 
+              Your data is encrypted in transit (TLS) and at rest. We use Supabase for secure data storage 
+              with row-level security policies. We do not sell your personal information to third parties.
+            </p>
+
+            <h2 className="text-lg font-bold mt-8 mb-3" style={{ color: NAVY }}>AI-Powered Tools</h2>
+            <p>
+              Our platform uses AI technology (powered by Anthropic's Claude) to provide strategic guidance and 
+              analyze organizational assessments. Content you submit to our AI tools is processed to generate 
+              your results and is not used to train AI models. Your organizational data remains private to your account.
+            </p>
+
+            <h2 className="text-lg font-bold mt-8 mb-3" style={{ color: NAVY }}>Third-Party Services</h2>
+            <p>
+              We use trusted third-party services to operate our platform, including Vercel (hosting), 
+              Supabase (database), Stripe (payments), and Anthropic (AI processing). Each of these providers 
+              maintains their own privacy policies and data protection practices.
+            </p>
+
+            <h2 className="text-lg font-bold mt-8 mb-3" style={{ color: NAVY }}>Your Rights</h2>
+            <p>
+              You may access, update, or delete your account information at any time through your dashboard settings. 
+              You may request a complete export of your data or request deletion of your account by contacting us 
+              at lyn@thepivotalgroup.com. We will respond to such requests within 30 days.
+            </p>
+
+            <h2 className="text-lg font-bold mt-8 mb-3" style={{ color: NAVY }}>Cookies</h2>
+            <p>
+              We use essential cookies to maintain your session and preferences. We do not use third-party 
+              advertising cookies. You can control cookie settings through your browser preferences.
+            </p>
+
+            <h2 className="text-lg font-bold mt-8 mb-3" style={{ color: NAVY }}>Changes to This Policy</h2>
+            <p>
+              We may update this Privacy Policy from time to time. We will notify you of significant changes 
+              by posting a notice on our website or sending you an email.
+            </p>
+
+            <h2 className="text-lg font-bold mt-8 mb-3" style={{ color: NAVY }}>Contact Us</h2>
+            <p>
+              If you have questions about this Privacy Policy or our data practices, please contact us at:
+            </p>
+            <p className="pl-4">
+              The Pivotal Group Consultants Inc.<br />
+              Email: lyn@thepivotalgroup.com<br />
+              Website: thepivotalgroup.com
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PrivacyPolicy;
