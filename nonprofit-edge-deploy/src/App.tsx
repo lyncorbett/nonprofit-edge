@@ -75,6 +75,7 @@ import BoardAssessmentLanding from './components/BoardAssessmentLanding';
 import CEOEvaluationLanding from './components/CEOEvaluationLanding';
 import StrategicPlanCheckupLanding from './components/StrategicPlanCheckupLanding';
 import CertificationsLanding from './components/CertificationsLanding';
+import GrantReviewLanding from './components/GrantReviewLanding';
 
 // ============================================
 // NEW PUBLIC PAGE COMPONENTS
@@ -393,7 +394,7 @@ const App: React.FC = () => {
         return <ScenarioPlannerLanding onNavigate={navigate} onGetStarted={() => navigate('/scenario-planner/use')} />;
       
       case '/grant-review':
-        return <StrategicPlanCheckupLanding onNavigate={navigate} onGetStarted={() => navigate('/grant-review/use')} />;
+        return <GrantReviewLanding onNavigate={navigate} onGetStarted={() => navigate('/grant-review/use')} />;
 
       case '/certifications':
         return <CertificationsLanding onNavigate={navigate} />;
