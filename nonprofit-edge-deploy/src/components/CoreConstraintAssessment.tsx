@@ -284,10 +284,10 @@ const CoreConstraintAssessment: React.FC<CoreConstraintAssessmentProps> = ({ onN
           </div>
         </div>
 
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="max-w-2xl w-full">
-            <p className="text-xs text-[#0097A9] font-medium mb-2">{q.domain}</p>
-            <h2 className="text-2xl font-bold text-gray-800 mb-8">{q.text}</h2>
+        <div className="flex-1 p-4 pt-10">
+          <div className="max-w-2xl w-full mx-auto">
+            <p className="text-sm text-[#0097A9] font-semibold mb-3">{q.domain}</p>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-6">{q.text}</h2>
 
             <div className="space-y-3">
               {[
@@ -313,7 +313,7 @@ const CoreConstraintAssessment: React.FC<CoreConstraintAssessmentProps> = ({ onN
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <span className="font-medium text-gray-800">{option.label}</span>
+                  <span className="font-medium text-gray-800 text-base">{option.label}</span>
                 </button>
               ))}
             </div>
