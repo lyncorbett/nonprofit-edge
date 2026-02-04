@@ -1,298 +1,299 @@
-import React, { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+/**
+ * THE NONPROFIT EDGE - Login Page
+ * Real Supabase Authentication
+ * Updated: February 3, 2026
+ * 
+ * This calls supabase.auth.signInWithPassword() and on success
+ * calls onLoginSuccess() which App.tsx uses to load the real user session.
+ */
 
-// ============================================
-// LOGIN PAGE - FIXED VERSION
-// Now properly redirects after Supabase auth
-// ============================================
+import React, { useState } from 'react';
+import { supabase } from '../lib/supabase';
+
+const NAVY = '#0D2C54';
+const TEAL = '#0097A9';
 
 interface LoginProps {
-  onLogin?: (email: string) => void  // Callback to parent App
-  onNavigate?: (route: string) => void
+  onLoginSuccess: (userData: { id: string; email: string; name: string; role: string }) => void;
+  onNavigate: (route: string) => void;
 }
 
-const Login: React.FC<LoginProps> = ({ onLogin, onNavigate }) => {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [mode, setMode] = useState<'login' | 'magic'>('login')
-  const [magicLinkSent, setMagicLinkSent] = useState(false)
+const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigate }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [mode, setMode] = useState<'login' | 'magic'>('login');
+  const [magicSent, setMagicSent] = useState(false);
 
-  // Check if already logged in on mount
-  useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        console.log('[Login] Already authenticated, redirecting...')
-        handleSuccessfulAuth(session.user.email || '')
-      }
+  const handlePasswordLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      setError('Please enter your email and password.');
+      return;
     }
-    checkSession()
-  }, [])
 
-  // Listen for auth state changes (handles magic link returns)
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('[Login] Auth event:', event)
-        if (event === 'SIGNED_IN' && session) {
-          handleSuccessfulAuth(session.user.email || '')
-        }
-      }
-    )
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  // ✅ FIX: Centralized success handler
-  const handleSuccessfulAuth = (userEmail: string) => {
-    console.log('[Login] Success! Redirecting to dashboard...')
-    
-    // Call parent's onLogin if provided
-    if (onLogin) {
-      onLogin(userEmail)
-    }
-    
-    // Navigate to dashboard
-    if (onNavigate) {
-      onNavigate('/dashboard')
-    } else {
-      // Fallback: direct navigation
-      window.location.href = '/dashboard'
-    }
-  }
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError('');
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
         password,
-      })
+      });
 
-      if (error) throw error
+      if (authError) throw authError;
 
-      // ✅ FIX: Actually redirect on success
-      if (data.session) {
-        handleSuccessfulAuth(email)
+      if (data.user && data.session) {
+        // Pass real user data up to App.tsx
+        onLoginSuccess({
+          id: data.user.id,
+          email: data.user.email || email,
+          name: data.user.user_metadata?.full_name || data.user.email?.split('@')[0] || 'User',
+          role: data.user.user_metadata?.role || 'member',
+        });
       }
     } catch (err: any) {
-      console.error('[Login] Error:', err.message)
-      setError(err.message || 'Failed to sign in')
-      setLoading(false)
+      console.error('[Login] Error:', err);
+      if (err.message?.includes('Invalid login')) {
+        setError('Invalid email or password. Please try again.');
+      } else if (err.message?.includes('Email not confirmed')) {
+        setError('Please check your email to confirm your account first.');
+      } else {
+        setError(err.message || 'Login failed. Please try again.');
+      }
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   const handleMagicLink = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
+    e.preventDefault();
+    if (!email) {
+      setError('Please enter your email address.');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
 
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
         options: {
-          // ✅ FIX: Redirect to dashboard, not homepage
           emailRedirectTo: `${window.location.origin}/dashboard`,
         },
-      })
+      });
 
-      if (error) throw error
-      setMagicLinkSent(true)
+      if (otpError) throw otpError;
+      setMagicSent(true);
     } catch (err: any) {
-      setError(err.message || 'Failed to send magic link')
+      console.error('[Login] Magic link error:', err);
+      setError(err.message || 'Failed to send magic link.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const goToForgotPassword = () => {
-    if (onNavigate) {
-      onNavigate('/forgot-password')
-    } else {
-      window.location.href = '/forgot-password'
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError('Enter your email first, then click Forgot Password.');
+      return;
     }
-  }
 
-  const goToSignup = () => {
-    if (onNavigate) {
-      onNavigate('/signup')
-    } else {
-      window.location.href = '/signup'
+    setLoading(true);
+    setError('');
+
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (resetError) throw resetError;
+      setError('');
+      alert('Password reset email sent! Check your inbox.');
+    } catch (err: any) {
+      setError(err.message || 'Failed to send reset email.');
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
-  if (magicLinkSent) {
+  // Magic link sent confirmation
+  if (magicSent) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <span className="text-3xl">✉️</span>
-          </div>
-          <h2 className="text-2xl font-bold text-navy mb-4">Check Your Email</h2>
-          <p className="text-gray-600 mb-6">
-            We sent a login link to <strong>{email}</strong>. Click the link to sign in.
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', padding: '20px' }}>
+        <div style={{ background: 'white', padding: '48px', borderRadius: '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.08)', width: '100%', maxWidth: '420px', textAlign: 'center' }}>
+          <div style={{ width: '64px', height: '64px', background: '#e0f7fa', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', fontSize: '28px' }}>✉️</div>
+          <h2 style={{ fontSize: '24px', fontWeight: 700, color: NAVY, marginBottom: '12px' }}>Check Your Email</h2>
+          <p style={{ color: '#64748b', fontSize: '15px', lineHeight: 1.6, marginBottom: '24px' }}>
+            We sent a login link to <strong>{email}</strong>. Click the link in the email to sign in.
           </p>
           <button
-            onClick={() => setMagicLinkSent(false)}
-            className="text-teal hover:underline"
+            onClick={() => { setMagicSent(false); setMode('login'); }}
+            style={{ color: TEAL, background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', fontWeight: 600 }}
           >
-            Use a different email
+            ← Back to Sign In
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full">
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', padding: '20px' }}>
+      <div style={{ background: 'white', padding: '48px', borderRadius: '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.08)', width: '100%', maxWidth: '420px' }}>
         {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <svg width="48" height="48" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M32 4 C16.5 4 4 16.5 4 32 C4 47.5 16.5 60 32 60 C40 60 47 56.5 52 51"
-              fill="none"
-              stroke="#1a365d"
-              strokeWidth="6"
-              strokeLinecap="round"
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <button
+            onClick={() => onNavigate('/')}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          >
+            <img
+              src="/logo.svg"
+              alt="The Nonprofit Edge"
+              style={{ width: '200px', height: 'auto' }}
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
             />
-            <path
-              d="M28 32 L44 16 L44 26 L56 26 L56 38 L44 38 L44 48 Z"
-              fill="#00a0b0"
-            />
-          </svg>
-          <div className="leading-none">
-            <div className="text-xs font-extrabold" style={{ color: '#1a365d' }}>THE</div>
-            <div className="text-sm font-extrabold" style={{ color: '#00a0b0' }}>NONPROFIT</div>
-            <div className="text-lg font-extrabold" style={{ color: '#1a365d' }}>EDGE</div>
-          </div>
+          </button>
         </div>
 
-        <h1 className="text-2xl font-bold text-center mb-2" style={{ color: '#1a365d' }}>Welcome Back</h1>
-        <p className="text-gray-500 text-center mb-8">Sign in to your account</p>
+        <h1 style={{ fontSize: '24px', fontWeight: 700, color: NAVY, textAlign: 'center', marginBottom: '4px' }}>Welcome Back</h1>
+        <p style={{ color: '#64748b', textAlign: 'center', marginBottom: '28px', fontSize: '15px' }}>Sign in to your account</p>
 
+        {/* Error */}
         {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm">
+          <div style={{
+            background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px',
+            padding: '12px 16px', marginBottom: '20px', color: '#dc2626', fontSize: '14px'
+          }}>
             {error}
           </div>
         )}
 
-        {mode === 'login' ? (
-          <form onSubmit={handleLogin}>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                placeholder="you@nonprofit.org"
-                required
-              />
-            </div>
+        {/* Toggle Login Mode */}
+        <div style={{ display: 'flex', marginBottom: '24px', background: '#f1f5f9', borderRadius: '8px', padding: '4px' }}>
+          <button
+            onClick={() => { setMode('login'); setError(''); }}
+            style={{
+              flex: 1, padding: '8px', borderRadius: '6px', border: 'none', cursor: 'pointer',
+              fontSize: '13px', fontWeight: 600,
+              background: mode === 'login' ? 'white' : 'transparent',
+              color: mode === 'login' ? NAVY : '#94a3b8',
+              boxShadow: mode === 'login' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+            }}
+          >
+            Password
+          </button>
+          <button
+            onClick={() => { setMode('magic'); setError(''); }}
+            style={{
+              flex: 1, padding: '8px', borderRadius: '6px', border: 'none', cursor: 'pointer',
+              fontSize: '13px', fontWeight: 600,
+              background: mode === 'magic' ? 'white' : 'transparent',
+              color: mode === 'magic' ? NAVY : '#94a3b8',
+              boxShadow: mode === 'magic' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+            }}
+          >
+            Magic Link
+          </button>
+        </div>
 
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
+        <form onSubmit={mode === 'login' ? handlePasswordLogin : handleMagicLink}>
+          {/* Email */}
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@organization.org"
+              required
+              style={{
+                width: '100%', padding: '12px 16px', borderRadius: '8px',
+                border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none',
+                boxSizing: 'border-box',
+                transition: 'border-color 0.2s',
+              }}
+              onFocus={(e) => e.target.style.borderColor = TEAL}
+              onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+            />
+          </div>
+
+          {/* Password (only in password mode) */}
+          {mode === 'login' && (
+            <div style={{ marginBottom: '8px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Password</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 placeholder="••••••••"
                 required
+                style={{
+                  width: '100%', padding: '12px 16px', borderRadius: '8px',
+                  border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none',
+                  boxSizing: 'border-box',
+                  transition: 'border-color 0.2s',
+                }}
+                onFocus={(e) => e.target.style.borderColor = TEAL}
+                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
               />
             </div>
+          )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 rounded-lg font-bold transition disabled:opacity-50"
-              style={{ 
-                background: '#00a0b0', 
-                color: 'white',
-                cursor: loading ? 'not-allowed' : 'pointer'
-              }}
-            >
-              {loading ? 'Signing in...' : 'Sign In'}
-            </button>
-
-            {/* Forgot Password Link */}
-            <div className="mt-4 text-center">
-              <button 
+          {/* Forgot Password */}
+          {mode === 'login' && (
+            <div style={{ textAlign: 'right', marginBottom: '20px' }}>
+              <button
                 type="button"
-                onClick={goToForgotPassword}
-                className="text-sm text-gray-500 hover:text-teal-600"
+                onClick={handleForgotPassword}
+                style={{ background: 'none', border: 'none', color: TEAL, fontSize: '13px', cursor: 'pointer', fontWeight: 500 }}
               >
-                Forgot your password?
+                Forgot password?
               </button>
             </div>
-          </form>
-        ) : (
-          <form onSubmit={handleMagicLink}>
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                placeholder="you@nonprofit.org"
-                required
-              />
-            </div>
+          )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 rounded-lg font-bold transition disabled:opacity-50"
-              style={{ 
-                background: '#00a0b0', 
-                color: 'white',
-                cursor: loading ? 'not-allowed' : 'pointer'
-              }}
-            >
-              {loading ? 'Sending...' : 'Send Magic Link'}
-            </button>
-          </form>
-        )}
-
-        <div className="mt-6 text-center">
+          {/* Submit */}
           <button
-            type="button"
-            onClick={() => setMode(mode === 'login' ? 'magic' : 'login')}
-            className="text-sm hover:underline"
-            style={{ color: '#00a0b0' }}
+            type="submit"
+            disabled={loading}
+            style={{
+              width: '100%', padding: '14px', borderRadius: '8px', border: 'none',
+              background: loading ? '#94a3b8' : TEAL, color: 'white',
+              fontSize: '15px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
+              marginTop: mode === 'magic' ? '8px' : '0',
+              transition: 'background 0.2s',
+            }}
           >
-            {mode === 'login' ? 'Sign in with magic link instead' : 'Sign in with password instead'}
+            {loading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Send Magic Link'}
           </button>
-        </div>
+        </form>
 
         {/* Sign Up Link */}
-        <div className="mt-6 pt-6 border-t border-gray-200 text-center">
-          <span className="text-gray-500 text-sm">Don't have an account? </span>
-          <button 
-            type="button"
-            onClick={goToSignup}
-            className="font-medium hover:underline text-sm"
-            style={{ color: '#00a0b0' }}
+        <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: '#64748b' }}>
+          Don't have an account?{' '}
+          <button
+            onClick={() => onNavigate('/signup')}
+            style={{ background: 'none', border: 'none', color: TEAL, cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}
           >
-            Sign up
+            Start Free Trial
           </button>
-        </div>
+        </p>
+
+        {/* Back to Home */}
+        <p style={{ textAlign: 'center', marginTop: '12px' }}>
+          <button
+            onClick={() => onNavigate('/')}
+            style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '13px' }}
+          >
+            ← Back to Homepage
+          </button>
+        </p>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;
