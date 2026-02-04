@@ -1,683 +1,504 @@
 /**
  * THE NONPROFIT EDGE - App.tsx
- * Complete Routing with Usage Tracking Integration
- * 
- * UPDATED: February 3, 2026
- * - Fixed all imports to match actual filenames in GitHub repo
- * - Fixed tracking import path (was ./lib/tracking, now ./components/tracking)
- * - All routes working
+ * Simple login screen version (no Homepage component)
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'
+import { createClient, Session } from '@supabase/supabase-js'
 
-// ============================================
-// COMPONENT IMPORTS
-// ============================================
+// Components
+import Dashboard from './components/Dashboard'
+import TeamAdmin from './components/TeamAdmin'
+import AdminDashboard from './components/AdminDashboard'
+import ContentManager from './components/ContentManager'
+import PlatformOwnerDashboard from './components/PlatformOwnerDashboard'
+import TeamAccessManager from './components/TeamAccessManager'
+import ResourceLibrary from './components/ResourceLibrary'
+import EventsCalendar from './components/EventsCalendar'
+import MarketingDashboard from './components/MarketingDashboard'
+import LinkManager from './components/LinkManager'
+import EnhancedOwnerDashboard from './components/EnhancedOwnerDashboard'
+import AIGuideChatbot from './components/AIGuideChatbot'
 
-// Dashboard & Core Components
-import RealDashboard from './components/Dashboard';
-import ResourceLibrary from './components/ResourceLibrary';
-import EventsCalendar from './components/EventsCalendar';
-import EnhancedOwnerDashboard from './components/EnhancedOwnerDashboard';
-import MarketingDashboard from './components/MarketingDashboard';
-import LinkManager from './components/LinkManager';
-import TeamAccessManager from './components/TeamAccessManager';
-import ContentManager from './components/ContentManager';
-import AdminDashboard from './components/AdminDashboard';
-import PlatformOwnerDashboard from './components/PlatformOwnerDashboard';
+// Supabase client
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// User Pages
-import Settings from './components/Settings';
-import MyDownloads from './components/MyDownloads';
-import SavedFavorites from './components/SavedFavorites';
+// Brand colors
+const NAVY = '#1a365d'
+const TEAL = '#00a0b0'
 
-// Constraint Assessment
-import ConstraintAssessment from './components/ConstraintAssessment';
-import ConstraintReport from './components/ConstraintReport';
-import CoreConstraintAssessment from './components/CoreConstraintAssessment';
+function App() {
+  const [session, setSession] = useState<Session | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState('dashboard')
+  const [userData, setUserData] = useState<any>(null)
+  const [teamMembers, setTeamMembers] = useState<any[]>([])
+  const [usage, setUsage] = useState<any>(null)
+  const [error, setError] = useState<string | null>(null)
 
-// Auth Components
-import Login from './components/Login';
-import SignUp from './components/SignUp';
-import SignUpSuccess from './components/SignUpSuccess';
-import SignupFlow from './components/SignupFlow';
-import ForgotPassword from './components/ForgotPassword';
-import ResetPassword from './components/ResetPassword';
-
-// UI Components
-import Homepage from './components/Homepage';
-import Sidebar from './components/Sidebar';
-import ProductTour from './components/ProductTour';
-import WelcomeModal from './components/WelcomeModal';
-import AIGuideChatbot from './components/AIGuideChatbot';
-
-// ============================================
-// TOOL COMPONENTS
-// ============================================
-import StrategicPlanCheckup from './components/StrategicPlanCheckup';
-import CEOEvaluation from './components/CEOEvaluation';
-import BoardAssessment from './components/BoardAssessment';
-import GrantReview from './components/GrantReview';
-import ScenarioPlanner from './components/ScenarioPlanner';
-import AskTheProfessor from './components/AskTheProfessor';
-
-// Leadership Assessment
-import LeadershipAssessment from './components/LeadershipAssessment';
-import LeadershipReport from './components/LeadershipReport';
-import LeadershipProfile from './components/LeadershipProfile';
-
-// Landing Page Components
-import ScenarioPlannerLanding from './components/ScenarioPlannerLanding';
-// ============================================
-// LANDING PAGES - Placeholder stubs for files with bad names
-// GitHub has these as "(1)" and "(2)" files which Vite can't resolve.
-// These stubs let the build pass. Replace with real components once
-// files are renamed properly in the repo.
-// ============================================
-const BoardAssessmentLanding: React.FC<any> = ({ onNavigate, onGetStarted }) => (
-  <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', fontFamily: 'Inter, sans-serif' }}>
-    <div style={{ textAlign: 'center', maxWidth: '600px', padding: '40px' }}>
-      <div style={{ fontSize: '48px', marginBottom: '16px' }}>📋</div>
-      <h1 style={{ fontSize: '32px', fontWeight: 700, color: '#0D2C54', marginBottom: '12px' }}>Board Assessment</h1>
-      <p style={{ fontSize: '18px', color: '#64748b', marginBottom: '32px' }}>Evaluate your board effectiveness across 8 critical dimensions. Get a detailed report with actionable recommendations.</p>
-      <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-        <button onClick={() => onGetStarted?.()} style={{ padding: '14px 28px', background: '#7C3AED', color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 600, cursor: 'pointer' }}>Start Assessment</button>
-        <button onClick={() => onNavigate?.('/')} style={{ padding: '14px 28px', background: 'white', color: '#0D2C54', border: '2px solid #0D2C54', borderRadius: '8px', fontSize: '16px', fontWeight: 600, cursor: 'pointer' }}>Back to Home</button>
-      </div>
-    </div>
-  </div>
-);
-
-const CEOEvaluationLanding: React.FC<any> = ({ onNavigate, onGetStarted }) => (
-  <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', fontFamily: 'Inter, sans-serif' }}>
-    <div style={{ textAlign: 'center', maxWidth: '600px', padding: '40px' }}>
-      <div style={{ fontSize: '48px', marginBottom: '16px' }}>👔</div>
-      <h1 style={{ fontSize: '32px', fontWeight: 700, color: '#0D2C54', marginBottom: '12px' }}>CEO / Executive Director Evaluation</h1>
-      <p style={{ fontSize: '18px', color: '#64748b', marginBottom: '32px' }}>A comprehensive 360-degree evaluation framework for nonprofit executive leadership.</p>
-      <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-        <button onClick={() => onGetStarted?.()} style={{ padding: '14px 28px', background: '#0097A9', color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 600, cursor: 'pointer' }}>Start Evaluation</button>
-        <button onClick={() => onNavigate?.('/')} style={{ padding: '14px 28px', background: 'white', color: '#0D2C54', border: '2px solid #0D2C54', borderRadius: '8px', fontSize: '16px', fontWeight: 600, cursor: 'pointer' }}>Back to Home</button>
-      </div>
-    </div>
-  </div>
-);
-
-const StrategicPlanCheckupLanding: React.FC<any> = ({ onNavigate, onGetStarted }) => (
-  <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', fontFamily: 'Inter, sans-serif' }}>
-    <div style={{ textAlign: 'center', maxWidth: '600px', padding: '40px' }}>
-      <div style={{ fontSize: '48px', marginBottom: '16px' }}>📊</div>
-      <h1 style={{ fontSize: '32px', fontWeight: 700, color: '#0D2C54', marginBottom: '12px' }}>Strategic Plan Check-Up</h1>
-      <p style={{ fontSize: '18px', color: '#64748b', marginBottom: '32px' }}>Upload your strategic plan and get an AI-powered analysis with scores across alignment, measurability, and more.</p>
-      <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-        <button onClick={() => onGetStarted?.()} style={{ padding: '14px 28px', background: '#0D2C54', color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 600, cursor: 'pointer' }}>Start Check-Up</button>
-        <button onClick={() => onNavigate?.('/')} style={{ padding: '14px 28px', background: 'white', color: '#0D2C54', border: '2px solid #0D2C54', borderRadius: '8px', fontSize: '16px', fontWeight: 600, cursor: 'pointer' }}>Back to Home</button>
-      </div>
-    </div>
-  </div>
-);
-
-const CertificationsLanding: React.FC<any> = ({ onNavigate }) => (
-  <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', fontFamily: 'Inter, sans-serif' }}>
-    <div style={{ textAlign: 'center', maxWidth: '600px', padding: '40px' }}>
-      <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎓</div>
-      <h1 style={{ fontSize: '32px', fontWeight: 700, color: '#0D2C54', marginBottom: '12px' }}>Certifications</h1>
-      <p style={{ fontSize: '18px', color: '#64748b', marginBottom: '32px' }}>Earn professional certifications in nonprofit leadership, board governance, and strategic planning.</p>
-      <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-        <button onClick={() => onNavigate?.('/signup')} style={{ padding: '14px 28px', background: '#D4A84B', color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 600, cursor: 'pointer' }}>Get Started</button>
-        <button onClick={() => onNavigate?.('/')} style={{ padding: '14px 28px', background: 'white', color: '#0D2C54', border: '2px solid #0D2C54', borderRadius: '8px', fontSize: '16px', fontWeight: 600, cursor: 'pointer' }}>Back to Home</button>
-      </div>
-    </div>
-  </div>
-);
-
-const GrantReviewLanding: React.FC<any> = ({ onNavigate, onGetStarted }) => (
-  <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', fontFamily: 'Inter, sans-serif' }}>
-    <div style={{ textAlign: 'center', maxWidth: '600px', padding: '40px' }}>
-      <div style={{ fontSize: '48px', marginBottom: '16px' }}>📝</div>
-      <h1 style={{ fontSize: '32px', fontWeight: 700, color: '#0D2C54', marginBottom: '12px' }}>Grant & RFP Review</h1>
-      <p style={{ fontSize: '18px', color: '#64748b', marginBottom: '32px' }}>Upload your grant proposal or RFP response and receive AI-powered feedback on narrative strength, compliance, and competitiveness.</p>
-      <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-        <button onClick={() => onGetStarted?.()} style={{ padding: '14px 28px', background: '#059669', color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 600, cursor: 'pointer' }}>Start Review</button>
-        <button onClick={() => onNavigate?.('/')} style={{ padding: '14px 28px', background: 'white', color: '#0D2C54', border: '2px solid #0D2C54', borderRadius: '8px', fontSize: '16px', fontWeight: 600, cursor: 'pointer' }}>Back to Home</button>
-      </div>
-    </div>
-  </div>
-);
-
-// ============================================
-// PUBLIC PAGE COMPONENTS
-// ============================================
-const AskProfessorFree: React.FC<any> = ({ onNavigate }) => (
-  <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #0D2C54 0%, #164677 100%)', fontFamily: 'Inter, sans-serif' }}>
-    <div style={{ textAlign: 'center', maxWidth: '600px', padding: '40px', color: 'white' }}>
-      <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎓</div>
-      <h1 style={{ fontSize: '32px', fontWeight: 700, marginBottom: '12px' }}>Ask the Professor — Free Preview</h1>
-      <p style={{ fontSize: '18px', opacity: 0.85, marginBottom: '32px' }}>Get a taste of expert nonprofit guidance. Sign up for unlimited access.</p>
-      <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-        <button onClick={() => onNavigate?.('/signup')} style={{ padding: '14px 28px', background: '#0097A9', color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 600, cursor: 'pointer' }}>Sign Up for Full Access</button>
-        <button onClick={() => onNavigate?.('/')} style={{ padding: '14px 28px', background: 'transparent', color: 'white', border: '2px solid white', borderRadius: '8px', fontSize: '16px', fontWeight: 600, cursor: 'pointer' }}>Back to Home</button>
-      </div>
-    </div>
-  </div>
-);
-
-const WhyWeExist: React.FC<any> = ({ onNavigate }) => (
-  <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: 'Inter, sans-serif' }}>
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '60px 24px' }}>
-      <button onClick={() => onNavigate?.('/')} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: '#0097A9', fontSize: '14px', fontWeight: 600, cursor: 'pointer', marginBottom: '32px' }}>← Back to Home</button>
-      <h1 style={{ fontSize: '40px', fontWeight: 700, color: '#0D2C54', marginBottom: '24px' }}>Why We Exist</h1>
-      <p style={{ fontSize: '18px', color: '#475569', lineHeight: 1.8, marginBottom: '24px' }}>Too many nonprofits are stuck — not because of bad intentions, but because they lack access to the strategic tools and expert guidance that larger organizations take for granted.</p>
-      <p style={{ fontSize: '18px', color: '#475569', lineHeight: 1.8, marginBottom: '24px' }}>The Nonprofit Edge was built to change that. We believe every mission-driven organization deserves the same caliber of strategic support, regardless of budget size.</p>
-      <p style={{ fontSize: '18px', color: '#475569', lineHeight: 1.8, marginBottom: '40px' }}>Our tools, templates, and AI-powered guidance are designed by practitioners who have spent decades in the nonprofit sector — not outside consultants looking in, but leaders who have lived it.</p>
-      <button onClick={() => onNavigate?.('/signup')} style={{ padding: '14px 28px', background: '#0D2C54', color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 600, cursor: 'pointer' }}>Join The Nonprofit Edge</button>
-    </div>
-  </div>
-);
-
-const PrivacyPolicy: React.FC<any> = ({ onNavigate }) => (
-  <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: 'Inter, sans-serif' }}>
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '60px 24px' }}>
-      <button onClick={() => onNavigate?.('/')} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: '#0097A9', fontSize: '14px', fontWeight: 600, cursor: 'pointer', marginBottom: '32px' }}>← Back to Home</button>
-      <h1 style={{ fontSize: '40px', fontWeight: 700, color: '#0D2C54', marginBottom: '24px' }}>Privacy Policy</h1>
-      <p style={{ fontSize: '16px', color: '#475569', lineHeight: 1.8, marginBottom: '16px' }}>Last updated: February 2026</p>
-      <p style={{ fontSize: '16px', color: '#475569', lineHeight: 1.8, marginBottom: '16px' }}>The Nonprofit Edge ("we," "us," or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform.</p>
-      <h2 style={{ fontSize: '24px', fontWeight: 600, color: '#0D2C54', margin: '32px 0 16px' }}>Information We Collect</h2>
-      <p style={{ fontSize: '16px', color: '#475569', lineHeight: 1.8, marginBottom: '16px' }}>We collect information you provide directly to us, such as your name, email address, organization name, and payment information when you create an account or subscribe to our services.</p>
-      <h2 style={{ fontSize: '24px', fontWeight: 600, color: '#0D2C54', margin: '32px 0 16px' }}>How We Use Your Information</h2>
-      <p style={{ fontSize: '16px', color: '#475569', lineHeight: 1.8, marginBottom: '16px' }}>We use the information we collect to provide, maintain, and improve our services, process transactions, send you updates and marketing communications, and respond to your comments and questions.</p>
-      <h2 style={{ fontSize: '24px', fontWeight: 600, color: '#0D2C54', margin: '32px 0 16px' }}>Contact Us</h2>
-      <p style={{ fontSize: '16px', color: '#475569', lineHeight: 1.8, marginBottom: '16px' }}>If you have questions about this Privacy Policy, please contact us at info@thenonprofitedge.com</p>
-    </div>
-  </div>
-);
-
-const TermsOfService: React.FC<any> = ({ onNavigate }) => (
-  <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: 'Inter, sans-serif' }}>
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '60px 24px' }}>
-      <button onClick={() => onNavigate?.('/')} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: '#0097A9', fontSize: '14px', fontWeight: 600, cursor: 'pointer', marginBottom: '32px' }}>← Back to Home</button>
-      <h1 style={{ fontSize: '40px', fontWeight: 700, color: '#0D2C54', marginBottom: '24px' }}>Terms of Service</h1>
-      <p style={{ fontSize: '16px', color: '#475569', lineHeight: 1.8, marginBottom: '16px' }}>Last updated: February 2026</p>
-      <p style={{ fontSize: '16px', color: '#475569', lineHeight: 1.8, marginBottom: '16px' }}>Welcome to The Nonprofit Edge. By accessing or using our platform, you agree to be bound by these Terms of Service.</p>
-      <h2 style={{ fontSize: '24px', fontWeight: 600, color: '#0D2C54', margin: '32px 0 16px' }}>Use of Service</h2>
-      <p style={{ fontSize: '16px', color: '#475569', lineHeight: 1.8, marginBottom: '16px' }}>You may use The Nonprofit Edge platform in accordance with these Terms. You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account.</p>
-      <h2 style={{ fontSize: '24px', fontWeight: 600, color: '#0D2C54', margin: '32px 0 16px' }}>Subscriptions and Payments</h2>
-      <p style={{ fontSize: '16px', color: '#475569', lineHeight: 1.8, marginBottom: '16px' }}>Certain features of the platform require a paid subscription. By subscribing, you agree to pay the applicable fees. Subscriptions automatically renew unless cancelled before the renewal date.</p>
-      <h2 style={{ fontSize: '24px', fontWeight: 600, color: '#0D2C54', margin: '32px 0 16px' }}>Contact Us</h2>
-      <p style={{ fontSize: '16px', color: '#475569', lineHeight: 1.8, marginBottom: '16px' }}>If you have questions about these Terms, please contact us at info@thenonprofitedge.com</p>
-    </div>
-  </div>
-);
-
-// Tracking utilities
-// NOTE: tracking.ts is in components/ folder, not lib/
-import { 
-  trackToolStart, 
-  trackToolComplete, 
-  trackDownload, 
-  trackProfessorSession,
-  TIER_LIMITS 
-} from './components/tracking';
-
-// ============================================
-// TYPES
-// ============================================
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  full_name?: string;
-  role: 'owner' | 'admin' | 'member';
-  organization_id: string;
-  avatar_url?: string | null;
-  profile_photo?: string | null;
-  created_at?: string;
-}
-
-interface Organization {
-  id: string;
-  name: string;
-  tier: 'essential' | 'professional' | 'premium';
-  logo_url?: string | null;
-}
-
-interface UsageData {
-  tools_started: number;
-  tools_completed: number;
-  tools_used_this_month: number;
-  downloads_this_month: number;
-  professor_sessions_this_month: number;
-  report_downloads: number;
-}
-
-interface ToolSession {
-  id: string;
-  tool_type: string;
-  started_at: string;
-}
-
-// ============================================
-// BRAND COLORS
-// ============================================
-
-const NAVY = '#0D2C54';
-const TEAL = '#0097A9';
-
-// ============================================
-// LOGO COMPONENT
-// ============================================
-
-const Logo = ({ width = 180 }: { width?: number }) => (
-  <img 
-    src="/logo.svg" 
-    alt="The Nonprofit Edge" 
-    style={{ width: `${width}px`, height: 'auto' }}
-  />
-);
-
-// ============================================
-// MAIN APP COMPONENT
-// ============================================
-
-const App: React.FC = () => {
-  const [currentRoute, setCurrentRoute] = useState<string>(window.location.pathname);
-  const [user, setUser] = useState<User | null>(null);
-  const [organization, setOrganization] = useState<Organization | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentSession, setCurrentSession] = useState<ToolSession | null>(null);
-  
-  const [usage, setUsage] = useState<UsageData>({
-    tools_started: 0,
-    tools_completed: 0,
-    tools_used_this_month: 0,
-    downloads_this_month: 0,
-    professor_sessions_this_month: 0,
-    report_downloads: 0,
-  });
-
+  // Auth state listener
   useEffect(() => {
-    const handlePopState = () => {
-      setCurrentRoute(window.location.pathname);
-    };
-    window.addEventListener('popstate', handlePopState);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      if (session) {
+        loadUserData(session.user.id)
+      } else {
+        setLoading(false)
+      }
+    })
 
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session)
+        
+        if (event === 'SIGNED_OUT') {
+          setUserData(null)
+          setTeamMembers([])
+          setUsage(null)
+          setError(null)
+          setCurrentPage('dashboard')
+          setLoading(false)
+        } else if (session) {
+          loadUserData(session.user.id)
+        } else {
+          setLoading(false)
+        }
+      }
+    )
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const loadUserData = async (userId: string) => {
     try {
-      const savedUser = localStorage.getItem('nonprofit_edge_user');
-      const savedOrg = localStorage.getItem('nonprofit_edge_org');
-      const savedUsage = localStorage.getItem('nonprofit_edge_usage');
+      setLoading(true)
       
-      if (savedUser) setUser(JSON.parse(savedUser));
-      if (savedOrg) setOrganization(JSON.parse(savedOrg));
-      if (savedUsage) setUsage(JSON.parse(savedUsage));
-    } catch (e) {
-      console.error('Error loading saved data:', e);
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .select(`
+          *,
+          organization:organizations(*)
+        `)
+        .eq('auth_user_id', userId)
+        .single()
+
+      if (userError) throw userError
+
+      setUserData(user)
+
+      if (user.organization_id) {
+        const { data: team } = await supabase
+          .from('users')
+          .select('*')
+          .eq('organization_id', user.organization_id)
+
+        setTeamMembers(team || [])
+      }
+
+      const currentMonth = new Date().toISOString().slice(0, 7)
+      const { data: usageData } = await supabase
+        .from('monthly_usage')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('month', currentMonth)
+        .single()
+
+      setUsage(usageData || {
+        downloads_this_month: 0,
+        professor_sessions_this_month: 0,
+        tools_used_this_month: 0
+      })
+
+      setError(null)
+    } catch (err: any) {
+      console.error('Error loading user data:', err)
+      setError(err.message)
+    } finally {
+      setLoading(false)
     }
-    
-    setIsLoading(false);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem('nonprofit_edge_usage', JSON.stringify(usage));
-    }
-  }, [usage, user]);
-
-  const navigate = (route: string) => {
-    setCurrentRoute(route);
-    window.history.pushState({}, '', route);
-    window.scrollTo(0, 0);
-  };
-
-  const handleLogin = (email: string) => {
-    const newUser: User = {
-      id: 'user_' + Date.now(),
-      email: email,
-      name: email.split('@')[0],
-      full_name: email.split('@')[0],
-      role: email.includes('owner') ? 'owner' : 'member',
-      organization_id: 'org_1',
-      created_at: new Date().toISOString(),
-    };
-    
-    const newOrg: Organization = {
-      id: 'org_1',
-      name: 'Your Organization',
-      tier: 'professional',
-    };
-    
-    setUser(newUser);
-    setOrganization(newOrg);
-    localStorage.setItem('nonprofit_edge_user', JSON.stringify(newUser));
-    localStorage.setItem('nonprofit_edge_org', JSON.stringify(newOrg));
-    navigate('/dashboard');
-  };
-
-  const handleLogout = () => {
-    setUser(null);
-    setOrganization(null);
-    setCurrentSession(null);
-    localStorage.removeItem('nonprofit_edge_user');
-    localStorage.removeItem('nonprofit_edge_org');
-    localStorage.removeItem('nonprofit_edge_usage');
-    navigate('/');
-  };
-
-  const handleToolStart = async (toolId: string, toolName: string): Promise<string | null> => {
-    if (!user || !organization) return null;
-    const sessionId = `session_${Date.now()}`;
-    const session: ToolSession = { id: sessionId, tool_type: toolId, started_at: new Date().toISOString() };
-    setCurrentSession(session);
-    return sessionId;
-  };
-
-  const handleToolComplete = async (sessionId: string, toolName: string, score?: number) => {
-    if (!user || !organization) return;
-    setUsage(prev => ({
-      ...prev,
-      tools_started: prev.tools_started + 1,
-      tools_completed: prev.tools_completed + 1,
-      tools_used_this_month: prev.tools_used_this_month + 1,
-    }));
-    setCurrentSession(null);
-  };
-
-  const handleDownload = async (resourceName: string, resourceType: 'report' | 'template' = 'report') => {
-    if (!user || !organization) return;
-    const tier = organization.tier;
-    const limits = TIER_LIMITS[tier] || TIER_LIMITS.essential;
-    if (usage.downloads_this_month >= limits.downloads) {
-      alert(`You've reached your monthly download limit (${limits.downloads}). Upgrade for more.`);
-      return;
-    }
-    setUsage(prev => ({
-      ...prev,
-      downloads_this_month: prev.downloads_this_month + 1,
-      report_downloads: prev.report_downloads + 1,
-    }));
-  };
-
-  const handleStartProfessor = async () => {
-    if (!user || !organization) {
-      navigate('/login');
-      return;
-    }
-    const tier = organization.tier;
-    const limits = TIER_LIMITS[tier] || TIER_LIMITS.essential;
-    if (tier !== 'premium' && usage.professor_sessions_this_month >= limits.professor) {
-      alert(`You've reached your monthly limit (${limits.professor}). Upgrade for more.`);
-      return;
-    }
-    setUsage(prev => ({ ...prev, professor_sessions_this_month: prev.professor_sessions_this_month + 1 }));
-    navigate('/ask-the-professor/use');
-  };
-
-  const requireAuth = (component: React.ReactNode): React.ReactNode => {
-    if (!user) {
-      navigate('/login');
-      return null;
-    }
-    return component;
-  };
-
-  if (isLoading) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
-        <div style={{ textAlign: 'center' }}>
-          <Logo width={200} />
-          <p style={{ color: '#64748b', marginTop: '16px' }}>Loading...</p>
-        </div>
-      </div>
-    );
   }
 
-  const mapDashboardNavigation = (page: string): string => {
-    const routeMap: Record<string, string> = {
-      'dashboard': '/dashboard',
-      'library': '/resources',
-      'events': '/events',
-      'settings': '/settings',
-      'constraint-assessment': '/constraint-assessment',
-      'constraint-report': '/constraint-report',
-      'my-downloads': '/my-downloads',
-      'favorites': '/favorites',
-      'leadership-assessment': '/leadership-assessment',
-      'leadership-report': '/leadership-assessment/report',
-      'strategic-checkup': '/strategic-plan-checkup/use',
-      'ceo-evaluation': '/ceo-evaluation/use',
-      'board-assessment': '/board-assessment/use',
-      'scenario-planner': '/scenario-planner/use',
-      'grant-review': '/grant-review/use',
-      'content-manager': '/admin/content',
-      'platform-admin': '/admin/platform',
-      'owner-dashboard': '/admin/owner',
-      'enhanced-owner': '/admin/enhanced',
-      'marketing': '/admin/marketing',
-      'link-manager': '/admin/links',
-      'team-access': '/admin/team',
-    };
-    return routeMap[page] || `/${page}`;
-  };
+  const handleLogin = async (email: string, password: string) => {
+    setError(null)
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    })
+    if (error) throw error
+  }
 
-  const renderRoute = (): React.ReactNode => {
-    switch (currentRoute) {
-      // ============================================
-      // PUBLIC ROUTES (No login required)
-      // ============================================
-      case '/':
-        return <Homepage onNavigate={navigate} />;
-      
-      case '/login':
-        return <Login onLogin={handleLogin} onNavigate={navigate} />;
-      
-      case '/signup':
-        return <SignUp onSignUp={handleLogin} onNavigate={navigate} />;
-      
-      case '/signup/success':
-        return <SignUpSuccess onNavigate={navigate} />;
-      
-      case '/forgot-password':
-        return <ForgotPassword onNavigate={navigate} />;
-      
-      case '/reset-password':
-        return <ResetPassword onNavigate={navigate} />;
+  const handleSignUp = async (email: string, password: string, fullName: string) => {
+    setError(null)
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: fullName }
+      }
+    })
+    if (error) throw error
+  }
 
-      // FREE ASSESSMENT (Public Lead Magnet)
-      case '/assessment':
-        return <CoreConstraintAssessment onNavigate={navigate} />;
+  const handleLogout = async () => {
+    setLoading(true)
+    await supabase.auth.signOut()
+  }
 
-      // ASK THE PROFESSOR - FREE PREVIEW (Public, one question, no login)
-      case '/ask-the-professor':
-      case '/ask-free':
-        return <AskProfessorFree onNavigate={navigate} />;
+  const handleDownload = async (resourceId: string) => {
+    await supabase.from('activity_logs').insert({
+      user_id: session?.user.id,
+      organization_id: userData?.organization_id,
+      action: 'download',
+      resource_id: resourceId
+    })
+    if (session) loadUserData(session.user.id)
+  }
 
-      // WHY WE EXIST PAGE
-      case '/why-we-exist':
-        return <WhyWeExist onNavigate={navigate} />;
-
-      // PRIVACY & TERMS
-      case '/privacy':
-        return <PrivacyPolicy onNavigate={navigate} />;
-      
-      case '/terms':
-        return <TermsOfService onNavigate={navigate} />;
-
-      // ============================================
-      // TOOL LANDING PAGES (Public)
-      // ============================================
-      case '/strategic-plan-checkup':
-        return <StrategicPlanCheckupLanding onNavigate={navigate} onGetStarted={() => navigate('/strategic-plan-checkup/use')} />;
-      
-      case '/board-assessment':
-        return <BoardAssessmentLanding onNavigate={navigate} onGetStarted={() => navigate('/board-assessment/use')} />;
-      
-      case '/ceo-evaluation':
-        return <CEOEvaluationLanding onNavigate={navigate} onGetStarted={() => navigate('/ceo-evaluation/use')} />;
-      
-      case '/scenario-planner':
-        return <ScenarioPlannerLanding onNavigate={navigate} onGetStarted={() => navigate('/scenario-planner/use')} />;
-      
-      case '/grant-review':
-        return <GrantReviewLanding onNavigate={navigate} onGetStarted={() => navigate('/grant-review/use')} />;
-
-      case '/certifications':
-        return <CertificationsLanding onNavigate={navigate} />;
-
-      // ============================================
-      // TOOL PAGES (Require Auth) - Direct render
-      // ============================================
-      case '/strategic-plan-checkup/use':
-        return requireAuth(<StrategicPlanCheckup onNavigate={navigate} />);
-      
-      case '/board-assessment/use':
-        return requireAuth(<BoardAssessment onNavigate={navigate} />);
-      
-      case '/ceo-evaluation/use':
-        return requireAuth(<CEOEvaluation onNavigate={navigate} />);
-      
-      case '/scenario-planner/use':
-        return requireAuth(<ScenarioPlanner onNavigate={navigate} />);
-      
-      case '/grant-review/use':
-        return requireAuth(<GrantReview onNavigate={navigate} />);
-      
-      case '/ask-the-professor/use':
-        return requireAuth(<AskTheProfessor onNavigate={navigate} />);
-
-      // ============================================
-      // LEADERSHIP ASSESSMENT
-      // ============================================
-      case '/leadership-assessment':
-        return requireAuth(<LeadershipAssessment onNavigate={navigate} />);
-      
-      case '/leadership-assessment/report':
-        return requireAuth(<LeadershipReport onNavigate={navigate} />);
-
-      // ============================================
-      // USER PAGES (Require Auth)
-      // ============================================
-      case '/settings':
-        return requireAuth(<Settings onNavigate={navigate} onLogout={handleLogout} />);
-
-      case '/my-downloads':
-        return requireAuth(<MyDownloads onNavigate={navigate} />);
-
-      case '/favorites':
-        return requireAuth(<SavedFavorites onNavigate={navigate} />);
-
-      // CONSTRAINT ASSESSMENT (Full Member Version)
-      case '/constraint-assessment':
-      case '/dashboard/constraint-assessment':
-        return requireAuth(<ConstraintAssessment onNavigate={navigate} />);
-
-      case '/constraint-report':
-      case '/dashboard/constraint-report':
-        return requireAuth(<ConstraintReport onNavigate={navigate} />);
-
-      // ============================================
-      // DASHBOARD
-      // ============================================
-      case '/dashboard':
-        if (!user || !organization) {
-          navigate('/login');
-          return null;
-        }
-        return (
-          <RealDashboard 
-            user={{ ...user, full_name: user.name, avatar_url: null, profile_photo: null, created_at: user.created_at || new Date().toISOString() }}
-            organization={organization}
-            usage={usage}
-            teamCount={1}
-            onNavigate={(page: string) => navigate(mapDashboardNavigation(page))}
-            onDownload={handleDownload}
-            onStartProfessor={handleStartProfessor}
-            onLogout={handleLogout}
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div 
+            className="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4"
+            style={{ borderColor: TEAL, borderTopColor: 'transparent' }}
           />
-        );
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
-      case '/resources':
-        return requireAuth(
-          <ResourceLibrary 
-            user={{ ...user!, full_name: user!.name }}
-            organization={organization!}
-            onNavigate={(page: string) => navigate(mapDashboardNavigation(page))}
-            onLogout={handleLogout}
-          />
-        );
+  // No session = show login
+  if (!session) {
+    return <LoginScreen onLogin={handleLogin} onSignUp={handleSignUp} />
+  }
 
-      case '/events':
-        return requireAuth(
-          <EventsCalendar 
-            user={{ ...user!, full_name: user!.name }}
-            organization={organization!}
-            onNavigate={(page: string) => navigate(mapDashboardNavigation(page))}
-            onLogout={handleLogout}
-          />
-        );
+  // Has session but no user data
+  if (!userData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center max-w-md p-8">
+          <h2 className="text-xl font-bold mb-4" style={{ color: NAVY }}>
+            Account Setup Required
+          </h2>
+          {error && <p className="text-red-600 mb-4">{error}</p>}
+          <p className="text-gray-600 mb-4">
+            Your account is being set up. If this persists, please contact support.
+          </p>
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 rounded-lg text-white font-medium"
+            style={{ backgroundColor: TEAL }}
+          >
+            Sign Out
+          </button>
+        </div>
+      </div>
+    )
+  }
 
-      // ============================================
-      // ADMIN ROUTES
-      // ============================================
-      case '/admin':
-      case '/admin/owner':
-      case '/admin/enhanced':
-        return requireAuth(<EnhancedOwnerDashboard onNavigate={(page: string) => navigate(`/${page}`)} />);
+  // Route handling
+  if (currentPage === 'team') {
+    return (
+      <TeamAdmin
+        organization={userData.organization}
+        currentUser={userData}
+        teamMembers={teamMembers}
+        onBack={() => setCurrentPage('dashboard')}
+        onRefresh={() => loadUserData(session.user.id)}
+      />
+    )
+  }
 
-      case '/admin/marketing':
-        return requireAuth(<MarketingDashboard />);
+  if (currentPage === 'admin') {
+    return (
+      <AdminDashboard
+        onBack={() => setCurrentPage('dashboard')}
+      />
+    )
+  }
 
-      case '/admin/links':
-        return requireAuth(<LinkManager />);
+  if (currentPage === 'content-manager') {
+    return (
+      <ContentManager
+        supabase={supabase}
+        onNavigate={setCurrentPage}
+        onLogout={handleLogout}
+      />
+    )
+  }
 
-      case '/admin/team':
-        return requireAuth(<TeamAccessManager />);
+  if (currentPage === 'owner-dashboard') {
+    return (
+      <PlatformOwnerDashboard
+        supabase={supabase}
+        onNavigate={setCurrentPage}
+        onLogout={handleLogout}
+      />
+    )
+  }
 
-      case '/admin/content':
-        return requireAuth(<ContentManager />);
+  if (currentPage === 'enhanced-owner') {
+    return (
+      <EnhancedOwnerDashboard
+        user={userData}
+        supabase={supabase}
+        onNavigate={setCurrentPage}
+      />
+    )
+  }
 
-      case '/admin/platform':
-        return requireAuth(<AdminDashboard />);
+  if (currentPage === 'marketing') {
+    return (
+      <MarketingDashboard
+        user={userData}
+        onNavigate={setCurrentPage}
+        onLogout={handleLogout}
+      />
+    )
+  }
 
-      // ============================================
-      // LEGACY REDIRECTS
-      // ============================================
-      case '/tools/strategic-plan':
-        navigate('/strategic-plan-checkup/use');
-        return null;
-      
-      case '/tools/board-assessment':
-        navigate('/board-assessment/use');
-        return null;
-      
-      case '/tools/ceo-evaluation':
-        navigate('/ceo-evaluation/use');
-        return null;
-      
-      case '/tools/scenario-planner':
-        navigate('/scenario-planner/use');
-        return null;
-      
-      case '/tools/grant-review':
-        navigate('/grant-review/use');
-        return null;
-      
-      case '/tools/ask-professor':
-        navigate('/ask-the-professor/use');
-        return null;
+  if (currentPage === 'link-manager') {
+    return (
+      <LinkManager
+        user={userData}
+        supabase={supabase}
+        onNavigate={setCurrentPage}
+      />
+    )
+  }
 
-      // ============================================
-      // DEFAULT
-      // ============================================
-      default:
-        if (currentRoute.startsWith('/tools/')) {
-          navigate('/dashboard');
-          return null;
-        }
-        return <Homepage onNavigate={navigate} />;
+  if (currentPage === 'team-access') {
+    return (
+      <TeamAccessManager
+        supabase={supabase}
+        currentUserEmail={userData.email}
+        onNavigate={setCurrentPage}
+      />
+    )
+  }
+
+  if (currentPage === 'library') {
+    return (
+      <>
+        <ResourceLibrary
+          user={userData}
+          organization={userData.organization}
+          onNavigate={setCurrentPage}
+          onLogout={handleLogout}
+        />
+        <AIGuideChatbot
+          user={userData}
+          organization={userData.organization}
+          onNavigate={setCurrentPage}
+        />
+      </>
+    )
+  }
+
+  if (currentPage === 'events') {
+    return (
+      <>
+        <EventsCalendar
+          user={userData}
+          organization={userData.organization}
+          onNavigate={setCurrentPage}
+          onLogout={handleLogout}
+        />
+        <AIGuideChatbot
+          user={userData}
+          organization={userData.organization}
+          onNavigate={setCurrentPage}
+        />
+      </>
+    )
+  }
+
+  // Main Dashboard
+  return (
+    <>
+      <Dashboard
+        user={userData}
+        organization={userData.organization}
+        usage={usage}
+        teamCount={teamMembers.length}
+        onNavigate={setCurrentPage}
+        onDownload={handleDownload}
+        onStartProfessor={() => setCurrentPage('professor')}
+        onLogout={handleLogout}
+        supabase={supabase}
+      />
+      <AIGuideChatbot
+        user={userData}
+        organization={userData.organization}
+        onNavigate={setCurrentPage}
+      />
+    </>
+  )
+}
+
+// Login Screen Component
+interface LoginScreenProps {
+  onLogin: (email: string, password: string) => Promise<void>
+  onSignUp: (email: string, password: string, fullName: string) => Promise<void>
+}
+
+const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onSignUp }) => {
+  const [isSignUp, setIsSignUp] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+    setSuccess(null)
+
+    try {
+      if (isSignUp) {
+        await onSignUp(email, password, fullName)
+        setSuccess('Account created! Check your email to confirm your account.')
+        setIsSignUp(false)
+        setEmail('')
+        setPassword('')
+        setFullName('')
+      } else {
+        await onLogin(email, password)
+      }
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
     }
-  };
+  }
 
-  return <>{renderRoute()}</>;
-};
+  return (
+    <div 
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{ backgroundColor: '#F8FAFC' }}
+    >
+      <div className="max-w-md w-full">
+        {/* Logo / Header */}
+        <div className="text-center mb-8">
+          <h1 
+            className="text-3xl font-bold mb-2"
+            style={{ color: NAVY }}
+          >
+            The Nonprofit Edge
+          </h1>
+          <p className="text-gray-600">
+            Strategic tools for nonprofit leaders
+          </p>
+        </div>
 
-export default App;
+        {/* Login Card */}
+        <div className="bg-white rounded-xl shadow-lg p-8">
+          <h2 
+            className="text-xl font-semibold mb-6"
+            style={{ color: NAVY }}
+          >
+            {isSignUp ? 'Create Account' : 'Welcome Back'}
+          </h2>
+
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4 text-sm">
+              {success}
+            </div>
+          )}
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {isSignUp && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:outline-none"
+                  placeholder="Your full name"
+                  required
+                />
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:outline-none"
+                placeholder="you@example.com"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:outline-none"
+                placeholder="••••••••"
+                required
+                minLength={6}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 rounded-lg text-white font-medium transition-all hover:opacity-90 disabled:opacity-50"
+              style={{ backgroundColor: TEAL }}
+            >
+              {loading ? 'Please wait...' : (isSignUp ? 'Create Account' : 'Sign In')}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <button
+              onClick={() => {
+                setIsSignUp(!isSignUp)
+                setError(null)
+                setSuccess(null)
+              }}
+              className="text-sm hover:underline"
+              style={{ color: TEAL }}
+            >
+              {isSignUp 
+                ? 'Already have an account? Sign in' 
+                : "Don't have an account? Sign up"}
+            </button>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-xs text-gray-400 mt-6">
+          © 2025 The Pivotal Group Consultants Inc. All rights reserved.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+export default App

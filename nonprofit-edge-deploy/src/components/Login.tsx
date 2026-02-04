@@ -3,11 +3,11 @@ import { supabase } from '../lib/supabase'
 
 // ============================================
 // LOGIN PAGE - FIXED VERSION
-// Fixed: Removed double navigation issue
+// Now properly redirects after Supabase auth
 // ============================================
 
 interface LoginProps {
-  onLogin?: (email: string) => void  // Callback to parent App - this handles navigation
+  onLogin?: (email: string) => void  // Callback to parent App
   onNavigate?: (route: string) => void
 }
 
@@ -45,20 +45,21 @@ const Login: React.FC<LoginProps> = ({ onLogin, onNavigate }) => {
     return () => subscription.unsubscribe()
   }, [])
 
-  // ✅ FIX: Only call onLogin - it handles navigation in App.tsx
+  // ✅ FIX: Centralized success handler
   const handleSuccessfulAuth = (userEmail: string) => {
-    console.log('[Login] Success! Calling onLogin...')
+    console.log('[Login] Success! Redirecting to dashboard...')
     
-    // Call parent's onLogin - this handles setting user state AND navigation
+    // Call parent's onLogin if provided
     if (onLogin) {
       onLogin(userEmail)
+    }
+    
+    // Navigate to dashboard
+    if (onNavigate) {
+      onNavigate('/dashboard')
     } else {
-      // Fallback only if no onLogin provided
-      if (onNavigate) {
-        onNavigate('/dashboard')
-      } else {
-        window.location.href = '/dashboard'
-      }
+      // Fallback: direct navigation
+      window.location.href = '/dashboard'
     }
   }
 
@@ -75,7 +76,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onNavigate }) => {
 
       if (error) throw error
 
-      // ✅ FIX: Let handleSuccessfulAuth handle the redirect
+      // ✅ FIX: Actually redirect on success
       if (data.session) {
         handleSuccessfulAuth(email)
       }
@@ -95,6 +96,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onNavigate }) => {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
+          // ✅ FIX: Redirect to dashboard, not homepage
           emailRedirectTo: `${window.location.origin}/dashboard`,
         },
       })
