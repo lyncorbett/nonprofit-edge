@@ -1,5 +1,21 @@
+/**
+ * THE NONPROFIT EDGE - Ask the Professor
+ * Real Claude API Integration via /api/ask-professor
+ * 
+ * UPDATED: February 6, 2026
+ * - Fixed starter questions
+ * - Added New Chat button
+ * - Added Chat History button
+ * - Fixed greeting to use user's name
+ * - Session tracking via API (not page reloads)
+ */
+
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Send, Loader2, Upload, X, FileText, GraduationCap } from 'lucide-react';
+import { 
+  Send, Sparkles, User, Lightbulb, History, Plus,
+  BookOpen, Target, Users, DollarSign, X, ArrowLeft
+} from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 interface Message {
   id: string;
@@ -8,24 +24,102 @@ interface Message {
   timestamp: Date;
 }
 
-interface AskTheProfessorProps {
-  onNavigate?: (route: string) => void;
+interface Conversation {
+  id: string;
+  created_at: string;
+  messages: Message[];
+  preview: string;
 }
 
-const AskTheProfessor: React.FC<AskTheProfessorProps> = ({ onNavigate }) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: "Hello! I'm Dr. Lyn Corbett, your nonprofit leadership advisor. I've spent 15+ years working with over 800 nonprofit organizations, helping them build sustainable impact.\n\nHow can I help you today? You can ask me about strategic planning, board governance, fundraising, leadership development, or any other nonprofit challenge you're facing.",
-      timestamp: new Date(),
-    },
-  ]);
+interface AskTheProfessorProps {
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  onNavigate?: (page: string) => void;
+}
+
+const SUGGESTED_QUESTIONS = [
+  {
+    icon: Users,
+    category: 'BOARD GOVERNANCE',
+    question: 'How can I improve board meeting engagement?',
+    color: '#0D2C54'
+  },
+  {
+    icon: Target,
+    category: 'STRATEGIC PLANNING',
+    question: 'What makes a strategic plan actually work?',
+    color: '#0097A9'
+  },
+  {
+    icon: DollarSign,
+    category: 'FUNDRAISING',
+    question: 'How do I approach a major donor who has stopped giving?',
+    color: '#D4A84B'
+  },
+  {
+    icon: BookOpen,
+    category: 'LEADERSHIP',
+    question: 'How do I handle a difficult team member?',
+    color: '#6366f1'
+  }
+];
+
+const AskTheProfessor: React.FC<AskTheProfessorProps> = ({ user, onNavigate }) => {
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+  const [userName, setUserName] = useState(user?.name || 'there');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Fetch user name on mount
+  useEffect(() => {
+    const fetchUserName = async () => {
+      if (user?.id) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('full_name, first_name')
+          .eq('id', user.id)
+          .single();
+        if (data) {
+          setUserName(data.full_name || data.first_name || 'there');
+        }
+      }
+    };
+    fetchUserName();
+  }, [user]);
+
+  // Fetch conversation history
+  const fetchConversations = async () => {
+    if (!user?.id) return;
+    
+    const { data } = await supabase
+      .from('professor_conversations')
+      .select('id, created_at, messages')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(20);
+    
+    if (data) {
+      const formatted = data.map(conv => ({
+        id: conv.id,
+        created_at: conv.created_at,
+        messages: conv.messages || [],
+        preview: conv.messages?.[0]?.content?.substring(0, 60) || 'New conversation'
+      }));
+      setConversations(formatted);
+    }
+  };
+
+  useEffect(() => {
+    fetchConversations();
+  }, [user]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -35,238 +129,503 @@ const AskTheProfessor: React.FC<AskTheProfessorProps> = ({ onNavigate }) => {
     scrollToBottom();
   }, [messages]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setUploadedFile(e.target.files[0]);
-    }
+  // Start a new chat
+  const startNewChat = () => {
+    setMessages([]);
+    setCurrentConversationId(null);
+    setShowHistory(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() && !uploadedFile) return;
+  // Load a conversation from history
+  const loadConversation = (conv: Conversation) => {
+    setMessages(conv.messages);
+    setCurrentConversationId(conv.id);
+    setShowHistory(false);
+  };
+
+  // Format date for history display
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString();
+  };
+
+  // Send message to API
+  const sendMessage = async (content: string) => {
+    if (!content.trim() || isLoading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: uploadedFile 
-        ? `[Attached: ${uploadedFile.name}]\n\n${input}` 
-        : input,
-      timestamp: new Date(),
+      content: content.trim(),
+      timestamp: new Date()
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setInput('');
     setIsLoading(true);
 
     try {
-      const formData = new FormData();
-      formData.append('message', input);
-      formData.append('conversationHistory', JSON.stringify(messages));
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (uploadedFile) {
-        formData.append('file', uploadedFile);
-      }
+      const response = await fetch('/api/ask-professor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: updatedMessages.map(m => ({ role: m.role, content: m.content })),
+          accessToken: session?.access_token,
+          localHour: new Date().getHours()
+        }),
+      });
 
-      // Try Vercel API first, fall back to n8n
-      let response;
-      try {
-        response = await fetch('/api/ask-professor', {
-          method: 'POST',
-          body: formData,
-        });
-      } catch {
-        // Fallback to n8n
-        response = await fetch('https://thenonprofitedge.app.n8n.cloud/webhook/professor', {
-          method: 'POST',
-          body: formData,
-        });
-      }
+      const data = await response.json();
 
-      if (response.ok) {
-        const data = await response.json();
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: data.response || data.output || data.message || "I apologize, but I couldn't process that request. Please try again.",
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, assistantMessage]);
-      } else {
-        throw new Error('Failed to get response');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      const errorMessage: Message = {
+      if (data.error) throw new Error(data.error);
+
+      const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: "I apologize, but I'm having trouble connecting right now. Please try again in a moment.",
-        timestamp: new Date(),
+        content: data.response,
+        timestamp: new Date()
       };
-      setMessages(prev => [...prev, errorMessage]);
+
+      setMessages([...updatedMessages, assistantMessage]);
+      
+      // Refresh history after new message
+      fetchConversations();
+      
+    } catch (error) {
+      console.error('Error:', error);
+      setMessages([
+        ...updatedMessages,
+        {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: "I'm having trouble connecting right now. Please try again in a moment.",
+          timestamp: new Date()
+        }
+      ]);
     } finally {
       setIsLoading(false);
-      setUploadedFile(null);
     }
   };
 
-  const suggestedQuestions = [
-    "How do I create an effective strategic plan?",
-    "What makes a high-performing board?",
-    "How can I diversify our funding sources?",
-    "What's the best way to develop emerging leaders?",
-  ];
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(input);
+    }
+  };
+
+  // Format message content with basic markdown
+  const formatContent = (text: string) => {
+    let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    formatted = formatted.replace(/\n/g, '<br/>');
+    return { __html: formatted };
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div style={{
+      minHeight: '100vh',
+      background: '#f8fafc',
+      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+      display: 'flex',
+      flexDirection: 'column',
+    }}>
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">
+      <header style={{
+        background: 'white',
+        borderBottom: '1px solid #e2e8f0',
+        padding: '16px 24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            background: 'linear-gradient(135deg, #0D2C54 0%, #1a4175 100%)',
+            borderRadius: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <Sparkles style={{ width: '20px', height: '20px', color: '#0097A9' }} />
+          </div>
+          <div>
+            <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#1e293b', margin: 0 }}>
+              Ask the Professor
+            </h1>
+            <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
+              AI-powered nonprofit leadership advisor
+            </p>
+          </div>
+        </div>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {/* Chat History Button */}
+          <button
+            onClick={() => {
+              fetchConversations();
+              setShowHistory(true);
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 16px',
+              background: 'white',
+              border: '1px solid #e2e8f0',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: 500,
+              color: '#475569',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+            onMouseOver={(e) => e.currentTarget.style.background = '#f8fafc'}
+            onMouseOut={(e) => e.currentTarget.style.background = 'white'}
+          >
+            <History style={{ width: '16px', height: '16px' }} />
+            History
+          </button>
+          
+          {/* New Chat Button */}
+          <button
+            onClick={startNewChat}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 16px',
+              background: '#0D2C54',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: 500,
+              color: 'white',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+            onMouseOver={(e) => e.currentTarget.style.background = '#1a4175'}
+            onMouseOut={(e) => e.currentTarget.style.background = '#0D2C54'}
+          >
+            <Plus style={{ width: '16px', height: '16px' }} />
+            New Chat
+          </button>
+          
+          {/* Back to Dashboard */}
           <button
             onClick={() => onNavigate?.('/dashboard')}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 16px',
+              background: 'white',
+              border: '1px solid #e2e8f0',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: 500,
+              color: '#475569',
+              cursor: 'pointer',
+            }}
           >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
+            ← Back to Dashboard
           </button>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-[#1B365D] to-[#0097A9] rounded-lg flex items-center justify-center">
-              <GraduationCap className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-800">Ask the Professor</h1>
-              <p className="text-sm text-gray-500">AI-powered nonprofit coaching</p>
-            </div>
-          </div>
         </div>
       </header>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`mb-6 flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+      {/* Chat History Sidebar */}
+      {showHistory && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: '360px',
+          background: 'white',
+          boxShadow: '-4px 0 20px rgba(0,0,0,0.1)',
+          zIndex: 100,
+          display: 'flex',
+          flexDirection: 'column',
+        }}>
+          <div style={{
+            padding: '20px',
+            borderBottom: '1px solid #e2e8f0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 600, margin: 0 }}>Chat History</h2>
+            <button
+              onClick={() => setShowHistory(false)}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '8px',
+              }}
             >
-              <div
-                className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                  message.role === 'user'
-                    ? 'bg-[#1B365D] text-white'
-                    : 'bg-white border border-gray-200 text-gray-800'
-                }`}
-              >
-                {message.role === 'assistant' && (
-                  <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100">
-                    <GraduationCap className="w-4 h-4 text-[#0097A9]" />
-                    <span className="text-sm font-medium text-[#0097A9]">Dr. Lyn Corbett</span>
-                  </div>
-                )}
-                <div className="whitespace-pre-wrap">{message.content}</div>
-                <div className={`text-xs mt-2 ${message.role === 'user' ? 'text-blue-200' : 'text-gray-400'}`}>
-                  {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </div>
-              </div>
-            </div>
-          ))}
+              <X style={{ width: '20px', height: '20px', color: '#64748b' }} />
+            </button>
+          </div>
           
-          {isLoading && (
-            <div className="flex justify-start mb-6">
-              <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-[#0097A9]" />
-                  <span className="text-gray-500">Thinking...</span>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
-
-      {/* Suggested Questions (show only if few messages) */}
-      {messages.length <= 2 && (
-        <div className="max-w-4xl mx-auto px-4 pb-4">
-          <p className="text-sm text-gray-500 mb-2">Try asking:</p>
-          <div className="flex flex-wrap gap-2">
-            {suggestedQuestions.map((question, index) => (
-              <button
-                key={index}
-                onClick={() => setInput(question)}
-                className="px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm text-gray-700 hover:border-[#0097A9] hover:text-[#0097A9] transition-colors"
-              >
-                {question}
-              </button>
-            ))}
+          <div style={{ flex: 1, overflow: 'auto', padding: '12px' }}>
+            {conversations.length === 0 ? (
+              <p style={{ color: '#94a3b8', textAlign: 'center', padding: '40px 20px' }}>
+                No previous conversations yet.
+              </p>
+            ) : (
+              conversations.map((conv) => (
+                <button
+                  key={conv.id}
+                  onClick={() => loadConversation(conv)}
+                  style={{
+                    width: '100%',
+                    padding: '16px',
+                    background: currentConversationId === conv.id ? '#f1f5f9' : 'white',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    marginBottom: '8px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.background = '#f8fafc'}
+                  onMouseOut={(e) => e.currentTarget.style.background = currentConversationId === conv.id ? '#f1f5f9' : 'white'}
+                >
+                  <p style={{
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    color: '#1e293b',
+                    margin: '0 0 4px 0',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {conv.preview}...
+                  </p>
+                  <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>
+                    {formatDate(conv.created_at)}
+                  </p>
+                </button>
+              ))
+            )}
           </div>
         </div>
       )}
 
-      {/* Input */}
-      <div className="bg-white border-t sticky bottom-0">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          {uploadedFile && (
-            <div className="mb-3 flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-              <FileText className="w-4 h-4 text-gray-500" />
-              <span className="text-sm text-gray-600 flex-1 truncate">{uploadedFile.name}</span>
-              <button onClick={() => setUploadedFile(null)} className="p-1 hover:bg-gray-200 rounded">
-                <X className="w-4 h-4 text-gray-500" />
-              </button>
+      {/* Main Content */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '900px', margin: '0 auto', width: '100%' }}>
+        
+        {/* Empty State / Welcome */}
+        {messages.length === 0 && (
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
+            <div style={{
+              width: '80px',
+              height: '80px',
+              background: 'linear-gradient(135deg, #0D2C54 0%, #1a4175 100%)',
+              borderRadius: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '24px',
+            }}>
+              <Sparkles style={{ width: '40px', height: '40px', color: '#0097A9' }} />
             </div>
-          )}
-          
-          <form onSubmit={handleSubmit} className="flex items-end gap-3">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept=".pdf,.doc,.docx,.txt"
-              className="hidden"
-            />
             
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="p-3 text-gray-400 hover:text-[#0097A9] hover:bg-gray-50 rounded-xl transition-colors"
-              title="Attach a document"
-            >
-              <Upload className="w-5 h-5" />
-            </button>
-
-            <div className="flex-1">
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSubmit(e);
-                  }
-                }}
-                placeholder="Ask me anything about nonprofit leadership..."
-                rows={1}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0097A9] focus:border-transparent resize-none"
-                style={{ minHeight: '48px', maxHeight: '120px' }}
-              />
+            <h2 style={{ fontSize: '28px', fontWeight: 700, color: '#1e293b', marginBottom: '12px' }}>
+              Hello, {userName}!
+            </h2>
+            <p style={{ fontSize: '16px', color: '#64748b', textAlign: 'center', maxWidth: '500px', lineHeight: 1.6, marginBottom: '40px' }}>
+              I'm your nonprofit leadership advisor. Ask me anything about strategy, governance, fundraising, team leadership, or any challenge you're facing.
+            </p>
+            
+            {/* Suggested Questions */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', width: '100%', maxWidth: '600px' }}>
+              {SUGGESTED_QUESTIONS.map((item, index) => (
+                <button
+                  key={index}
+                  onClick={() => sendMessage(item.question)}
+                  style={{
+                    padding: '20px',
+                    background: 'white',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '12px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.borderColor = item.color;
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.borderColor = '#e2e8f0';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                    <item.icon style={{ width: '18px', height: '18px', color: item.color }} />
+                    <span style={{ fontSize: '11px', fontWeight: 600, color: item.color, letterSpacing: '0.5px' }}>
+                      {item.category}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '14px', color: '#1e293b', margin: 0, lineHeight: 1.4 }}>
+                    {item.question}
+                  </p>
+                </button>
+              ))}
             </div>
+          </div>
+        )}
 
+        {/* Messages */}
+        {messages.length > 0 && (
+          <div style={{ flex: 1, overflow: 'auto', padding: '24px' }}>
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                style={{
+                  display: 'flex',
+                  justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
+                  marginBottom: '20px',
+                }}
+              >
+                <div style={{
+                  maxWidth: '80%',
+                  padding: '16px 20px',
+                  borderRadius: '16px',
+                  background: message.role === 'user' ? '#0D2C54' : 'white',
+                  color: message.role === 'user' ? 'white' : '#1e293b',
+                  border: message.role === 'assistant' ? '1px solid #e2e8f0' : 'none',
+                  boxShadow: message.role === 'assistant' ? '0 2px 8px rgba(0,0,0,0.04)' : 'none',
+                }}>
+                  {message.role === 'assistant' && (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      marginBottom: '12px',
+                      paddingBottom: '12px',
+                      borderBottom: '1px solid #f1f5f9',
+                    }}>
+                      <Sparkles style={{ width: '16px', height: '16px', color: '#0097A9' }} />
+                      <span style={{ fontSize: '13px', fontWeight: 600, color: '#0097A9' }}>The Professor</span>
+                    </div>
+                  )}
+                  <div 
+                    style={{ fontSize: '15px', lineHeight: 1.7 }}
+                    dangerouslySetInnerHTML={formatContent(message.content)}
+                  />
+                </div>
+              </div>
+            ))}
+            
+            {/* Loading indicator */}
+            {isLoading && (
+              <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '20px' }}>
+                <div style={{
+                  padding: '16px 20px',
+                  borderRadius: '16px',
+                  background: 'white',
+                  border: '1px solid #e2e8f0',
+                }}>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#0097A9', animation: 'bounce 1s infinite' }} />
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#0097A9', animation: 'bounce 1s infinite 0.15s' }} />
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#0097A9', animation: 'bounce 1s infinite 0.3s' }} />
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div ref={messagesEndRef} />
+          </div>
+        )}
+
+        {/* Input Area */}
+        <div style={{
+          padding: '20px 24px',
+          background: 'white',
+          borderTop: '1px solid #e2e8f0',
+        }}>
+          <div style={{
+            display: 'flex',
+            gap: '12px',
+            alignItems: 'flex-end',
+            maxWidth: '800px',
+            margin: '0 auto',
+          }}>
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Ask me anything about nonprofit leadership..."
+              rows={1}
+              style={{
+                flex: 1,
+                padding: '14px 18px',
+                border: '1px solid #e2e8f0',
+                borderRadius: '12px',
+                fontSize: '15px',
+                resize: 'none',
+                outline: 'none',
+                fontFamily: 'inherit',
+                minHeight: '52px',
+                maxHeight: '120px',
+              }}
+            />
             <button
-              type="submit"
-              disabled={isLoading || (!input.trim() && !uploadedFile)}
-              className={`p-3 rounded-xl transition-all ${
-                isLoading || (!input.trim() && !uploadedFile)
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-[#0097A9] text-white hover:bg-[#007a8a]'
-              }`}
+              onClick={() => sendMessage(input)}
+              disabled={!input.trim() || isLoading}
+              style={{
+                padding: '14px 20px',
+                background: !input.trim() || isLoading ? '#94a3b8' : '#0097A9',
+                border: 'none',
+                borderRadius: '12px',
+                color: 'white',
+                cursor: !input.trim() || isLoading ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontWeight: 500,
+                fontSize: '15px',
+              }}
             >
-              <Send className="w-5 h-5" />
+              <Send style={{ width: '18px', height: '18px' }} />
             </button>
-          </form>
-          
-          <p className="text-xs text-gray-400 text-center mt-3">
-            Powered by Dr. Lyn Corbett's nonprofit expertise • Responses are AI-generated guidance
+          </div>
+          <p style={{
+            fontSize: '12px',
+            color: '#94a3b8',
+            textAlign: 'center',
+            marginTop: '12px',
+          }}>
+            Ask the Professor is an AI assistant and can make mistakes. Please double-check responses.
           </p>
         </div>
       </div>
+
+      {/* CSS Animation */}
+      <style>{`
+        @keyframes bounce {
+          0%, 60%, 100% { transform: translateY(0); }
+          30% { transform: translateY(-6px); }
+        }
+      `}</style>
     </div>
   );
 };
