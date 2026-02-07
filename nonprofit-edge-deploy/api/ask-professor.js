@@ -489,7 +489,21 @@ export default async function handler(req, res) {
     );
 
     // Build user context
-    let ctx = { name: 'there', org: null, role: null, focus: null, leadership: null, board: false, history: [] };
+    let ctx = { 
+      name: 'there', 
+      org: null, 
+      role: null, 
+      focus: null, 
+      leadership: null, 
+      board: null, 
+      history: [],
+      recentTopics: [],
+      orgSize: null,
+      orgType: null,
+      memberSince: null,
+      lastVisit: null,
+      isOwner: false
+    };
     let userId = null;
 
     if (accessToken) {
@@ -497,53 +511,148 @@ export default async function handler(req, res) {
       userId = user?.id;
 
       if (userId) {
-        // Profile
+        // Profile - get full context
         const { data: profile } = await supabase.from('profiles').select('*').eq('id', userId).single();
         if (profile) {
           ctx.name = profile.full_name || profile.first_name || 'there';
           ctx.org = profile.organization_name;
           ctx.role = profile.role || profile.job_title;
           ctx.focus = profile.focus_area;
+          ctx.orgSize = profile.organization_size || profile.org_size;
+          ctx.orgType = profile.organization_type || profile.org_type;
+          ctx.memberSince = profile.created_at;
+          ctx.lastVisit = profile.last_login || profile.updated_at;
         }
 
-        // Leadership assessment
-        const { data: la } = await supabase.from('leadership_assessments').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(1).single();
-        if (la) ctx.leadership = { date: la.created_at, style: la.leadership_style, strengths: la.strengths, growth: la.growth_areas };
+        // Leadership assessment - get details
+        const { data: la } = await supabase
+          .from('leadership_assessments')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+        if (la) {
+          ctx.leadership = { 
+            date: la.created_at, 
+            style: la.leadership_style, 
+            strengths: la.strengths, 
+            growth: la.growth_areas,
+            scores: la.scores || null
+          };
+        }
 
         // Board assessment
-        const { data: ba } = await supabase.from('board_assessments').select('id, created_at, overall_score').eq('organization_id', profile?.organization_id).limit(1).single();
-        if (ba) ctx.board = { date: ba.created_at, score: ba.overall_score };
+        const { data: ba } = await supabase
+          .from('board_assessments')
+          .select('id, created_at, overall_score, results')
+          .eq('organization_id', profile?.organization_id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+        if (ba) {
+          ctx.board = { 
+            date: ba.created_at, 
+            score: ba.overall_score,
+            areas: ba.results?.weakest_areas || null
+          };
+        }
 
-        // Recent conversations
-        const { data: convos } = await supabase.from('professor_conversations').select('focus_area, messages, created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(3);
-        if (convos?.length) ctx.history = convos.map(c => ({ date: c.created_at, topic: c.messages?.find(m => m.role === 'user')?.content?.substring(0, 60) })).filter(h => h.topic);
-      }
+        // Check if user is owner or platform admin (unlimited memory)
+        const isOwner = profile?.role === 'owner' || 
+                        profile?.is_admin === true || 
+                        profile?.email === 'lyn@thepivotalgroup.com' ||
+                        profile?.email === 'lcorbett@sandiego.edu';
+        ctx.isOwner = isOwner;
+        
+        // Recent conversations - unlimited for owners, 7 days/5 convos for others
+        let convosQuery = supabase
+          .from('professor_conversations')
+          .select('id, focus_area, messages, created_at')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+        
+        if (isOwner) {
+          // Unlimited memory for owners - get last 50 conversations (no date limit)
+          convosQuery = convosQuery.limit(50);
+        } else {
+          // Regular users - last 7 days, max 5 conversations
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+          convosQuery = convosQuery
+            .gte('created_at', sevenDaysAgo.toISOString())
+            .limit(5);
+        }
+        
+        const { data: convos } = await convosQuery;
+        
+        if (convos?.length) {
+          ctx.history = convos.map(c => {
+            const userMsgs = c.messages?.filter(m => m.role === 'user') || [];
+            const assistantMsgs = c.messages?.filter(m => m.role === 'assistant') || [];
+            return { 
+              date: c.created_at, 
+              topic: userMsgs[0]?.content?.substring(0, 100),
+              lastUserMessage: userMsgs[userMsgs.length - 1]?.content?.substring(0, 100),
+              keyPoints: assistantMsgs.slice(-1)[0]?.content?.substring(0, 200)
+            };
+          }).filter(h => h.topic);
+          
+          // Extract topics they've been discussing
+          ctx.recentTopics = convos.map(c => c.focus_area).filter(Boolean);
+        }
     }
 
     // Time greeting - use user's local hour if provided, fallback to server time
     const hour = localHour !== undefined ? localHour : new Date().getHours();
     const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
-    // Context block
+    // Context block with memory
+    const memoryLabel = ctx.isOwner ? 'FULL CONVERSATION HISTORY' : 'CONVERSATION MEMORY (Last 7 Days)';
     const contextBlock = `
 ---
 ## CURRENT USER CONTEXT
+
 **Name:** ${ctx.name}
 **Greeting:** ${greeting}
 **Organization:** ${ctx.org || 'Not specified'}
+**Organization Type:** ${ctx.orgType || 'Not specified'}
+**Organization Size:** ${ctx.orgSize || 'Not specified'}
 **Role:** ${ctx.role || 'Nonprofit leader'}
-**Focus:** ${ctx.focus || 'General strategy'}
+**Focus Area:** ${ctx.focus || 'General strategy'}
+**Member Since:** ${ctx.memberSince ? new Date(ctx.memberSince).toLocaleDateString() : 'New member'}
+${ctx.isOwner ? '**Memory Mode:** UNLIMITED (Platform Owner)' : ''}
 
 ### Leadership Assessment
-${ctx.leadership ? `Completed ${new Date(ctx.leadership.date).toLocaleDateString()} | Style: ${ctx.leadership.style || 'See results'} | Strengths: ${ctx.leadership.strengths || 'See results'}` : 'Not completed — suggest when relevant'}
+${ctx.leadership ? `Completed ${new Date(ctx.leadership.date).toLocaleDateString()}
+- Style: ${ctx.leadership.style || 'See results'}
+- Strengths: ${ctx.leadership.strengths || 'See results'}
+- Growth areas: ${ctx.leadership.growth || 'See results'}` : 'Not completed — suggest when relevant'}
 
 ### Board Assessment
-${ctx.board ? `Completed ${new Date(ctx.board.date).toLocaleDateString()} | Score: ${ctx.board.score}` : 'Not completed — suggest when relevant'}
+${ctx.board ? `Completed ${new Date(ctx.board.date).toLocaleDateString()}
+- Overall Score: ${ctx.board.score}
+- Areas needing attention: ${ctx.board.areas || 'See full report'}` : 'Not completed — suggest when relevant'}
 
-### Recent Conversations
-${ctx.history.length ? ctx.history.map(h => `- ${new Date(h.date).toLocaleDateString()}: "${h.topic}..."`).join('\n') : 'First conversation'}
+### ${memoryLabel}
+${ctx.history.length ? `You've been talking with ${ctx.name} ${ctx.isOwner ? 'over time' : 'recently'} about:
+${ctx.history.map(h => `- ${new Date(h.date).toLocaleDateString()}: "${h.topic}..."
+  Last discussed: ${h.lastUserMessage || 'See conversation'}`).join('\n')}
+
+**Important:** Reference these past conversations naturally when relevant. For example:
+- "Last time we talked about [topic] — how did that go?"
+- "You mentioned [issue] a few days ago. Any updates?"
+- "Building on what we discussed about [topic]..."` : 'First conversation with this user — welcome them warmly but briefly.'}
+
+### MEMORY GUIDELINES
+- If they mentioned a specific challenge recently, ask for an update
+- If they completed an assessment, reference insights from it
+- Remember their organization context (size, type) when giving advice
+- Don't repeat advice you've already given in recent conversations
+- If they seem to be continuing a previous thread, acknowledge it
+
 ---
-Use context naturally. Greet by name. Reference their history when relevant.`;
+Use context naturally. Greet by name. Reference their history when relevant. Never say "I see from your profile" — just know it.`;
 
     // Call Claude
     const response = await fetch('https://api.anthropic.com/v1/messages', {
