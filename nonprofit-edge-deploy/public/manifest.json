@@ -1,0 +1,41 @@
+{
+  "name": "The Nonprofit Edge",
+  "short_name": "Nonprofit Edge",
+  "description": "AI-powered strategic consulting for nonprofit leaders",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#060a10",
+  "theme_color": "#0D2C54",
+  "orientation": "any",
+  "categories": ["business", "education", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/icons/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Dashboard"
+    },
+    {
+      "src": "/icons/screenshot-narrow.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Mobile Dashboard"
+    }
+  ]
+}
