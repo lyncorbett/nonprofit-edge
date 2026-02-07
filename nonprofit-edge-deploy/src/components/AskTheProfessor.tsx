@@ -180,13 +180,19 @@ const AskTheProfessor: React.FC<AskTheProfessorProps> = ({ user, onNavigate }) =
         body: JSON.stringify({
           messages: updatedMessages.map(m => ({ role: m.role, content: m.content })),
           accessToken: session?.access_token,
-          localHour: new Date().getHours()
+          localHour: new Date().getHours(),
+          conversationId: currentConversationId // Pass existing conversation ID if continuing
         }),
       });
 
       const data = await response.json();
 
       if (data.error) throw new Error(data.error);
+
+      // Update conversation ID if new one was created
+      if (data.conversationId && !currentConversationId) {
+        setCurrentConversationId(data.conversationId);
+      }
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
