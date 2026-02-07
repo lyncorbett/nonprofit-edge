@@ -481,7 +481,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { messages, accessToken, localHour } = req.body;
+    const { messages, accessToken, localHour, conversationId } = req.body;
 
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
@@ -678,14 +678,35 @@ Use context naturally. Greet by name. Reference their history when relevant. Nev
     const data = await response.json();
     const reply = data.content[0].text;
 
-    // Save if logged in
+    // Save conversation if logged in
+    let savedConversationId = conversationId;
     if (userId) {
       try {
-        await supabase.from('professor_conversations').insert({ 
+        const conversationData = { 
           user_id: userId, 
           messages: [...messages, { role: 'assistant', content: reply }], 
-          focus_area: ctx.focus 
-        });
+          focus_area: ctx.focus,
+          updated_at: new Date().toISOString()
+        };
+
+        if (conversationId) {
+          // Update existing conversation
+          await supabase
+            .from('professor_conversations')
+            .update(conversationData)
+            .eq('id', conversationId);
+        } else {
+          // Create new conversation
+          const { data: newConvo } = await supabase
+            .from('professor_conversations')
+            .insert(conversationData)
+            .select('id')
+            .single();
+          
+          if (newConvo) {
+            savedConversationId = newConvo.id;
+          }
+        }
       } catch (e) { 
         console.error('Save conversation error:', e); 
       }
@@ -700,7 +721,11 @@ Use context naturally. Greet by name. Reference their history when relevant. Nev
       }
     }
 
-    return res.status(200).json({ response: reply, usage: data.usage });
+    return res.status(200).json({ 
+      response: reply, 
+      usage: data.usage,
+      conversationId: savedConversationId 
+    });
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).json({ error: 'Internal server error' });
