@@ -2,17 +2,20 @@
  * THE NONPROFIT EDGE - Ask the Professor
  * Real Claude API Integration via /api/ask-professor
  * 
- * UPDATED: February 3, 2026
- * - Replaced canned responses with real API call
- * - Added disclaimer about AI responses
- * - Auto-scroll to latest message
+ * UPDATED: February 6, 2026
+ * - Fixed starter questions
+ * - Added New Chat button
+ * - Added Chat History button
+ * - Fixed greeting to use user's name
+ * - Session tracking via API (not page reloads)
  */
 
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-  Send, Sparkles, User, Lightbulb, 
-  BookOpen, Target, Users, DollarSign
+  Send, Sparkles, User, Lightbulb, History, Plus,
+  BookOpen, Target, Users, DollarSign, X, ArrowLeft
 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 interface Message {
   id: string;
@@ -21,16 +24,18 @@ interface Message {
   timestamp: Date;
 }
 
+interface Conversation {
+  id: string;
+  created_at: string;
+  messages: Message[];
+  preview: string;
+}
+
 interface AskTheProfessorProps {
   user?: {
     id: string;
     name: string;
     email: string;
-  };
-  organization?: {
-    id: string;
-    name: string;
-    tier: string;
   };
   onNavigate?: (page: string) => void;
 }
@@ -38,37 +43,83 @@ interface AskTheProfessorProps {
 const SUGGESTED_QUESTIONS = [
   {
     icon: Users,
-    category: 'Board Governance',
+    category: 'BOARD GOVERNANCE',
     question: 'How can I improve board meeting engagement?',
     color: '#0D2C54'
   },
   {
     icon: Target,
-    category: 'Strategic Planning',
+    category: 'STRATEGIC PLANNING',
     question: 'What makes a strategic plan actually work?',
     color: '#0097A9'
   },
   {
     icon: DollarSign,
-    category: 'Fundraising',
-    question: 'How do I approach a major donor ask?',
+    category: 'FUNDRAISING',
+    question: 'How do I approach a major donor who has stopped giving?',
     color: '#D4A84B'
   },
   {
     icon: BookOpen,
-    category: 'Leadership',
-    question: 'How do I handle a difficult board member?',
+    category: 'LEADERSHIP',
+    question: 'How do I handle a difficult team member?',
     color: '#6366f1'
   }
 ];
 
-const AskTheProfessor: React.FC<AskTheProfessorProps> = ({ user, organization, onNavigate }) => {
+const AskTheProfessor: React.FC<AskTheProfessorProps> = ({ user, onNavigate }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+  const [userName, setUserName] = useState(user?.name || 'there');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Fetch user name on mount
+  useEffect(() => {
+    const fetchUserName = async () => {
+      if (user?.id) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('full_name, first_name')
+          .eq('id', user.id)
+          .single();
+        if (data) {
+          setUserName(data.full_name || data.first_name || 'there');
+        }
+      }
+    };
+    fetchUserName();
+  }, [user]);
+
+  // Fetch conversation history
+  const fetchConversations = async () => {
+    if (!user?.id) return;
+    
+    const { data } = await supabase
+      .from('professor_conversations')
+      .select('id, created_at, messages')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(20);
+    
+    if (data) {
+      const formatted = data.map(conv => ({
+        id: conv.id,
+        created_at: conv.created_at,
+        messages: conv.messages || [],
+        preview: conv.messages?.[0]?.content?.substring(0, 60) || 'New conversation'
+      }));
+      setConversations(formatted);
+    }
+  };
+
+  useEffect(() => {
+    fetchConversations();
+  }, [user]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -78,86 +129,88 @@ const AskTheProfessor: React.FC<AskTheProfessorProps> = ({ user, organization, o
     scrollToBottom();
   }, [messages]);
 
-  // Format markdown-like content for display
-  const formatContent = (text: string) => {
-    // Convert **bold** to <strong>
-    let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    // Convert numbered lists
-    formatted = formatted.replace(/^(\d+)\.\s/gm, '<br/>$1. ');
-    // Convert bullet points
-    formatted = formatted.replace(/^[-•]\s/gm, '<br/>• ');
-    return formatted;
+  // Start a new chat
+  const startNewChat = () => {
+    setMessages([]);
+    setCurrentConversationId(null);
+    setShowHistory(false);
   };
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+  // Load a conversation from history
+  const loadConversation = (conv: Conversation) => {
+    setMessages(conv.messages);
+    setCurrentConversationId(conv.id);
+    setShowHistory(false);
+  };
+
+  // Format date for history display
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString();
+  };
+
+  // Send message to API
+  const sendMessage = async (content: string) => {
+    if (!content.trim() || isLoading) return;
 
     const userMessage: Message = {
-      id: `msg_${Date.now()}`,
+      id: Date.now().toString(),
       role: 'user',
-      content: input.trim(),
+      content: content.trim(),
       timestamp: new Date()
     };
 
-    setMessages(prev => [...prev, userMessage]);
-    const currentInput = input.trim();
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setInput('');
     setIsLoading(true);
-    setError(null);
-
-    // Reset textarea height
-    if (inputRef.current) {
-      inputRef.current.style.height = 'auto';
-    }
 
     try {
-      // Build conversation history for context
-      const conversationHistory = messages.map(m => ({
-        role: m.role,
-        content: m.content
-      }));
-      conversationHistory.push({ role: 'user', content: currentInput });
-
+      const { data: { session } } = await supabase.auth.getSession();
+      
       const response = await fetch('/api/ask-professor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: conversationHistory,
-          userId: user?.id || null,
-          organizationName: organization?.name || null,
-          userRole: user?.name || null,
-          tier: organization?.tier || 'essential',
-          focusArea: null,
-          sessionId: `session_${Date.now()}`
-        })
+          messages: updatedMessages.map(m => ({ role: m.role, content: m.content })),
+          accessToken: session?.access_token,
+          localHour: new Date().getHours()
+        }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Server error (${response.status})`);
-      }
-
       const data = await response.json();
-      
+
+      if (data.error) throw new Error(data.error);
+
       const assistantMessage: Message = {
-        id: `msg_${Date.now()}`,
+        id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.response || 'I apologize, but I received an empty response. Please try again.',
+        content: data.response,
         timestamp: new Date()
       };
 
-      setMessages(prev => [...prev, assistantMessage]);
-    } catch (err: any) {
-      console.error('Ask Professor error:', err);
-      setError(err.message || 'Connection failed');
+      setMessages([...updatedMessages, assistantMessage]);
       
-      const errorMessage: Message = {
-        id: `msg_${Date.now()}`,
-        role: 'assistant',
-        content: 'I apologize, but I\'m having trouble connecting right now. Please try again in a moment. If this continues, check that your internet connection is working.',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      // Refresh history after new message
+      fetchConversations();
+      
+    } catch (error) {
+      console.error('Error:', error);
+      setMessages([
+        ...updatedMessages,
+        {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: "I'm having trouble connecting right now. Please try again in a moment.",
+          timestamp: new Date()
+        }
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -166,405 +219,493 @@ const AskTheProfessor: React.FC<AskTheProfessorProps> = ({ user, organization, o
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      sendMessage(input);
     }
   };
 
-  const handleSuggestedQuestion = (question: string) => {
-    setInput(question);
-    inputRef.current?.focus();
+  // Format message content with basic markdown
+  const formatContent = (text: string) => {
+    let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    formatted = formatted.replace(/\n/g, '<br/>');
+    return { __html: formatted };
   };
 
-  const userName = user?.name?.split(' ')[0] || 'there';
-
   return (
-    <div style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      height: 'calc(100vh - 73px)',
-      maxWidth: '900px',
-      margin: '0 auto',
-      padding: '0 24px'
+    <div style={{
+      minHeight: '100vh',
+      background: '#f8fafc',
+      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+      display: 'flex',
+      flexDirection: 'column',
     }}>
       {/* Header */}
-      <div style={{
+      <header style={{
+        background: 'white',
+        borderBottom: '1px solid #e2e8f0',
+        padding: '12px 16px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '16px 0',
-        borderBottom: '1px solid #e2e8f0'
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+        gap: '12px',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Left side - Logo and title */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
           <div style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, #0D2C54 0%, #1a3a5c 100%)',
+            width: '36px',
+            height: '36px',
+            minWidth: '36px',
+            background: 'linear-gradient(135deg, #0D2C54 0%, #1a4175 100%)',
+            borderRadius: '8px',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
           }}>
-            <Sparkles size={20} color="#0097A9" />
+            <Sparkles style={{ width: '18px', height: '18px', color: '#0097A9' }} />
           </div>
-          <div>
-            <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0D2C54', margin: 0 }}>
+          <div style={{ minWidth: 0 }}>
+            <h1 style={{ 
+              fontSize: '16px', 
+              fontWeight: 700, 
+              color: '#1e293b', 
+              margin: 0,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}>
               Ask the Professor
-            </h2>
-            <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
+            </h1>
+            <p style={{ 
+              fontSize: '12px', 
+              color: '#64748b', 
+              margin: 0,
+              display: 'none',
+            }}
+            className="header-subtitle"
+            >
               AI-powered nonprofit leadership advisor
             </p>
           </div>
         </div>
-        {onNavigate && (
+        
+        {/* Right side - Actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* History Button - Icon only on mobile */}
           <button
-            onClick={() => onNavigate('dashboard')}
-            style={{
-              padding: '8px 16px',
-              background: '#f1f5f9',
-              color: '#475569',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '14px'
+            onClick={() => {
+              fetchConversations();
+              setShowHistory(true);
             }}
-          >
-            ← Back to Dashboard
-          </button>
-        )}
-      </div>
-
-      {/* Messages Area */}
-      <div style={{ 
-        flex: 1, 
-        overflowY: 'auto', 
-        padding: '24px 0',
-      }}>
-        {messages.length === 0 ? (
-          /* Welcome State */
-          <div style={{ textAlign: 'center', padding: '40px 0' }}>
-            <div style={{
-              width: '80px',
-              height: '80px',
-              borderRadius: '20px',
-              background: 'linear-gradient(135deg, #0D2C54 0%, #1a3a5c 100%)',
+            style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              margin: '0 auto 24px'
+              gap: '6px',
+              padding: '8px',
+              background: 'white',
+              border: '1px solid #e2e8f0',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: 500,
+              color: '#475569',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              minWidth: '40px',
+              height: '40px',
+            }}
+            onMouseOver={(e) => e.currentTarget.style.background = '#f8fafc'}
+            onMouseOut={(e) => e.currentTarget.style.background = 'white'}
+            title="Chat History"
+          >
+            <History style={{ width: '18px', height: '18px' }} />
+            <span className="button-text" style={{ display: 'none' }}>History</span>
+          </button>
+          
+          {/* New Chat Button - Icon only on mobile */}
+          <button
+            onClick={startNewChat}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '8px',
+              background: '#0D2C54',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: 500,
+              color: 'white',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              minWidth: '40px',
+              height: '40px',
+            }}
+            onMouseOver={(e) => e.currentTarget.style.background = '#1a4175'}
+            onMouseOut={(e) => e.currentTarget.style.background = '#0D2C54'}
+            title="New Chat"
+          >
+            <Plus style={{ width: '18px', height: '18px' }} />
+            <span className="button-text" style={{ display: 'none' }}>New</span>
+          </button>
+          
+          {/* Back to Dashboard - Icon only on mobile */}
+          <button
+            onClick={() => onNavigate?.('/dashboard')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '8px',
+              background: 'white',
+              border: '1px solid #e2e8f0',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: 500,
+              color: '#475569',
+              cursor: 'pointer',
+              minWidth: '40px',
+              height: '40px',
+            }}
+            title="Back to Dashboard"
+          >
+            <ArrowLeft style={{ width: '18px', height: '18px' }} />
+            <span className="button-text" style={{ display: 'none' }}>Dashboard</span>
+          </button>
+        </div>
+      </header>
+
+      {/* Chat History Sidebar - Full screen on mobile */}
+      {showHistory && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          right: 0,
+          bottom: 0,
+          left: 0,
+          background: 'rgba(0,0,0,0.5)',
+          zIndex: 100,
+        }}
+        onClick={() => setShowHistory(false)}
+        >
+          <div 
+            style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              bottom: 0,
+              width: '100%',
+              maxWidth: '360px',
+              background: 'white',
+              boxShadow: '-4px 0 20px rgba(0,0,0,0.1)',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{
+              padding: '16px 20px',
+              borderBottom: '1px solid #e2e8f0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
             }}>
-              <Sparkles size={36} color="#0097A9" />
+              <h2 style={{ fontSize: '18px', fontWeight: 600, margin: 0 }}>Chat History</h2>
+              <button
+                onClick={() => setShowHistory(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '8px',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <X style={{ width: '24px', height: '24px', color: '#64748b' }} />
+              </button>
             </div>
             
-            <h2 style={{ 
-              fontSize: '28px', 
-              fontWeight: 700, 
-              color: '#0D2C54', 
-              marginBottom: '12px' 
-            }}>
-              Hello, {userName}!
-            </h2>
-            
-            <p style={{ 
-              color: '#64748b', 
-              fontSize: '16px', 
-              maxWidth: '500px', 
-              margin: '0 auto 40px',
-              lineHeight: 1.6
-            }}>
-              I'm your nonprofit leadership advisor. Ask me anything about strategy, 
-              governance, fundraising, team leadership, or any challenge you're facing.
-            </p>
-
-            {/* Suggested Questions */}
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(2, 1fr)', 
-              gap: '12px',
-              maxWidth: '600px',
-              margin: '0 auto'
-            }}>
-              {SUGGESTED_QUESTIONS.map((item, idx) => {
-                const Icon = item.icon;
-                return (
+            <div style={{ flex: 1, overflow: 'auto', padding: '12px' }}>
+              {conversations.length === 0 ? (
+                <p style={{ color: '#94a3b8', textAlign: 'center', padding: '40px 20px' }}>
+                  No previous conversations yet.
+                </p>
+              ) : (
+                conversations.map((conv) => (
                   <button
-                    key={idx}
-                    onClick={() => handleSuggestedQuestion(item.question)}
+                    key={conv.id}
+                    onClick={() => loadConversation(conv)}
                     style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: '12px',
+                      width: '100%',
                       padding: '16px',
-                      background: 'white',
+                      background: currentConversationId === conv.id ? '#f1f5f9' : 'white',
                       border: '1px solid #e2e8f0',
-                      borderRadius: '12px',
+                      borderRadius: '8px',
+                      marginBottom: '8px',
                       cursor: 'pointer',
                       textAlign: 'left',
-                      transition: 'all 0.2s'
+                      transition: 'all 0.2s',
                     }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = '#0097A9';
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = '#e2e8f0';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
+                    onMouseOver={(e) => e.currentTarget.style.background = '#f8fafc'}
+                    onMouseOut={(e) => e.currentTarget.style.background = currentConversationId === conv.id ? '#f1f5f9' : 'white'}
                   >
-                    <div style={{
-                      width: '36px',
-                      height: '36px',
-                      borderRadius: '8px',
-                      background: `${item.color}15`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0
+                    <p style={{
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      color: '#1e293b',
+                      margin: '0 0 4px 0',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
                     }}>
-                      <Icon size={18} color={item.color} />
-                    </div>
-                    <div>
-                      <div style={{ 
-                        fontSize: '11px', 
-                        color: item.color, 
-                        fontWeight: 600,
-                        marginBottom: '4px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
-                      }}>
-                        {item.category}
-                      </div>
-                      <div style={{ 
-                        fontSize: '14px', 
-                        color: '#0D2C54',
-                        fontWeight: 500
-                      }}>
-                        {item.question}
-                      </div>
-                    </div>
+                      {conv.preview}...
+                    </p>
+                    <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>
+                      {formatDate(conv.created_at)}
+                    </p>
                   </button>
-                );
-              })}
+                ))
+              )}
             </div>
           </div>
-        ) : (
-          /* Messages */
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '900px', margin: '0 auto', width: '100%' }}>
+        
+        {/* Empty State / Welcome */}
+        {messages.length === 0 && (
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 16px' }}>
+            <div style={{
+              width: '64px',
+              height: '64px',
+              background: 'linear-gradient(135deg, #0D2C54 0%, #1a4175 100%)',
+              borderRadius: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '20px',
+            }}>
+              <Sparkles style={{ width: '32px', height: '32px', color: '#0097A9' }} />
+            </div>
+            
+            <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#1e293b', marginBottom: '8px', textAlign: 'center' }}>
+              Hello, {userName}!
+            </h2>
+            <p style={{ fontSize: '15px', color: '#64748b', textAlign: 'center', maxWidth: '400px', lineHeight: 1.6, marginBottom: '32px', padding: '0 8px' }}>
+              I'm your nonprofit leadership advisor. Ask me anything about strategy, governance, fundraising, team leadership, or any challenge you're facing.
+            </p>
+            
+            {/* Suggested Questions - Single column on mobile */}
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(1, 1fr)',
+              gap: '12px', 
+              width: '100%', 
+              maxWidth: '600px',
+              padding: '0 16px',
+            }}
+            className="questions-grid"
+            >
+              {SUGGESTED_QUESTIONS.map((item, index) => (
+                <button
+                  key={index}
+                  onClick={() => sendMessage(item.question)}
+                  style={{
+                    padding: '20px',
+                    background: 'white',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '12px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.borderColor = item.color;
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.borderColor = '#e2e8f0';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                    <item.icon style={{ width: '18px', height: '18px', color: item.color }} />
+                    <span style={{ fontSize: '11px', fontWeight: 600, color: item.color, letterSpacing: '0.5px' }}>
+                      {item.category}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '14px', color: '#1e293b', margin: 0, lineHeight: 1.4 }}>
+                    {item.question}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Messages */}
+        {messages.length > 0 && (
+          <div style={{ flex: 1, overflow: 'auto', padding: '24px' }}>
             {messages.map((message) => (
               <div
                 key={message.id}
                 style={{
                   display: 'flex',
-                  gap: '12px',
-                  alignItems: 'flex-start'
+                  justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
+                  marginBottom: '20px',
                 }}
               >
-                {/* Avatar */}
                 <div style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '10px',
-                  background: message.role === 'user' 
-                    ? 'linear-gradient(135deg, #0097A9 0%, #00b4cc 100%)'
-                    : 'linear-gradient(135deg, #0D2C54 0%, #1a3a5c 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0
+                  maxWidth: '80%',
+                  padding: '16px 20px',
+                  borderRadius: '16px',
+                  background: message.role === 'user' ? '#0D2C54' : 'white',
+                  color: message.role === 'user' ? 'white' : '#1e293b',
+                  border: message.role === 'assistant' ? '1px solid #e2e8f0' : 'none',
+                  boxShadow: message.role === 'assistant' ? '0 2px 8px rgba(0,0,0,0.04)' : 'none',
                 }}>
-                  {message.role === 'user' ? (
-                    <User size={18} color="white" />
-                  ) : (
-                    <Sparkles size={18} color="#0097A9" />
+                  {message.role === 'assistant' && (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      marginBottom: '12px',
+                      paddingBottom: '12px',
+                      borderBottom: '1px solid #f1f5f9',
+                    }}>
+                      <Sparkles style={{ width: '16px', height: '16px', color: '#0097A9' }} />
+                      <span style={{ fontSize: '13px', fontWeight: 600, color: '#0097A9' }}>The Professor</span>
+                    </div>
                   )}
-                </div>
-
-                {/* Content */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ 
-                    fontSize: '13px', 
-                    fontWeight: 600, 
-                    color: '#64748b',
-                    marginBottom: '6px'
-                  }}>
-                    {message.role === 'user' ? 'You' : 'The Professor'}
-                  </div>
                   <div 
-                    style={{
-                      background: message.role === 'user' ? '#f1f5f9' : 'white',
-                      border: message.role === 'user' ? 'none' : '1px solid #e2e8f0',
-                      borderRadius: '12px',
-                      padding: '16px',
-                      fontSize: '15px',
-                      lineHeight: 1.7,
-                      color: '#1e293b',
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word'
-                    }}
-                    dangerouslySetInnerHTML={{ 
-                      __html: formatContent(message.content) 
-                    }}
+                    style={{ fontSize: '15px', lineHeight: 1.7 }}
+                    dangerouslySetInnerHTML={formatContent(message.content)}
                   />
                 </div>
               </div>
             ))}
-
+            
             {/* Loading indicator */}
             {isLoading && (
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '20px' }}>
                 <div style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '10px',
-                  background: 'linear-gradient(135deg, #0D2C54 0%, #1a3a5c 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
+                  padding: '16px 20px',
+                  borderRadius: '16px',
+                  background: 'white',
+                  border: '1px solid #e2e8f0',
                 }}>
-                  <Sparkles size={18} color="#0097A9" />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#64748b', marginBottom: '6px' }}>
-                    The Professor
-                  </div>
-                  <div style={{
-                    background: 'white',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '12px',
-                    padding: '16px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}>
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                      {[0, 1, 2].map((i) => (
-                        <div
-                          key={i}
-                          style={{
-                            width: '8px',
-                            height: '8px',
-                            borderRadius: '50%',
-                            background: '#0097A9',
-                            animation: `bounce 1.4s infinite ease-in-out both`,
-                            animationDelay: `${i * 0.16}s`
-                          }}
-                        />
-                      ))}
-                    </div>
-                    <span style={{ color: '#64748b', fontSize: '14px' }}>Thinking...</span>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#0097A9', animation: 'bounce 1s infinite' }} />
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#0097A9', animation: 'bounce 1s infinite 0.15s' }} />
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#0097A9', animation: 'bounce 1s infinite 0.3s' }} />
                   </div>
                 </div>
               </div>
             )}
-
+            
             <div ref={messagesEndRef} />
           </div>
         )}
-      </div>
 
-      {/* Input Area */}
-      <div style={{ 
-        padding: '16px 0 24px',
-        borderTop: '1px solid #e2e8f0',
-        background: '#f8fafc'
-      }}>
-        {error && (
+        {/* Input Area */}
+        <div style={{
+          padding: '12px 16px',
+          background: 'white',
+          borderTop: '1px solid #e2e8f0',
+        }}>
           <div style={{
-            padding: '8px 12px',
-            background: '#fef2f2',
-            border: '1px solid #fecaca',
-            borderRadius: '8px',
-            color: '#dc2626',
-            fontSize: '13px',
-            marginBottom: '12px',
             display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
+            gap: '8px',
+            alignItems: 'flex-end',
+            maxWidth: '800px',
+            margin: '0 auto',
           }}>
-            <span>Connection issue: {error}</span>
-            <button 
-              onClick={() => setError(null)}
-              style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontWeight: 600 }}
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Ask me anything..."
+              rows={1}
+              style={{
+                flex: 1,
+                padding: '12px 14px',
+                border: '1px solid #e2e8f0',
+                borderRadius: '12px',
+                fontSize: '16px',
+                resize: 'none',
+                outline: 'none',
+                fontFamily: 'inherit',
+                minHeight: '48px',
+                maxHeight: '120px',
+              }}
+            />
+            <button
+              onClick={() => sendMessage(input)}
+              disabled={!input.trim() || isLoading}
+              style={{
+                padding: '12px 16px',
+                background: !input.trim() || isLoading ? '#94a3b8' : '#0097A9',
+                border: 'none',
+                borderRadius: '12px',
+                color: 'white',
+                cursor: !input.trim() || isLoading ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minWidth: '48px',
+                height: '48px',
+              }}
             >
-              ✕
+              <Send style={{ width: '20px', height: '20px' }} />
             </button>
           </div>
-        )}
-
-        <div style={{
-          display: 'flex',
-          gap: '12px',
-          background: 'white',
-          border: '2px solid #e2e8f0',
-          borderRadius: '16px',
-          padding: '12px 16px',
-          alignItems: 'flex-end',
-          transition: 'border-color 0.2s',
-        }}>
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-            placeholder="Ask me anything about nonprofit leadership..."
-            style={{
-              flex: 1,
-              border: 'none',
-              outline: 'none',
-              resize: 'none',
-              fontSize: '15px',
-              lineHeight: 1.5,
-              minHeight: '24px',
-              maxHeight: '120px',
-              fontFamily: 'inherit'
-            }}
-            rows={1}
-            onInput={(e) => {
-              const target = e.target as HTMLTextAreaElement;
-              target.style.height = 'auto';
-              target.style.height = Math.min(target.scrollHeight, 120) + 'px';
-            }}
-          />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim() || isLoading}
-            style={{
-              width: '44px',
-              height: '44px',
-              borderRadius: '12px',
-              background: input.trim() && !isLoading ? '#0097A9' : '#e2e8f0',
-              border: 'none',
-              cursor: input.trim() && !isLoading ? 'pointer' : 'not-allowed',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s',
-              flexShrink: 0
-            }}
-          >
-            <Send size={20} color={input.trim() && !isLoading ? 'white' : '#94a3b8'} />
-          </button>
+          <p style={{
+            fontSize: '11px',
+            color: '#94a3b8',
+            textAlign: 'center',
+            marginTop: '8px',
+          }}>
+            AI assistant — please double-check important information.
+          </p>
         </div>
-        
-        <p style={{ 
-          textAlign: 'center', 
-          fontSize: '12px', 
-          color: '#94a3b8', 
-          marginTop: '12px' 
-        }}>
-          Ask the Professor is an AI assistant and can make mistakes. Please double-check responses.
-        </p>
       </div>
 
-      {/* Bounce animation */}
+      {/* CSS Animation and Responsive Styles */}
       <style>{`
         @keyframes bounce {
-          0%, 80%, 100% { transform: scale(0); }
-          40% { transform: scale(1); }
+          0%, 60%, 100% { transform: translateY(0); }
+          30% { transform: translateY(-6px); }
+        }
+        
+        /* Desktop styles */
+        @media (min-width: 768px) {
+          .header-subtitle {
+            display: block !important;
+          }
+          .button-text {
+            display: inline !important;
+          }
+          .questions-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 16px !important;
+            padding: 0 !important;
+          }
+        }
+        
+        /* Mobile adjustments */
+        @media (max-width: 767px) {
+          .message-bubble {
+            max-width: 90% !important;
+          }
         }
       `}</style>
     </div>
