@@ -1,12 +1,9 @@
 /**
  * Homepage - The Nonprofit Edge
- * Updated: Feb 2, 2026
+ * Updated: Feb 6, 2026
+ * - Fixed Ask the Professor links to /ask-the-professor/use
  * - All links use onNavigate for SPA routing (no full page reloads)
- * - Fixed /grant-rfp-review → /grant-review
  * - Fixed pricing to $97/$197/$397
- * - Contact links to mailto
- * - Why We Exist scrolls to professor section
- * - Privacy/Terms placeholder routes added
  */
 
 import React, { useState } from 'react'
@@ -315,7 +312,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
                 </div>
                 
                 <button
-                  onClick={() => handleNavigate('/signup')}
+                  onClick={() => handleNavigate('/ask-the-professor/use')}
                   className="inline-block px-6 py-3 text-base font-semibold text-white rounded-lg transition hover:opacity-90 border-none cursor-pointer"
                   style={{ backgroundColor: NAVY }}
                 >
@@ -487,7 +484,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
             <div>
               <h4 className="font-bold text-lg mb-4">Tools</h4>
               <ul className="space-y-3">
-                <li><button onClick={() => handleNavigate('/ask-the-professor')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Ask the Professor</button></li>
+                <li><button onClick={() => handleNavigate('/ask-the-professor/use')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Ask the Professor</button></li>
                 <li><button onClick={() => handleNavigate('/grant-review')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Grant Review</button></li>
                 <li><button onClick={() => handleNavigate('/board-assessment')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Board Assessment</button></li>
                 <li><button onClick={() => handleNavigate('/strategic-plan-checkup')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Strategic Plan Analysis</button></li>
