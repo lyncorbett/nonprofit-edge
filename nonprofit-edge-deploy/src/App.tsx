@@ -1,504 +1,713 @@
 /**
  * THE NONPROFIT EDGE - App.tsx
- * Simple login screen version (no Homepage component)
+ * Real Supabase Authentication + Complete Routing
+ * 
+ * UPDATED: February 6, 2026
+ * - Added PWA InstallBanner for mobile app download prompt
+ * - Real Supabase auth (no more mock users)
+ * - Listens to onAuthStateChange for login/logout/magic links
+ * - Loads user profile and organization from Supabase
+ * - Falls back to user_metadata if no profile table exists yet
+ * - All public routes (free tools, pages) work without login
  */
 
-import React, { useState, useEffect } from 'react'
-import { createClient, Session } from '@supabase/supabase-js'
+import React, { useState, useEffect } from 'react';
+import { supabase } from './lib/supabase';
+import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
 
-// Components
-import Dashboard from './components/Dashboard'
-import TeamAdmin from './components/TeamAdmin'
-import AdminDashboard from './components/AdminDashboard'
-import ContentManager from './components/ContentManager'
-import PlatformOwnerDashboard from './components/PlatformOwnerDashboard'
-import TeamAccessManager from './components/TeamAccessManager'
-import ResourceLibrary from './components/ResourceLibrary'
-import EventsCalendar from './components/EventsCalendar'
-import MarketingDashboard from './components/MarketingDashboard'
-import LinkManager from './components/LinkManager'
-import EnhancedOwnerDashboard from './components/EnhancedOwnerDashboard'
-import AIGuideChatbot from './components/AIGuideChatbot'
+// ============================================
+// COMPONENT IMPORTS
+// ============================================
 
-// Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// PWA Install Banner
+import InstallBanner from './components/InstallBanner';
 
-// Brand colors
-const NAVY = '#1a365d'
-const TEAL = '#00a0b0'
+// Dashboard & Core Components
+import RealDashboard from './components/Dashboard';
+import ResourceLibrary from './components/ResourceLibrary';
+import EventsCalendar from './components/EventsCalendar';
+import EnhancedOwnerDashboard from './components/EnhancedOwnerDashboard';
+import MarketingDashboard from './components/MarketingDashboard';
+import LinkManager from './components/LinkManager';
+import TeamAccessManager from './components/TeamAccessManager';
+import ContentManager from './components/ContentManager';
+import AdminDashboard from './components/AdminDashboard';
+import PlatformOwnerDashboard from './components/PlatformOwnerDashboard';
 
-function App() {
-  const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [currentPage, setCurrentPage] = useState('dashboard')
-  const [userData, setUserData] = useState<any>(null)
-  const [teamMembers, setTeamMembers] = useState<any[]>([])
-  const [usage, setUsage] = useState<any>(null)
-  const [error, setError] = useState<string | null>(null)
+// User Pages
+import Settings from './components/Settings';
+import MyDownloads from './components/MyDownloads';
+import SavedFavorites from './components/SavedFavorites';
 
-  // Auth state listener
+// Constraint Assessment
+import ConstraintAssessment from './components/ConstraintAssessment';
+import ConstraintReport from './components/ConstraintReport';
+import CoreConstraintAssessment from './components/CoreConstraintAssessment';
+
+// Auth Components
+import Login from './components/Login';
+import SignUp from './components/SignUp';
+import SignUpSuccess from './components/SignUpSuccess';
+import SignupFlow from './components/SignupFlow';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
+
+// UI Components
+import Homepage from './components/Homepage';
+import Sidebar from './components/Sidebar';
+import ProductTour from './components/ProductTour';
+import WelcomeModal from './components/WelcomeModal';
+import AIGuideChatbot from './components/AIGuideChatbot';
+
+// ============================================
+// TOOL COMPONENTS
+// ============================================
+import StrategicPlanCheckup from './components/StrategicPlanCheckup';
+import CEOEvaluation from './components/CEOEvaluation';
+import BoardAssessment from './components/BoardAssessment';
+import GrantReview from './components/GrantReview';
+import ScenarioPlanner from './components/ScenarioPlanner';
+import AskTheProfessor from './components/AskTheProfessor';
+
+// Leadership Assessment
+import LeadershipAssessment from './components/LeadershipAssessment';
+import LeadershipReport from './components/LeadershipReport';
+import LeadershipProfile from './components/LeadershipProfile';
+
+// Landing Page Components
+import ScenarioPlannerLanding from './components/ScenarioPlannerLanding';
+import BoardAssessmentLanding from './components/BoardAssessmentLanding';
+import CEOEvaluationLanding from './components/CEOEvaluationLanding';
+import StrategicPlanCheckupLanding from './components/StrategicPlanCheckupLanding';
+import CertificationsLanding from './components/CertificationsLanding';
+
+// New Public Page Components
+import AskProfessorFree from './components/AskProfessorFree';
+import WhyWeExist from './components/WhyWeExist';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import TermsOfService from './components/TermsOfService';
+
+// Tracking utilities
+import { 
+  trackToolStart, 
+  trackToolComplete, 
+  trackDownload, 
+  trackProfessorSession,
+  TIER_LIMITS 
+} from './lib/tracking';
+
+// ============================================
+// TYPES
+// ============================================
+
+interface AppUser {
+  id: string;
+  email: string;
+  name: string;
+  full_name?: string;
+  role: 'owner' | 'admin' | 'member';
+  organization_id: string;
+  avatar_url?: string | null;
+  profile_photo?: string | null;
+  created_at?: string;
+}
+
+interface Organization {
+  id: string;
+  name: string;
+  tier: 'essential' | 'professional' | 'premium';
+  logo_url?: string | null;
+}
+
+interface UsageData {
+  tools_started: number;
+  tools_completed: number;
+  tools_used_this_month: number;
+  downloads_this_month: number;
+  professor_sessions_this_month: number;
+  report_downloads: number;
+}
+
+interface ToolSession {
+  id: string;
+  tool_type: string;
+  started_at: string;
+}
+
+// ============================================
+// BRAND COLORS
+// ============================================
+
+const NAVY = '#0D2C54';
+const TEAL = '#0097A9';
+
+// ============================================
+// LOGO COMPONENT
+// ============================================
+
+const Logo = ({ width = 180 }: { width?: number }) => (
+  <img 
+    src="/logo.svg" 
+    alt="The Nonprofit Edge" 
+    style={{ width: `${width}px`, height: 'auto' }}
+  />
+);
+
+// ============================================
+// HELPER: Build user & org from Supabase session
+// ============================================
+
+const buildUserFromSession = (supabaseUser: SupabaseUser): { user: AppUser; org: Organization } => {
+  const meta = supabaseUser.user_metadata || {};
+  
+  const user: AppUser = {
+    id: supabaseUser.id,
+    email: supabaseUser.email || '',
+    name: meta.full_name || meta.name || supabaseUser.email?.split('@')[0] || 'User',
+    full_name: meta.full_name || meta.name || supabaseUser.email?.split('@')[0] || 'User',
+    role: meta.role || 'member',
+    organization_id: meta.organization_id || 'org_' + supabaseUser.id.slice(0, 8),
+    avatar_url: meta.avatar_url || null,
+    profile_photo: null,
+    created_at: supabaseUser.created_at,
+  };
+
+  const org: Organization = {
+    id: user.organization_id,
+    name: meta.organization || 'My Organization',
+    tier: meta.plan || 'professional',
+    logo_url: null,
+  };
+
+  return { user, org };
+};
+
+// ============================================
+// MAIN APP COMPONENT
+// ============================================
+
+const App: React.FC = () => {
+  const [currentRoute, setCurrentRoute] = useState<string>(window.location.pathname);
+  const [user, setUser] = useState<AppUser | null>(null);
+  const [organization, setOrganization] = useState<Organization | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentSession, setCurrentSession] = useState<ToolSession | null>(null);
+  
+  const [usage, setUsage] = useState<UsageData>({
+    tools_started: 0,
+    tools_completed: 0,
+    tools_used_this_month: 0,
+    downloads_this_month: 0,
+    professor_sessions_this_month: 0,
+    report_downloads: 0,
+  });
+
+  // ============================================
+  // SUPABASE AUTH LISTENER
+  // ============================================
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      if (session) {
-        loadUserData(session.user.id)
-      } else {
-        setLoading(false)
-      }
-    })
+    // Handle browser back/forward
+    const handlePopState = () => setCurrentRoute(window.location.pathname);
+    window.addEventListener('popstate', handlePopState);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session)
+    // Check for existing session on load
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
         
+        if (session?.user) {
+          const { user: appUser, org } = buildUserFromSession(session.user);
+          setUser(appUser);
+          setOrganization(org);
+
+          // Try to load profile from profiles table (if it exists)
+          try {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+
+            if (profile) {
+              setUser(prev => prev ? {
+                ...prev,
+                name: profile.full_name || prev.name,
+                full_name: profile.full_name || prev.full_name,
+                role: profile.role || prev.role,
+                organization_id: profile.organization_id || prev.organization_id,
+                avatar_url: profile.avatar_url || prev.avatar_url,
+              } : prev);
+            }
+          } catch {
+            // profiles table might not exist yet — that's fine, use metadata
+          }
+
+          // Try to load org details
+          try {
+            const { data: orgData } = await supabase
+              .from('organizations')
+              .select('*')
+              .eq('id', appUser.organization_id)
+              .single();
+
+            if (orgData) {
+              setOrganization({
+                id: orgData.id,
+                name: orgData.name || 'My Organization',
+                tier: orgData.tier || 'professional',
+                logo_url: orgData.logo_url || null,
+              });
+            }
+          } catch {
+            // organizations table might not exist yet — use defaults
+          }
+
+          // Load saved usage
+          const savedUsage = localStorage.getItem('nonprofit_edge_usage');
+          if (savedUsage) {
+            try { setUsage(JSON.parse(savedUsage)); } catch {}
+          }
+        }
+      } catch (err) {
+        console.error('[App] Auth init error:', err);
+      }
+      
+      setIsLoading(false);
+    };
+
+    initAuth();
+
+    // Listen for auth state changes (login, logout, magic link callbacks)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('[Auth]', event, session?.user?.email);
+
+        if (event === 'SIGNED_IN' && session?.user) {
+          const { user: appUser, org } = buildUserFromSession(session.user);
+          setUser(appUser);
+          setOrganization(org);
+
+          // If we're on login/signup page, redirect to dashboard
+          if (currentRoute === '/login' || currentRoute === '/signup' || currentRoute === '/') {
+            navigate('/dashboard');
+          }
+        }
+
         if (event === 'SIGNED_OUT') {
-          setUserData(null)
-          setTeamMembers([])
-          setUsage(null)
-          setError(null)
-          setCurrentPage('dashboard')
-          setLoading(false)
-        } else if (session) {
-          loadUserData(session.user.id)
-        } else {
-          setLoading(false)
+          setUser(null);
+          setOrganization(null);
+          localStorage.removeItem('nonprofit_edge_usage');
+          navigate('/');
         }
       }
-    )
+    );
 
-    return () => subscription.unsubscribe()
-  }, [])
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      subscription.unsubscribe();
+    };
+  }, []);
 
-  const loadUserData = async (userId: string) => {
-    try {
-      setLoading(true)
-      
-      const { data: user, error: userError } = await supabase
-        .from('users')
-        .select(`
-          *,
-          organization:organizations(*)
-        `)
-        .eq('auth_user_id', userId)
-        .single()
-
-      if (userError) throw userError
-
-      setUserData(user)
-
-      if (user.organization_id) {
-        const { data: team } = await supabase
-          .from('users')
-          .select('*')
-          .eq('organization_id', user.organization_id)
-
-        setTeamMembers(team || [])
-      }
-
-      const currentMonth = new Date().toISOString().slice(0, 7)
-      const { data: usageData } = await supabase
-        .from('monthly_usage')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('month', currentMonth)
-        .single()
-
-      setUsage(usageData || {
-        downloads_this_month: 0,
-        professor_sessions_this_month: 0,
-        tools_used_this_month: 0
-      })
-
-      setError(null)
-    } catch (err: any) {
-      console.error('Error loading user data:', err)
-      setError(err.message)
-    } finally {
-      setLoading(false)
+  // Persist usage
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('nonprofit_edge_usage', JSON.stringify(usage));
     }
-  }
+  }, [usage, user]);
 
-  const handleLogin = async (email: string, password: string) => {
-    setError(null)
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    })
-    if (error) throw error
-  }
+  // ============================================
+  // NAVIGATION
+  // ============================================
 
-  const handleSignUp = async (email: string, password: string, fullName: string) => {
-    setError(null)
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: fullName }
-      }
-    })
-    if (error) throw error
-  }
+  const navigate = (route: string) => {
+    setCurrentRoute(route);
+    window.history.pushState({}, '', route);
+    window.scrollTo(0, 0);
+  };
+
+  // ============================================
+  // AUTH HANDLERS
+  // ============================================
+
+  const handleLoginSuccess = (userData: { id: string; email: string; name: string; role: string }) => {
+    // Build user/org from the data Login.tsx passes back
+    const appUser: AppUser = {
+      id: userData.id,
+      email: userData.email,
+      name: userData.name,
+      full_name: userData.name,
+      role: (userData.role as 'owner' | 'admin' | 'member') || 'member',
+      organization_id: 'org_' + userData.id.slice(0, 8),
+      created_at: new Date().toISOString(),
+    };
+
+    const org: Organization = {
+      id: appUser.organization_id,
+      name: 'My Organization',
+      tier: 'professional',
+    };
+
+    setUser(appUser);
+    setOrganization(org);
+    navigate('/dashboard');
+  };
 
   const handleLogout = async () => {
-    setLoading(true)
-    await supabase.auth.signOut()
-  }
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error('[App] Logout error:', err);
+    }
+    setUser(null);
+    setOrganization(null);
+    setCurrentSession(null);
+    localStorage.removeItem('nonprofit_edge_usage');
+    navigate('/');
+  };
 
-  const handleDownload = async (resourceId: string) => {
-    await supabase.from('activity_logs').insert({
-      user_id: session?.user.id,
-      organization_id: userData?.organization_id,
-      action: 'download',
-      resource_id: resourceId
-    })
-    if (session) loadUserData(session.user.id)
-  }
+  // ============================================
+  // TOOL TRACKING HANDLERS
+  // ============================================
 
-  // Loading state
-  if (loading) {
+  const handleToolStart = async (toolId: string, toolName: string): Promise<string | null> => {
+    if (!user || !organization) return null;
+    const sessionId = `session_${Date.now()}`;
+    const session: ToolSession = { id: sessionId, tool_type: toolId, started_at: new Date().toISOString() };
+    setCurrentSession(session);
+    return sessionId;
+  };
+
+  const handleToolComplete = async (sessionId: string, toolName: string, score?: number) => {
+    if (!user || !organization) return;
+    setUsage(prev => ({
+      ...prev,
+      tools_started: prev.tools_started + 1,
+      tools_completed: prev.tools_completed + 1,
+      tools_used_this_month: prev.tools_used_this_month + 1,
+    }));
+    setCurrentSession(null);
+  };
+
+  const handleDownload = async (resourceName: string, resourceType: 'report' | 'template' = 'report') => {
+    if (!user || !organization) return;
+    const tier = organization.tier;
+    const limits = TIER_LIMITS[tier] || TIER_LIMITS.essential;
+    if (usage.downloads_this_month >= limits.downloads) {
+      alert(`You've reached your monthly download limit (${limits.downloads}). Upgrade for more.`);
+      return;
+    }
+    setUsage(prev => ({
+      ...prev,
+      downloads_this_month: prev.downloads_this_month + 1,
+      report_downloads: prev.report_downloads + 1,
+    }));
+  };
+
+  const handleStartProfessor = async () => {
+    if (!user || !organization) {
+      navigate('/login');
+      return;
+    }
+    const tier = organization.tier;
+    const limits = TIER_LIMITS[tier] || TIER_LIMITS.essential;
+    if (tier !== 'premium' && usage.professor_sessions_this_month >= limits.professor) {
+      alert(`You've reached your monthly limit (${limits.professor}). Upgrade for more.`);
+      return;
+    }
+    setUsage(prev => ({ ...prev, professor_sessions_this_month: prev.professor_sessions_this_month + 1 }));
+    navigate('/ask-the-professor/use');
+  };
+
+  // ============================================
+  // AUTH GUARD
+  // ============================================
+
+  const requireAuth = (component: React.ReactNode): React.ReactNode => {
+    if (!user) {
+      navigate('/login');
+      return null;
+    }
+    return component;
+  };
+
+  // ============================================
+  // LOADING STATE
+  // ============================================
+
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div 
-            className="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4"
-            style={{ borderColor: TEAL, borderTopColor: 'transparent' }}
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
+        <div style={{ textAlign: 'center' }}>
+          <Logo width={200} />
+          <p style={{ color: '#64748b', marginTop: '16px' }}>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ============================================
+  // DASHBOARD NAVIGATION MAP
+  // ============================================
+
+  const mapDashboardNavigation = (page: string): string => {
+    const routeMap: Record<string, string> = {
+      'dashboard': '/dashboard',
+      'library': '/resources',
+      'events': '/events',
+      'settings': '/settings',
+      'constraint-assessment': '/constraint-assessment',
+      'constraint-report': '/constraint-report',
+      'my-downloads': '/my-downloads',
+      'favorites': '/favorites',
+      'leadership-assessment': '/leadership-assessment',
+      'leadership-report': '/leadership-assessment/report',
+      'strategic-checkup': '/strategic-plan-checkup/use',
+      'ceo-evaluation': '/ceo-evaluation/use',
+      'board-assessment': '/board-assessment/use',
+      'scenario-planner': '/scenario-planner/use',
+      'grant-review': '/grant-review/use',
+      'content-manager': '/admin/content',
+      'platform-admin': '/admin/platform',
+      'owner-dashboard': '/admin/owner',
+      'enhanced-owner': '/admin/enhanced',
+      'marketing': '/admin/marketing',
+      'link-manager': '/admin/links',
+      'team-access': '/admin/team',
+    };
+    return routeMap[page] || `/${page}`;
+  };
+
+  // ============================================
+  // ROUTING
+  // ============================================
+
+  const renderRoute = (): React.ReactNode => {
+    switch (currentRoute) {
+      // ============================================
+      // PUBLIC ROUTES (No login required)
+      // ============================================
+      case '/':
+        return <Homepage onNavigate={navigate} />;
+      
+      case '/login':
+        // If already logged in, go to dashboard
+        if (user) { navigate('/dashboard'); return null; }
+        return <Login onLoginSuccess={handleLoginSuccess} onNavigate={navigate} />;
+      
+      case '/signup':
+        if (user) { navigate('/dashboard'); return null; }
+        return <SignUp onSignUpSuccess={handleLoginSuccess} onNavigate={navigate} />;
+      
+      case '/signup/success':
+        return <SignUpSuccess onNavigate={navigate} />;
+      
+      case '/forgot-password':
+        return <ForgotPassword onNavigate={navigate} />;
+      
+      case '/reset-password':
+        return <ResetPassword onNavigate={navigate} />;
+
+      // FREE ASSESSMENT (Public Lead Magnet)
+      case '/assessment':
+        return <CoreConstraintAssessment onNavigate={navigate} />;
+
+      // ASK THE PROFESSOR - FREE PREVIEW (Public, one question, no login)
+      case '/ask-the-professor':
+      case '/ask-free':
+        return <AskProfessorFree onNavigate={navigate} />;
+
+      // WHY WE EXIST PAGE
+      case '/why-we-exist':
+        return <WhyWeExist onNavigate={navigate} />;
+
+      // PRIVACY & TERMS
+      case '/privacy':
+        return <PrivacyPolicy onNavigate={navigate} />;
+      
+      case '/terms':
+        return <TermsOfService onNavigate={navigate} />;
+
+      // ============================================
+      // TOOL LANDING PAGES (Public)
+      // ============================================
+      case '/strategic-plan-checkup':
+        return <StrategicPlanCheckupLanding onNavigate={navigate} onGetStarted={() => navigate('/strategic-plan-checkup/use')} />;
+      
+      case '/board-assessment':
+        return <BoardAssessmentLanding onNavigate={navigate} onGetStarted={() => navigate('/board-assessment/use')} />;
+      
+      case '/ceo-evaluation':
+        return <CEOEvaluationLanding onNavigate={navigate} onGetStarted={() => navigate('/ceo-evaluation/use')} />;
+      
+      case '/scenario-planner':
+        return <ScenarioPlannerLanding onNavigate={navigate} onGetStarted={() => navigate('/scenario-planner/use')} />;
+      
+      case '/grant-review':
+        return <StrategicPlanCheckupLanding onNavigate={navigate} onGetStarted={() => navigate('/grant-review/use')} />;
+
+      case '/certifications':
+        return <CertificationsLanding onNavigate={navigate} />;
+
+      // ============================================
+      // TOOL PAGES (Require Auth) - Direct render
+      // ============================================
+      case '/strategic-plan-checkup/use':
+        return requireAuth(<StrategicPlanCheckup onNavigate={navigate} />);
+      
+      case '/board-assessment/use':
+        return requireAuth(<BoardAssessment onNavigate={navigate} />);
+      
+      case '/ceo-evaluation/use':
+        return requireAuth(<CEOEvaluation onNavigate={navigate} />);
+      
+      case '/scenario-planner/use':
+        return requireAuth(<ScenarioPlanner onNavigate={navigate} />);
+      
+      case '/grant-review/use':
+        return requireAuth(<GrantReview onNavigate={navigate} />);
+      
+      case '/ask-the-professor/use':
+        return requireAuth(<AskTheProfessor onNavigate={navigate} />);
+
+      // ============================================
+      // LEADERSHIP ASSESSMENT
+      // ============================================
+      case '/leadership-assessment':
+        return requireAuth(<LeadershipAssessment onNavigate={navigate} />);
+      
+      case '/leadership-assessment/report':
+        return requireAuth(<LeadershipReport onNavigate={navigate} />);
+
+      // ============================================
+      // USER PAGES (Require Auth)
+      // ============================================
+      case '/settings':
+        return requireAuth(<Settings onNavigate={navigate} onLogout={handleLogout} />);
+
+      case '/my-downloads':
+        return requireAuth(<MyDownloads onNavigate={navigate} />);
+
+      case '/favorites':
+        return requireAuth(<SavedFavorites onNavigate={navigate} />);
+
+      // CONSTRAINT ASSESSMENT (Full Member Version)
+      case '/constraint-assessment':
+      case '/dashboard/constraint-assessment':
+        return requireAuth(<ConstraintAssessment onNavigate={navigate} />);
+
+      case '/constraint-report':
+      case '/dashboard/constraint-report':
+        return requireAuth(<ConstraintReport onNavigate={navigate} />);
+
+      // ============================================
+      // DASHBOARD
+      // ============================================
+      case '/dashboard':
+        if (!user || !organization) {
+          navigate('/login');
+          return null;
+        }
+        return (
+          <RealDashboard 
+            user={{ ...user, full_name: user.name, avatar_url: null, profile_photo: null, created_at: user.created_at || new Date().toISOString() }}
+            organization={organization}
+            usage={usage}
+            teamCount={1}
+            onNavigate={(page: string) => navigate(mapDashboardNavigation(page))}
+            onDownload={handleDownload}
+            onStartProfessor={handleStartProfessor}
+            onLogout={handleLogout}
           />
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
-  }
+        );
 
-  // No session = show login
-  if (!session) {
-    return <LoginScreen onLogin={handleLogin} onSignUp={handleSignUp} />
-  }
+      case '/resources':
+        return requireAuth(
+          <ResourceLibrary 
+            user={{ ...user!, full_name: user!.name }}
+            organization={organization!}
+            onNavigate={(page: string) => navigate(mapDashboardNavigation(page))}
+            onLogout={handleLogout}
+          />
+        );
 
-  // Has session but no user data
-  if (!userData) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center max-w-md p-8">
-          <h2 className="text-xl font-bold mb-4" style={{ color: NAVY }}>
-            Account Setup Required
-          </h2>
-          {error && <p className="text-red-600 mb-4">{error}</p>}
-          <p className="text-gray-600 mb-4">
-            Your account is being set up. If this persists, please contact support.
-          </p>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 rounded-lg text-white font-medium"
-            style={{ backgroundColor: TEAL }}
-          >
-            Sign Out
-          </button>
-        </div>
-      </div>
-    )
-  }
+      case '/events':
+        return requireAuth(
+          <EventsCalendar 
+            user={{ ...user!, full_name: user!.name }}
+            organization={organization!}
+            onNavigate={(page: string) => navigate(mapDashboardNavigation(page))}
+            onLogout={handleLogout}
+          />
+        );
 
-  // Route handling
-  if (currentPage === 'team') {
-    return (
-      <TeamAdmin
-        organization={userData.organization}
-        currentUser={userData}
-        teamMembers={teamMembers}
-        onBack={() => setCurrentPage('dashboard')}
-        onRefresh={() => loadUserData(session.user.id)}
-      />
-    )
-  }
+      // ============================================
+      // ADMIN ROUTES
+      // ============================================
+      case '/admin':
+      case '/admin/owner':
+      case '/admin/enhanced':
+        return requireAuth(<EnhancedOwnerDashboard onNavigate={(page: string) => navigate(`/${page}`)} />);
 
-  if (currentPage === 'admin') {
-    return (
-      <AdminDashboard
-        onBack={() => setCurrentPage('dashboard')}
-      />
-    )
-  }
+      case '/admin/marketing':
+        return requireAuth(<MarketingDashboard />);
 
-  if (currentPage === 'content-manager') {
-    return (
-      <ContentManager
-        supabase={supabase}
-        onNavigate={setCurrentPage}
-        onLogout={handleLogout}
-      />
-    )
-  }
+      case '/admin/links':
+        return requireAuth(<LinkManager />);
 
-  if (currentPage === 'owner-dashboard') {
-    return (
-      <PlatformOwnerDashboard
-        supabase={supabase}
-        onNavigate={setCurrentPage}
-        onLogout={handleLogout}
-      />
-    )
-  }
+      case '/admin/team':
+        return requireAuth(<TeamAccessManager />);
 
-  if (currentPage === 'enhanced-owner') {
-    return (
-      <EnhancedOwnerDashboard
-        user={userData}
-        supabase={supabase}
-        onNavigate={setCurrentPage}
-      />
-    )
-  }
+      case '/admin/content':
+        return requireAuth(<ContentManager />);
 
-  if (currentPage === 'marketing') {
-    return (
-      <MarketingDashboard
-        user={userData}
-        onNavigate={setCurrentPage}
-        onLogout={handleLogout}
-      />
-    )
-  }
+      case '/admin/platform':
+        return requireAuth(<AdminDashboard />);
 
-  if (currentPage === 'link-manager') {
-    return (
-      <LinkManager
-        user={userData}
-        supabase={supabase}
-        onNavigate={setCurrentPage}
-      />
-    )
-  }
+      // ============================================
+      // LEGACY REDIRECTS
+      // ============================================
+      case '/tools/strategic-plan':
+        navigate('/strategic-plan-checkup/use');
+        return null;
+      
+      case '/tools/board-assessment':
+        navigate('/board-assessment/use');
+        return null;
+      
+      case '/tools/ceo-evaluation':
+        navigate('/ceo-evaluation/use');
+        return null;
+      
+      case '/tools/scenario-planner':
+        navigate('/scenario-planner/use');
+        return null;
+      
+      case '/tools/grant-review':
+        navigate('/grant-review/use');
+        return null;
+      
+      case '/tools/ask-professor':
+        navigate('/ask-the-professor/use');
+        return null;
 
-  if (currentPage === 'team-access') {
-    return (
-      <TeamAccessManager
-        supabase={supabase}
-        currentUserEmail={userData.email}
-        onNavigate={setCurrentPage}
-      />
-    )
-  }
+      // ============================================
+      // DEFAULT
+      // ============================================
+      default:
+        if (currentRoute.startsWith('/tools/')) {
+          navigate('/dashboard');
+          return null;
+        }
+        return <Homepage onNavigate={navigate} />;
+    }
+  };
 
-  if (currentPage === 'library') {
-    return (
-      <>
-        <ResourceLibrary
-          user={userData}
-          organization={userData.organization}
-          onNavigate={setCurrentPage}
-          onLogout={handleLogout}
-        />
-        <AIGuideChatbot
-          user={userData}
-          organization={userData.organization}
-          onNavigate={setCurrentPage}
-        />
-      </>
-    )
-  }
-
-  if (currentPage === 'events') {
-    return (
-      <>
-        <EventsCalendar
-          user={userData}
-          organization={userData.organization}
-          onNavigate={setCurrentPage}
-          onLogout={handleLogout}
-        />
-        <AIGuideChatbot
-          user={userData}
-          organization={userData.organization}
-          onNavigate={setCurrentPage}
-        />
-      </>
-    )
-  }
-
-  // Main Dashboard
   return (
     <>
-      <Dashboard
-        user={userData}
-        organization={userData.organization}
-        usage={usage}
-        teamCount={teamMembers.length}
-        onNavigate={setCurrentPage}
-        onDownload={handleDownload}
-        onStartProfessor={() => setCurrentPage('professor')}
-        onLogout={handleLogout}
-        supabase={supabase}
-      />
-      <AIGuideChatbot
-        user={userData}
-        organization={userData.organization}
-        onNavigate={setCurrentPage}
-      />
+      {renderRoute()}
+      <InstallBanner />
     </>
-  )
-}
+  );
+};
 
-// Login Screen Component
-interface LoginScreenProps {
-  onLogin: (email: string, password: string) => Promise<void>
-  onSignUp: (email: string, password: string, fullName: string) => Promise<void>
-}
-
-const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onSignUp }) => {
-  const [isSignUp, setIsSignUp] = useState(false)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [fullName, setFullName] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-    setSuccess(null)
-
-    try {
-      if (isSignUp) {
-        await onSignUp(email, password, fullName)
-        setSuccess('Account created! Check your email to confirm your account.')
-        setIsSignUp(false)
-        setEmail('')
-        setPassword('')
-        setFullName('')
-      } else {
-        await onLogin(email, password)
-      }
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <div 
-      className="min-h-screen flex items-center justify-center p-4"
-      style={{ backgroundColor: '#F8FAFC' }}
-    >
-      <div className="max-w-md w-full">
-        {/* Logo / Header */}
-        <div className="text-center mb-8">
-          <h1 
-            className="text-3xl font-bold mb-2"
-            style={{ color: NAVY }}
-          >
-            The Nonprofit Edge
-          </h1>
-          <p className="text-gray-600">
-            Strategic tools for nonprofit leaders
-          </p>
-        </div>
-
-        {/* Login Card */}
-        <div className="bg-white rounded-xl shadow-lg p-8">
-          <h2 
-            className="text-xl font-semibold mb-6"
-            style={{ color: NAVY }}
-          >
-            {isSignUp ? 'Create Account' : 'Welcome Back'}
-          </h2>
-
-          {success && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4 text-sm">
-              {success}
-            </div>
-          )}
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {isSignUp && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:outline-none"
-                  placeholder="Your full name"
-                  required
-                />
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:outline-none"
-                placeholder="you@example.com"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:outline-none"
-                placeholder="••••••••"
-                required
-                minLength={6}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 rounded-lg text-white font-medium transition-all hover:opacity-90 disabled:opacity-50"
-              style={{ backgroundColor: TEAL }}
-            >
-              {loading ? 'Please wait...' : (isSignUp ? 'Create Account' : 'Sign In')}
-            </button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => {
-                setIsSignUp(!isSignUp)
-                setError(null)
-                setSuccess(null)
-              }}
-              className="text-sm hover:underline"
-              style={{ color: TEAL }}
-            >
-              {isSignUp 
-                ? 'Already have an account? Sign in' 
-                : "Don't have an account? Sign up"}
-            </button>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <p className="text-center text-xs text-gray-400 mt-6">
-          © 2025 The Pivotal Group Consultants Inc. All rights reserved.
-        </p>
-      </div>
-    </div>
-  )
-}
-
-export default App
+export default App;
