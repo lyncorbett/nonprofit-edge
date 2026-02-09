@@ -2,8 +2,7 @@
  * THE NONPROFIT EDGE - App.tsx
  * Real Supabase Authentication + Complete Routing
  * 
- * UPDATED: February 6, 2026
- * - Added PWA InstallBanner for mobile app download prompt
+ * UPDATED: February 3, 2026
  * - Real Supabase auth (no more mock users)
  * - Listens to onAuthStateChange for login/logout/magic links
  * - Loads user profile and organization from Supabase
@@ -18,9 +17,6 @@ import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
 // ============================================
 // COMPONENT IMPORTS
 // ============================================
-
-// PWA Install Banner
-import InstallBanner from './components/InstallBanner';
 
 // Dashboard & Core Components
 import RealDashboard from './components/Dashboard';
@@ -702,12 +698,7 @@ const App: React.FC = () => {
     }
   };
 
-  return (
-    <>
-      {renderRoute()}
-      <InstallBanner />
-    </>
-  );
+  return <>{renderRoute()}</>;
 };
 
 export default App;
