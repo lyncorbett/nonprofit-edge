@@ -364,7 +364,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
               {/* Essential */}
               <div className="bg-white border border-gray-200 rounded-2xl p-6">
                 <h3 className="text-lg font-bold mb-2" style={{ color: NAVY }}>Essential</h3>
-                <div className="text-3xl font-extrabold mb-1" style={{ color: NAVY }}>$97<span className="text-sm font-normal text-gray-500">/mo</span></div>
+                <div className="text-3xl font-extrabold mb-1" style={{ color: NAVY }}>$79<span className="text-sm font-normal text-gray-500">/mo</span></div>
                 <div className="text-xs font-semibold mb-5" style={{ color: TEAL }}>Founding Member Rate</div>
                 <ul className="space-y-2 mb-6 text-sm">
                   <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> 1 person</li>
@@ -390,7 +390,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
                   MOST POPULAR
                 </div>
                 <h3 className="text-lg font-bold mb-2" style={{ color: NAVY }}>Professional</h3>
-                <div className="text-3xl font-extrabold mb-1" style={{ color: NAVY }}>$197<span className="text-sm font-normal text-gray-500">/mo</span></div>
+                <div className="text-3xl font-extrabold mb-1" style={{ color: NAVY }}>$159<span className="text-sm font-normal text-gray-500">/mo</span></div>
                 <div className="text-xs font-semibold mb-5" style={{ color: TEAL }}>Founding Member Rate</div>
                 <ul className="space-y-2 mb-6 text-sm">
                   <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> Up to 5 team members</li>
@@ -410,7 +410,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
               {/* Premium */}
               <div className="bg-white border border-gray-200 rounded-2xl p-6">
                 <h3 className="text-lg font-bold mb-2" style={{ color: NAVY }}>Premium</h3>
-                <div className="text-3xl font-extrabold mb-1" style={{ color: NAVY }}>$397<span className="text-sm font-normal text-gray-500">/mo</span></div>
+                <div className="text-3xl font-extrabold mb-1" style={{ color: NAVY }}>$329<span className="text-sm font-normal text-gray-500">/mo</span></div>
                 <div className="text-xs font-semibold mb-5" style={{ color: TEAL }}>Founding Member Rate</div>
                 <ul className="space-y-2 mb-6 text-sm">
                   <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> Everything in Professional</li>

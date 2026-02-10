@@ -292,7 +292,7 @@ const CEOEvaluationLanding: React.FC<CEOEvaluationLandingProps> = ({ onNavigate,
             </button>
             <a href="/samples/ceo-evaluation-report.pdf" className="inline-flex items-center justify-center px-6 py-3 border-2 border-[#0D2C54] text-[#0D2C54] font-semibold rounded-lg hover:bg-[#0D2C54] hover:text-white transition-all">View Sample Report</a>
           </div>
-          <p className="mt-6 text-sm text-gray-500">Starting at $97/month for teams · Cancel anytime</p>
+          <p className="mt-6 text-sm text-gray-500">Starting at $79/month for teams · Cancel anytime</p>
         </div>
       </section>
     </div>

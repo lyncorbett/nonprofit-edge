@@ -610,8 +610,8 @@ const UserManager: React.FC<UserManagerProps> = ({ supabase, onNavigate }) => {
                       borderRadius: '8px', fontSize: '14px', cursor: 'pointer', background: COLORS.white
                     }}
                   >
-                    <option value="essential">Essential ($97/mo)</option>
-                    <option value="professional">Professional ($197/mo)</option>
+                    <option value="essential">Essential ($79/mo)</option>
+                    <option value="professional">Professional ($159/mo)</option>
                     <option value="premium">Premium ($497/mo)</option>
                   </select>
                 </div>

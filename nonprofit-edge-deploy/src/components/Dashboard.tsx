@@ -260,7 +260,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         >
           <Menu className="w-6 h-6" />
         </button>
-        <img src="/logo.svg" alt="The Nonprofit Edge" className="h-8" />
+        <img src="/logo.svg" alt="The Nonprofit Edge" className="h-10" />
         <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#0D2C54] to-[#164677] text-white flex items-center justify-center font-semibold text-sm">
           {user.name.charAt(0).toUpperCase()}
         </div>
@@ -290,8 +290,8 @@ const Dashboard: React.FC<DashboardProps> = ({
         </button>
 
         {/* Logo */}
-        <div className="mb-8">
-          <img src="/logo.svg" alt="The Nonprofit Edge" className="w-[220px] h-auto" />
+        <div className="mb-4">
+          <img src="/logo.svg" alt="The Nonprofit Edge" className="w-[260px] h-auto" />
         </div>
 
         {/* Quick Actions */}
@@ -321,59 +321,6 @@ const Dashboard: React.FC<DashboardProps> = ({
             Saved Favorites
           </button>
         </nav>
-
-        {/* My Commitments */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between px-3 mb-3">
-            <div className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
-              My Commitments
-            </div>
-            <button 
-              onClick={() => setShowCommitmentModal(true)}
-              className="text-xs text-[#0097A9] font-medium hover:underline"
-            >
-              + New
-            </button>
-          </div>
-          
-          {commitments.filter(c => c.status === 'active').length === 0 ? (
-            <button
-              onClick={() => setShowCommitmentModal(true)}
-              className="w-full px-3 py-3 bg-amber-50 border border-amber-200 rounded-lg text-left hover:bg-amber-100 transition-colors"
-            >
-              <div className="flex items-center gap-2 text-amber-700 text-sm font-medium mb-1">
-                <Target className="w-4 h-4" />
-                Make a commitment
-              </div>
-              <p className="text-xs text-amber-600">I'll check in to support you</p>
-            </button>
-          ) : (
-            <div className="space-y-2">
-              {commitments.filter(c => c.status === 'active').slice(0, 2).map((commitment) => {
-                const daysUntil = Math.ceil(
-                  (new Date(commitment.deadlineDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-                );
-                return (
-                  <div key={commitment.id} className="px-3 py-2 bg-slate-50 rounded-lg">
-                    <p className="text-sm text-slate-700 line-clamp-2 mb-1">{commitment.text}</p>
-                    <div className="flex items-center justify-between">
-                      <span className={`text-xs ${daysUntil <= 1 ? 'text-red-500' : 'text-slate-400'}`}>
-                        {daysUntil <= 0 ? 'Due today' : `${daysUntil} days left`}
-                      </span>
-                      <button
-                        onClick={() => handleMarkComplete(commitment.id)}
-                        className="text-xs text-[#0097A9] font-medium hover:underline"
-                      >
-                        Done ✓
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
         {/* Recent Activity */}
         <div className="mb-6">
           <div className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold mb-3 pl-3">
@@ -503,7 +450,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {/* Top Cards - Stack on mobile */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-5 mb-6 lg:mb-8">
             {/* Today's Insight */}
-            <div className="bg-gradient-to-br from-[#0097A9] to-[#00b4cc] rounded-2xl p-5 lg:p-7 text-white flex flex-col">
+            <div className="bg-gradient-to-br from-[#0097A9] to-[#00b4cc] rounded-2xl p-4 lg:p-5 text-white flex flex-col">
               <div className="text-[11px] uppercase tracking-widest opacity-85 mb-3 lg:mb-4 font-semibold flex items-center gap-2">
                 <Lightbulb className="w-3.5 h-3.5" />
                 Today's Insight
@@ -536,7 +483,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   navigate('ask-the-professor');
                 }
               }}
-              className="bg-gradient-to-br from-[#0D2C54] to-[#164677] rounded-2xl p-5 lg:p-7 text-white flex flex-col hover:-translate-y-0.5 hover:shadow-xl transition-all cursor-pointer"
+              className="bg-gradient-to-br from-[#0D2C54] to-[#164677] rounded-2xl p-4 lg:p-5 text-white flex flex-col hover:-translate-y-0.5 hover:shadow-xl transition-all cursor-pointer"
             >
               <div className="text-[11px] uppercase tracking-widest opacity-85 mb-3 lg:mb-4 font-semibold flex items-center gap-2">
                 <MessageSquare className="w-3.5 h-3.5 text-[#0097A9]" />

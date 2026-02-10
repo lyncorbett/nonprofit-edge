@@ -18,9 +18,9 @@ interface SignUpProps {
 }
 
 const plans = [
-  { id: 'essential', name: 'Essential', price: '$97', desc: '3 AI tools, 5 downloads/mo' },
-  { id: 'professional', name: 'Professional', price: '$197', desc: 'All tools, 25 downloads/mo', popular: true },
-  { id: 'premium', name: 'Premium', price: '$397', desc: 'Unlimited everything + priority' },
+  { id: 'essential', name: 'Essential', price: '$79', desc: '3 AI tools, 5 downloads/mo' },
+  { id: 'professional', name: 'Professional', price: '$159', desc: 'All tools, 25 downloads/mo', popular: true },
+  { id: 'premium', name: 'Premium', price: '$329', desc: 'Unlimited everything + priority' },
 ];
 
 const SignUp: React.FC<SignUpProps> = ({ onSignUpSuccess, onNavigate }) => {
@@ -105,7 +105,7 @@ const SignUp: React.FC<SignUpProps> = ({ onSignUpSuccess, onNavigate }) => {
         {step === 'plan' ? (
           <>
             <h1 style={{ fontSize: '24px', fontWeight: 700, color: NAVY, textAlign: 'center', marginBottom: '4px' }}>Choose Your Plan</h1>
-            <p style={{ color: '#64748b', textAlign: 'center', marginBottom: '28px', fontSize: '15px' }}>Start with a 14-day free trial. Cancel anytime.</p>
+            <p style={{ color: '#64748b', textAlign: 'center', marginBottom: '28px', fontSize: '15px' }}>Start with a 3-day free trial. Cancel anytime.</p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
               {plans.map((plan) => (
@@ -150,7 +150,7 @@ const SignUp: React.FC<SignUpProps> = ({ onSignUpSuccess, onNavigate }) => {
           <>
             <h1 style={{ fontSize: '24px', fontWeight: 700, color: NAVY, textAlign: 'center', marginBottom: '4px' }}>Create Your Account</h1>
             <p style={{ color: '#64748b', textAlign: 'center', marginBottom: '28px', fontSize: '15px' }}>
-              {plans.find(p => p.id === selectedPlan)?.name} Plan — 14-day free trial
+              {plans.find(p => p.id === selectedPlan)?.name} Plan — 3-day free trial
             </p>
 
             {error && (

@@ -152,7 +152,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigate }) => {
             <img
               src="/logo.svg"
               alt="The Nonprofit Edge"
-              style={{ width: '200px', height: 'auto' }}
+              style={{ width: '300px', height: 'auto' }}
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
             />
           </button>
