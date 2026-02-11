@@ -312,7 +312,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
                 </div>
                 
                 <button
-                  onClick={() => handleNavigate('/ask-the-professor/use')}
+                  onClick={() => handleNavigate('/ask-the-professor')}
                   className="inline-block px-6 py-3 text-base font-semibold text-white rounded-lg transition hover:opacity-90 border-none cursor-pointer"
                   style={{ backgroundColor: NAVY }}
                 >
@@ -465,7 +465,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
                 <img 
                   src="/logo.svg" 
                   alt="The Nonprofit Edge" 
-                  className="h-10 w-auto brightness-0 invert"
+                  className="h-14 w-auto brightness-0 invert"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = '/logo.jpg'
                   }}
@@ -484,7 +484,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
             <div>
               <h4 className="font-bold text-lg mb-4">Tools</h4>
               <ul className="space-y-3">
-                <li><button onClick={() => handleNavigate('/ask-the-professor/use')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Ask the Professor</button></li>
+                <li><button onClick={() => handleNavigate('/ask-the-professor')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Ask the Professor</button></li>
                 <li><button onClick={() => handleNavigate('/grant-review')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Grant Review</button></li>
                 <li><button onClick={() => handleNavigate('/board-assessment')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Board Assessment</button></li>
                 <li><button onClick={() => handleNavigate('/strategic-plan-checkup')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Strategic Plan Analysis</button></li>

@@ -62,6 +62,7 @@ import StrategicPlanCheckup from './components/StrategicPlanCheckup';
 import CEOEvaluation from './components/CEOEvaluation';
 import BoardAssessment from './components/BoardAssessment';
 import GrantReview from './components/GrantReview';
+import GrantReviewLanding from "./GrantReviewLanding";
 import ScenarioPlanner from './components/ScenarioPlanner';
 import AskTheProfessor from './components/AskTheProfessor';
 
@@ -71,10 +72,10 @@ import LeadershipReport from './components/LeadershipReport';
 import LeadershipProfile from './components/LeadershipProfile';
 
 // Landing Page Components
-import ScenarioPlannerLanding from './components/ScenarioPlannerLanding';
-import BoardAssessmentLanding from './components/BoardAssessmentLanding';
-import CEOEvaluationLanding from './components/CEOEvaluationLanding';
-import StrategicPlanCheckupLanding from './components/StrategicPlanCheckupLanding';
+import ScenarioPlannerLanding from './ScenarioPlannerLanding';
+import BoardAssessmentLanding from './BoardAssessmentLanding';
+import CEOEvaluationLanding from './CEOEvaluationLanding';
+import StrategicPlanCheckupLanding from './StrategicPlanCheckupLanding';
 import CertificationsLanding from './components/CertificationsLanding';
 
 // New Public Page Components
@@ -527,7 +528,7 @@ const App: React.FC = () => {
       // TOOL LANDING PAGES (Public)
       // ============================================
       case '/strategic-plan-checkup':
-        return <StrategicPlanCheckupLanding onNavigate={navigate} onGetStarted={() => navigate('/strategic-plan-checkup/use')} />;
+        return <StrategicPlanCheckupLanding />;
       
       case '/board-assessment':
         return <BoardAssessmentLanding onNavigate={navigate} onGetStarted={() => navigate('/board-assessment/use')} />;
@@ -539,7 +540,7 @@ const App: React.FC = () => {
         return <ScenarioPlannerLanding onNavigate={navigate} onGetStarted={() => navigate('/scenario-planner/use')} />;
       
       case '/grant-review':
-        return <StrategicPlanCheckupLanding onNavigate={navigate} onGetStarted={() => navigate('/grant-review/use')} />;
+        return <GrantReviewLanding onNavigate={navigate} onGetStarted={() => navigate('/grant-review/use')} />;
 
       case '/certifications':
         return <CertificationsLanding onNavigate={navigate} />;
