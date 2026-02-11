@@ -251,7 +251,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const downloadPercent = (usage.downloads_this_month / maxDownloads) * 100;
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 lg:flex">
       {/* MOBILE HEADER */}
       <header className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between">
         <button
@@ -276,7 +276,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       {/* LEFT SIDEBAR */}
       <aside className={`
-        fixed top-0 left-0 h-screen bg-white border-r border-slate-200 p-6 flex flex-col overflow-y-auto z-50
+        lg:sticky lg:top-0 lg:h-screen bg-white border-r border-slate-200 p-6 flex flex-col overflow-y-auto z-50 fixed top-0 left-0 h-screen lg:relative
         w-[280px] transition-transform duration-300 ease-in-out
         lg:translate-x-0
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -291,7 +291,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
         {/* Logo */}
         <div className="mb-2">
-          <img src="/logo.svg" alt="The Nonprofit Edge" className="w-[320px] h-auto" />
+          <img src="/logo.svg" alt="The Nonprofit Edge" className="w-[360px] h-auto" />
         </div>
 
         {/* Quick Actions */}
@@ -432,7 +432,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="lg:ml-[280px] p-4 lg:p-8 pt-20 lg:pt-8">
+      <main className="lg:ml-0 p-4 lg:p-8 flex-1 pt-20 lg:pt-8">
         <div className="max-w-[1000px] mx-auto">
           {/* Welcome */}
           <div className="mb-6 lg:mb-7">

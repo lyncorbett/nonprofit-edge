@@ -185,7 +185,7 @@ const CEOEvaluation: React.FC<CEOEvaluationProps> = ({ onNavigate }) => {
         {/* Role Selection */}
         {!role && (
           <div className="bg-white rounded-2xl shadow-sm p-8">
-            <h2 className="text-xl font-bold text-gray-800 mb-2 text-center">Who are you?</h2>
+            <h2 className="text-xl font-bold text-gray-800 mb-2 text-center">What is your role?</h2>
             <p className="text-gray-600 text-center mb-8">
               Select your role to begin the appropriate evaluation form.
             </p>
