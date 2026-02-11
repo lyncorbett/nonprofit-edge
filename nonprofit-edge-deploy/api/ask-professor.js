@@ -492,6 +492,30 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "No message provided" });
     }
 
+    // Fast path for free preview - skip Supabase context
+    if (req.body.mode === "free-preview") {
+      const freeResponse = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": process.env.ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 2048,
+          system: SYSTEM_PROMPT,
+          messages: finalMessages,
+        }),
+      });
+      if (!freeResponse.ok) {
+        console.error("Claude free error:", await freeResponse.text());
+        return res.status(500).json({ error: "AI service error" });
+      }
+      const freeData = await freeResponse.json();
+      return res.status(200).json({ response: freeData.content[0].text });
+    }
+
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
