@@ -276,7 +276,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       {/* LEFT SIDEBAR */}
       <aside className={`
-        lg:sticky lg:top-0 lg:h-screen bg-white border-r border-slate-200 p-6 flex flex-col overflow-y-auto z-50 fixed top-0 left-0 h-screen lg:relative
+        bg-white border-r border-slate-200 p-6 flex flex-col z-50 fixed top-0 left-0 h-screen lg:relative lg:h-auto lg:overflow-visible
         w-[280px] transition-transform duration-300 ease-in-out
         lg:translate-x-0
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}

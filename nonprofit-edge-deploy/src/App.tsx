@@ -141,7 +141,7 @@ const TEAL = '#0097A9';
 // LOGO COMPONENT
 // ============================================
 
-const Logo = ({ width = 180 }: { width?: number }) => (
+const Logo = ({ width = 280 }: { width?: number }) => (
   <img 
     src="/logo.svg" 
     alt="The Nonprofit Edge" 
@@ -434,7 +434,7 @@ const App: React.FC = () => {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
         <div style={{ textAlign: 'center' }}>
-          <Logo width={200} />
+          <Logo width={320} />
           <p style={{ color: '#64748b', marginTop: '16px' }}>Loading...</p>
         </div>
       </div>
