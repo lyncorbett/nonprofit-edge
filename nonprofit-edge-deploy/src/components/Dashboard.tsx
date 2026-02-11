@@ -290,8 +290,8 @@ const Dashboard: React.FC<DashboardProps> = ({
         </button>
 
         {/* Logo */}
-        <div className="mb-4">
-          <img src="/logo.svg" alt="The Nonprofit Edge" className="w-[260px] h-auto" />
+        <div className="mb-2">
+          <img src="/logo.svg" alt="The Nonprofit Edge" className="w-[320px] h-auto" />
         </div>
 
         {/* Quick Actions */}
@@ -300,7 +300,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             Quick Actions
           </div>
           <button 
-            onClick={() => handleNavigateAndClose('member-resources')}
+            onClick={() => handleNavigateAndClose('library')}
             className="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-[#0D2C54] text-sm font-medium w-full text-left"
           >
             <Folder className="w-5 h-5" />
