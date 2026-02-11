@@ -5,7 +5,7 @@
       "destination": "/landing-pages/:path*"
     },
     {
-      "source": "/((?!landing-pages|images|assets).*)",
+      "source": "/((?!api|landing-pages|images|assets).*)",
       "destination": "/index.html"
     }
   ]
