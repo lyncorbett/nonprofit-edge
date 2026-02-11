@@ -483,6 +483,15 @@ export default async function handler(req, res) {
   try {
     const { messages, accessToken, localHour, conversationId } = req.body;
 
+    // Handle free preview format (sends message + conversationHistory instead of messages)
+    let finalMessages = messages;
+    if (!messages && req.body.message) {
+      finalMessages = [{ role: "user", content: req.body.message }];
+    }
+    if (!finalMessages || finalMessages.length === 0) {
+      return res.status(400).json({ error: "No message provided" });
+    }
+
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -664,9 +673,9 @@ Use context naturally. Greet by name. Reference their history when relevant. Nev
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 1024,
+        max_tokens: req.body.mode === 'free-preview' ? 2048 : 1024,
         system: SYSTEM_PROMPT + contextBlock,
-        messages,
+        messages: finalMessages,
       }),
     });
 
