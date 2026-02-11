@@ -693,7 +693,7 @@ Use context naturally. Greet by name. Reference their history when relevant. Nev
       try {
         const conversationData = { 
           user_id: userId, 
-          messages: [...messages, { role: 'assistant', content: reply }], 
+          messages: [...finalMessages, { role: 'assistant', content: reply }], 
           focus_area: ctx.focus,
           updated_at: new Date().toISOString()
         };
