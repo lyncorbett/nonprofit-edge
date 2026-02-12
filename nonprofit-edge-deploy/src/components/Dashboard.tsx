@@ -129,6 +129,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [showCommitmentModal, setShowCommitmentModal] = useState(false);
   const [commitments, setCommitments] = useState<Commitment[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showHealthPopup, setShowHealthPopup] = useState(false);
 
   // Load commitments from localStorage
   useEffect(() => {
@@ -564,8 +565,78 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
             );
           })()}
+
+          {/* Organizational Health Score Progress Tracker */}
+          <div className="mt-6 lg:mt-8 bg-white rounded-xl border border-slate-200 p-5 lg:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-base lg:text-lg font-bold text-[#0D2C54]">🏥 Organizational Health Score</h3>
+                <p className="text-xs lg:text-sm text-slate-500 mt-1">Complete any 4 assessments to unlock your score</p>
+              </div>
+              <button
+                onClick={() => setShowHealthPopup(true)}
+                className="text-xs lg:text-sm text-[#0097A9] font-semibold hover:underline bg-transparent border-none cursor-pointer"
+              >
+                View All Assessments →
+              </button>
+            </div>
+            {(() => {
+              const completed = 0;
+              const needed = 4;
+              const pct = Math.min(100, Math.round((completed / needed) * 100));
+              return (
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="flex-1 bg-slate-100 rounded-full h-3">
+                      <div className="h-3 rounded-full bg-gradient-to-r from-[#0097A9] to-[#0D2C54] transition-all duration-500" style={{ width: pct + "%" }} />
+                    </div>
+                    <span className="text-sm font-bold text-[#0D2C54]">{completed}/{needed}</span>
+                  </div>
+                  {completed === 0 && (
+                    <p className="text-sm text-slate-400 italic">No assessments completed yet. Start your first one from the tools above!</p>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
         </div>
       </main>
+
+
+      {/* HEALTH SCORE POPUP */}
+      {showHealthPopup && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4" onClick={() => setShowHealthPopup(false)}>
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 lg:p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-[#0D2C54]">🏥 Organizational Health Score</h2>
+              <button onClick={() => setShowHealthPopup(false)} className="text-slate-400 hover:text-slate-600 text-2xl bg-transparent border-none cursor-pointer">×</button>
+            </div>
+            <p className="text-sm text-slate-600 mb-5">Complete <strong>any 4</strong> of the following assessments to unlock your Organizational Health Score — a composite view of your nonprofit's strengths and growth areas.</p>
+            <div className="space-y-3">
+              {[
+                { name: "Strategic Plan Check-Up", desc: "Evaluate your strategic plan's clarity, metrics, and timeline", route: "strategic-checkup" },
+                { name: "Board Assessment", desc: "Assess board engagement, governance, and effectiveness", route: "board-assessment" },
+                { name: "CEO Evaluation", desc: "Evaluate executive leadership alignment and performance", route: "ceo-evaluation" },
+                { name: "PIVOT Scenario Planner", desc: "Test your organization's adaptability and resilience", route: "scenario-planner" },
+                { name: "Grant/RFP Review", desc: "Analyze your funding readiness and proposal strength", route: "grant-review" },
+                { name: "Ask the Professor", desc: "Complete a structured strategic coaching session", route: "ask-professor" },
+                { name: "Leadership Assessment", desc: "Discover your leadership style and growth areas", route: "leadership-assessment" },
+                { name: "Constraint Assessment", desc: "Identify your organization's primary bottleneck", route: "constraint-assessment" },
+              ].map((tool, i) => (
+                <button
+                  key={i}
+                  onClick={() => { setShowHealthPopup(false); onNavigate(tool.route); }}
+                  className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-[#0097A9] hover:bg-[#0097A9]/5 transition-all bg-white cursor-pointer"
+                >
+                  <div className="font-semibold text-sm text-[#0D2C54]">⭕ {tool.name}</div>
+                  <div className="text-xs text-slate-500 mt-0.5">{tool.desc}</div>
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-slate-400 mt-4 text-center">Pick the assessments most relevant to your organization</p>
+          </div>
+        </div>
+      )}
 
       {/* TOOL MODAL */}
       {selectedTool && (
