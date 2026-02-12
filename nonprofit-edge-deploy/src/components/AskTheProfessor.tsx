@@ -48,6 +48,7 @@ const SUGGESTED_QUESTIONS = [
     color: '#0D2C54'
   },
   {
+    icon: DollarSign,
     category: 'FUNDRAISING',
     question: 'How do I approach a major donor who has stopped giving?',
     color: '#D4A84B'
