@@ -91,13 +91,16 @@ const AskTheProfessor: React.FC<AskTheProfessorProps> = ({ user, onNavigate }) =
 
   // Fetch conversation history
   const fetchConversations = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id || user?.id;
+    console.log("Fetching for userId:", userId);
+    if (!userId) return;
     console.log("Fetching conversations for user:", user?.id);
-    if (!user?.id) return;
     
     const { data } = await supabase
       .from('professor_conversations')
       .select('id, created_at, messages')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(20);
     
