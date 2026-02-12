@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Insider Circle - The Nonprofit Edge</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 px-4 lg:px-8 py-4 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-[#0D2C54] rounded-xl flex items-center justify-center text-white font-bold text-sm">
+          NE
+        </div>
+        <div>
+          <div class="text-lg font-bold text-[#0D2C54]">The Nonprofit Edge</div>
+          <span class="inline-block bg-amber-100 text-amber-800 text-[10px] font-semibold px-2 py-0.5 rounded uppercase tracking-wide">
+            Insider Circle
+          </span>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button 
+          onclick="openFeedback()"
+          class="flex items-center gap-2 px-4 py-2.5 bg-[#0097A9] hover:bg-[#008999] text-white rounded-lg text-sm font-medium transition-colors"
+        >
+          💬 Send Feedback
+        </button>
+        <button class="px-4 py-2.5 border border-slate-200 rounded-lg text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors">
+          Sign Out
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-6xl mx-auto px-4 lg:px-8 py-6 lg:py-8">
+
+    <!-- Welcome -->
+    <div class="mb-6">
+      <h1 class="text-2xl lg:text-3xl font-bold text-[#0D2C54] mb-2">Welcome! 👋</h1>
+      <p class="text-slate-500">You're one of 12 people shaping The Nonprofit Edge before anyone else sees it.</p>
+    </div>
+
+    <!-- Top Cards - 2 column grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-5 mb-6 lg:mb-8">
+      
+      <!-- Mission Card (replaces Today's Insight) -->
+      <div class="bg-gradient-to-br from-[#0097A9] to-[#00b4cc] rounded-2xl p-4 lg:p-5 text-white flex flex-col">
+        <div class="text-[11px] uppercase tracking-widest opacity-85 mb-3 lg:mb-4 font-semibold flex items-center gap-2">
+          🎯 Your Mission
+        </div>
+        <p class="text-sm lg:text-base leading-relaxed flex-1 mb-4 lg:mb-6">
+          Test the "Ask the Professor" tool with real questions. I built it to be a strategic advisor. Tell me what works and what doesn't.
+        </p>
+        <button 
+          onclick="openFeedback()"
+          class="flex items-center justify-between gap-2 bg-white/20 border border-white/30 rounded-lg px-4 py-3 text-white text-sm font-medium w-full hover:bg-white/30 transition-colors"
+        >
+          <span class="flex items-center gap-2">
+            ✉️ Send Feedback to Lyn
+          </span>
+          <span>→</span>
+        </button>
+      </div>
+
+      <!-- Ask the Professor Card - ACTIVE -->
+      <a 
+        href="/ask-the-professor/use"
+        class="bg-gradient-to-br from-[#0D2C54] to-[#164677] rounded-2xl p-4 lg:p-5 text-white flex flex-col hover:-translate-y-0.5 hover:shadow-xl transition-all cursor-pointer no-underline"
+      >
+        <div class="text-[11px] uppercase tracking-widest opacity-85 mb-3 lg:mb-4 font-semibold flex items-center gap-2">
+          <span class="text-[#0097A9]">✨</span> Ask the Professor
+          <span class="ml-auto bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded">READY</span>
+        </div>
+        <p class="text-sm lg:text-base leading-relaxed flex-1 mb-4 lg:mb-6">
+          Your personal nonprofit leadership advisor, available 24/7. Get strategic guidance tailored to your challenges.
+        </p>
+        <div class="flex items-center justify-between gap-2 bg-white/20 border border-white/30 rounded-lg px-4 py-3 text-sm font-medium">
+          <span class="flex items-center gap-2">
+            💬 Start a Conversation
+          </span>
+          <span>→</span>
+        </div>
+      </a>
+    </div>
+
+    <!-- Your Tools Section -->
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-lg font-bold text-[#0D2C54]">Your Tools</h2>
+      <span class="text-xs text-slate-400 uppercase tracking-wide">5 more coming March 4th</span>
+    </div>
+
+    <!-- Tools Grid - Greyed out -->
+    <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-5 mb-6 lg:mb-8">
+      
+      <!-- Board Assessment - LOCKED -->
+      <div class="bg-white rounded-xl overflow-hidden border border-slate-200 opacity-50 cursor-not-allowed relative">
+        <div class="absolute top-2 right-2 z-10 bg-slate-700/80 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">
+          March 4th
+        </div>
+        <div
+          class="h-[80px] lg:h-[120px] bg-cover bg-center flex items-end p-3 lg:p-4 relative grayscale"
+          style="background-image: url('https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop')"
+        >
+          <div class="absolute inset-0 bg-gradient-to-b from-transparent to-slate-800/85"></div>
+          <span class="relative text-white font-semibold text-xs lg:text-[15px] line-clamp-2">Board Assessment</span>
+        </div>
+      </div>
+
+      <!-- Strategic Plan - LOCKED -->
+      <div class="bg-white rounded-xl overflow-hidden border border-slate-200 opacity-50 cursor-not-allowed relative">
+        <div class="absolute top-2 right-2 z-10 bg-slate-700/80 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">
+          March 4th
+        </div>
+        <div
+          class="h-[80px] lg:h-[120px] bg-cover bg-center flex items-end p-3 lg:p-4 relative grayscale"
+          style="background-image: url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&h=300&fit=crop')"
+        >
+          <div class="absolute inset-0 bg-gradient-to-b from-transparent to-slate-800/85"></div>
+          <span class="relative text-white font-semibold text-xs lg:text-[15px] line-clamp-2">Strategic Plan Check-Up</span>
+        </div>
+      </div>
+
+      <!-- Grant Review - LOCKED -->
+      <div class="bg-white rounded-xl overflow-hidden border border-slate-200 opacity-50 cursor-not-allowed relative">
+        <div class="absolute top-2 right-2 z-10 bg-slate-700/80 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">
+          March 4th
+        </div>
+        <div
+          class="h-[80px] lg:h-[120px] bg-cover bg-center flex items-end p-3 lg:p-4 relative grayscale"
+          style="background-image: url('https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=300&fit=crop')"
+        >
+          <div class="absolute inset-0 bg-gradient-to-b from-transparent to-slate-800/85"></div>
+          <span class="relative text-white font-semibold text-xs lg:text-[15px] line-clamp-2">Grant Review</span>
+        </div>
+      </div>
+
+      <!-- CEO Evaluation - LOCKED -->
+      <div class="bg-white rounded-xl overflow-hidden border border-slate-200 opacity-50 cursor-not-allowed relative">
+        <div class="absolute top-2 right-2 z-10 bg-slate-700/80 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">
+          March 4th
+        </div>
+        <div
+          class="h-[80px] lg:h-[120px] bg-cover bg-center flex items-end p-3 lg:p-4 relative grayscale"
+          style="background-image: url('https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=400&h=300&fit=crop')"
+        >
+          <div class="absolute inset-0 bg-gradient-to-b from-transparent to-slate-800/85"></div>
+          <span class="relative text-white font-semibold text-xs lg:text-[15px] line-clamp-2">CEO Evaluation</span>
+        </div>
+      </div>
+
+      <!-- Scenario Planner - LOCKED -->
+      <div class="bg-white rounded-xl overflow-hidden border border-slate-200 opacity-50 cursor-not-allowed relative">
+        <div class="absolute top-2 right-2 z-10 bg-slate-700/80 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">
+          March 4th
+        </div>
+        <div
+          class="h-[80px] lg:h-[120px] bg-cover bg-center flex items-end p-3 lg:p-4 relative grayscale"
+          style="background-image: url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&h=300&fit=crop')"
+        >
+          <div class="absolute inset-0 bg-gradient-to-b from-transparent to-slate-800/85"></div>
+          <span class="relative text-white font-semibold text-xs lg:text-[15px] line-clamp-2">Scenario Planner</span>
+        </div>
+      </div>
+
+      <!-- Template Vault - LOCKED -->
+      <div class="bg-white rounded-xl overflow-hidden border border-slate-200 opacity-50 cursor-not-allowed relative">
+        <div class="absolute top-2 right-2 z-10 bg-slate-700/80 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">
+          March 4th
+        </div>
+        <div
+          class="h-[80px] lg:h-[120px] bg-cover bg-center flex items-end p-3 lg:p-4 relative grayscale"
+          style="background-image: url('https://images.unsplash.com/photo-1568992687947-868a62a9f521?w=400&h=300&fit=crop')"
+        >
+          <div class="absolute inset-0 bg-gradient-to-b from-transparent to-slate-800/85"></div>
+          <span class="relative text-white font-semibold text-xs lg:text-[15px] line-clamp-2">Template Vault</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quote of the Day -->
+    <div class="bg-gradient-to-r from-[#0D2C54] to-[#1a3a5c] rounded-2xl px-5 lg:px-8 py-5 lg:py-6 shadow-lg mb-6 lg:mb-8">
+      <div class="flex items-start gap-3 lg:gap-4">
+        <div class="text-3xl lg:text-4xl text-[#0097A9] font-serif leading-none">"</div>
+        <div class="flex-1">
+          <p class="text-sm lg:text-lg italic text-white/90 leading-relaxed mb-2 lg:mb-3">
+            You can't read the label from inside the jar.
+          </p>
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-1">
+            <span class="text-xs lg:text-sm font-medium text-[#0097A9]">— Unknown</span>
+            <span class="text-[10px] text-white/40 uppercase tracking-wider">Quote of the Day</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- March Forth Section -->
+    <div class="bg-gradient-to-br from-amber-50 to-amber-50/30 border border-amber-200/50 rounded-2xl p-6 lg:p-8 text-center">
+      <div class="flex items-center justify-center gap-2 mb-4">
+        <span class="text-amber-600 text-xl">📅</span>
+        <h2 class="text-xl lg:text-2xl font-bold text-[#0D2C54]">What's Coming March 4th</h2>
+      </div>
+      <p class="text-base lg:text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto mb-6">
+        On March 4th, we <strong class="text-[#0D2C54]">March Forth</strong> — giving full access to all 6 strategic tools, the Template Vault, and a founding member pricing opportunity.
+      </p>
+      <div class="flex flex-wrap justify-center gap-4 lg:gap-8">
+        <div class="flex items-center gap-2 text-slate-600 text-sm">
+          <span class="text-[#0097A9]">✓</span>
+          Full access to all 6 tools
+        </div>
+        <div class="flex items-center gap-2 text-slate-600 text-sm">
+          <span class="text-[#0097A9]">✓</span>
+          Template Vault with 100+ resources
+        </div>
+        <div class="flex items-center gap-2 text-slate-600 text-sm">
+          <span class="text-[#0097A9]">✓</span>
+          Founding member pricing locked in
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Feedback Modal -->
+  <div id="modalOverlay" class="fixed inset-0 bg-black/40 z-[100] hidden" onclick="closeFeedback()"></div>
+  <div id="feedbackModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl p-6 lg:p-8 w-[90%] max-w-md z-[101] shadow-2xl hidden">
+    <div class="flex justify-between items-center mb-5">
+      <h3 class="text-xl font-bold text-[#0D2C54]">Send Feedback</h3>
+      <button onclick="closeFeedback()" class="w-9 h-9 bg-slate-100 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-200 text-xl">
+        ×
+      </button>
+    </div>
+    <p class="text-slate-500 text-sm mb-4 leading-relaxed">
+      Your feedback directly shapes The Nonprofit Edge. What worked? What felt off? What would make you use this regularly?
+    </p>
+    <textarea 
+      id="feedbackText" 
+      placeholder="Share your thoughts..."
+      class="w-full min-h-[150px] p-4 border border-slate-200 rounded-lg text-sm resize-y mb-5 focus:outline-none focus:border-[#0097A9]"
+    ></textarea>
+    <button 
+      onclick="sendFeedback()"
+      class="w-full py-3.5 bg-[#0097A9] hover:bg-[#008999] text-white rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
+    >
+      ✉️ Send to Lyn
+    </button>
+  </div>
+
+  <script>
+    function openFeedback() {
+      document.getElementById('modalOverlay').classList.remove('hidden');
+      document.getElementById('feedbackModal').classList.remove('hidden');
+    }
+
+    function closeFeedback() {
+      document.getElementById('modalOverlay').classList.add('hidden');
+      document.getElementById('feedbackModal').classList.add('hidden');
+    }
+
+    function sendFeedback() {
+      const text = document.getElementById('feedbackText').value;
+      const subject = encodeURIComponent('Insider Circle Feedback - The Nonprofit Edge');
+      const body = encodeURIComponent(text || 'Hi Lyn,\n\nHere\'s my feedback on Ask the Professor:\n\n');
+      window.location.href = `mailto:lyn@thepivotalgroup.com?subject=${subject}&body=${body}`;
+      closeFeedback();
+    }
+  </script>
+
+</body>
+</html>
