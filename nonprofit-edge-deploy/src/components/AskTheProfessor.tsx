@@ -701,7 +701,7 @@ const AskTheProfessor: React.FC<AskTheProfessorProps> = ({ user, onNavigate }) =
             display: inline !important;
           }
           .questions-grid {
-            grid-template-columns: repeat(4, 1fr) !important;
+            grid-template-columns: repeat(3, 1fr) !important;
             gap: 16px !important;
             padding: 0 !important;
           }
