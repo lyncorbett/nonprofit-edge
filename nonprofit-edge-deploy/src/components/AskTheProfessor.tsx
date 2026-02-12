@@ -91,6 +91,7 @@ const AskTheProfessor: React.FC<AskTheProfessorProps> = ({ user, onNavigate }) =
 
   // Fetch conversation history
   const fetchConversations = async () => {
+    console.log("Fetching conversations for user:", user?.id);
     if (!user?.id) return;
     
     const { data } = await supabase
