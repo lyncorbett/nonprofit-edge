@@ -109,7 +109,7 @@ const AskTheProfessor: React.FC<AskTheProfessorProps> = ({ user, onNavigate }) =
         id: conv.id,
         created_at: conv.created_at,
         messages: conv.messages || [],
-        preview: conv.messages?.[0]?.content?.substring(0, 60) || 'New conversation'
+        preview: conv.messages?.find(m => m.role === 'user')?.content?.substring(0, 60) || 'New conversation'
       }));
       setConversations(formatted);
     }
