@@ -48,13 +48,6 @@ const SUGGESTED_QUESTIONS = [
     color: '#0D2C54'
   },
   {
-    icon: Target,
-    category: 'STRATEGIC PLANNING',
-    question: 'What makes a strategic plan actually work?',
-    color: '#0097A9'
-  },
-  {
-    icon: DollarSign,
     category: 'FUNDRAISING',
     question: 'How do I approach a major donor who has stopped giving?',
     color: '#D4A84B'
