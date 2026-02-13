@@ -24,8 +24,12 @@ const plans = [
 ];
 
 const SignUp: React.FC<SignUpProps> = ({ onSignUpSuccess, onNavigate }) => {
-  const [step, setStep] = useState<'plan' | 'details'>('plan');
-  const [selectedPlan, setSelectedPlan] = useState('professional');
+  // Check for insider plan in URL (e.g., /signup?plan=insider)
+  const urlParams = new URLSearchParams(window.location.search);
+  const planFromUrl = urlParams.get('plan');
+  const isInsider = planFromUrl === 'insider';
+  const [step, setStep] = useState<'plan' | 'details'>(isInsider ? 'details' : 'plan');
+  const [selectedPlan, setSelectedPlan] = useState(isInsider ? 'insider' : 'professional');
   const [fullName, setFullName] = useState('');
   const [organization, setOrganization] = useState('');
   const [email, setEmail] = useState('');
