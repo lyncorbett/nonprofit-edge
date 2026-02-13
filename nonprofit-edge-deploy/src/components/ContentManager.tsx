@@ -8,19 +8,16 @@
  * - Get content suggestions
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { supabase } from '../lib/supabase';
 
 // Brand colors
 const NAVY = '#0D2C54';
 const TEAL = '#0097A9';
 
-// Supabase client (you'll import from your existing setup)
-// import { supabase } from '../lib/supabase';
-
 interface ContentManagerProps {
-  supabase: any; // Your Supabase client
-  onNavigate: (page: string) => void;
-  onLogout: () => void;
+  onNavigate?: (page: string) => void;
+  onLogout?: () => void;
 }
 
 type TabType = 'resources' | 'quotes' | 'events' | 'analytics';
@@ -62,7 +59,7 @@ interface Event {
   status: string;
 }
 
-const ContentManager: React.FC<ContentManagerProps> = ({ supabase, onNavigate, onLogout }) => {
+const ContentManager: React.FC<ContentManagerProps> = ({ onNavigate, onLogout }) => {
   const [activeTab, setActiveTab] = useState<TabType>('resources');
   const [resources, setResources] = useState<Resource[]>([]);
   const [quotes, setQuotes] = useState<Quote[]>([]);
@@ -73,8 +70,10 @@ const ContentManager: React.FC<ContentManagerProps> = ({ supabase, onNavigate, o
   const [editingItem, setEditingItem] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
+  const [isDragging, setIsDragging] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
 
   // Categories for resources
   const resourceCategories = [
@@ -123,10 +122,26 @@ const ContentManager: React.FC<ContentManagerProps> = ({ supabase, onNavigate, o
     setLoading(false);
   };
 
-  // File upload handler
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  // File upload handler - works for both input change and drag & drop
+  const processFileUpload = async (file: File) => {
     if (!file) return;
+
+    // Validate file type
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'application/zip'
+    ];
+    
+    if (!allowedTypes.includes(file.type)) {
+      alert(`File type not supported: ${file.type || 'unknown'}. Please upload PDF, Word, Excel, PowerPoint, or ZIP files.`);
+      return;
+    }
 
     setUploading(true);
     try {
@@ -137,9 +152,23 @@ const ContentManager: React.FC<ContentManagerProps> = ({ supabase, onNavigate, o
 
       const { error: uploadError } = await supabase.storage
         .from('content')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        if (uploadError.message?.includes('bucket') || uploadError.message?.includes('not found')) {
+          alert('Upload failed: The "content" storage bucket may not exist in Supabase. Go to Supabase → Storage → New Bucket → name it "content" and make it public.');
+        } else if (uploadError.message?.includes('policy') || uploadError.message?.includes('permission')) {
+          alert('Upload failed: Storage permissions issue. Check your Supabase Storage policies allow uploads.');
+        } else {
+          alert(`Upload failed: ${uploadError.message}`);
+        }
+        setUploading(false);
+        return;
+      }
 
       // Get public URL
       const { data: urlData } = supabase.storage
@@ -160,12 +189,51 @@ const ContentManager: React.FC<ContentManagerProps> = ({ supabase, onNavigate, o
         featured: false
       });
       setShowAddModal(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload error:', error);
-      alert('Upload failed. Please try again.');
+      alert(`Upload failed: ${error?.message || 'Please try again.'}`);
     }
     setUploading(false);
   };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) await processFileUpload(file);
+    // Reset input so same file can be re-selected
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  // Drag & drop handlers
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Only set false if leaving the drop zone entirely
+    if (e.currentTarget === e.target) {
+      setIsDragging(false);
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      await processFileUpload(files[0]);
+    }
+  }, []);
 
   // Save resource
   const saveResource = async (resource: Partial<Resource>) => {
@@ -449,6 +517,44 @@ const ContentManager: React.FC<ContentManagerProps> = ({ supabase, onNavigate, o
                   {uploading ? '⏳ Uploading...' : '📤 Upload Resource'}
                 </button>
               </div>
+            </div>
+
+            {/* Drag & Drop Zone */}
+            <div
+              ref={dropZoneRef}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              onClick={() => !uploading && fileInputRef.current?.click()}
+              style={{
+                border: isDragging ? `3px dashed ${TEAL}` : '3px dashed #d1d5db',
+                borderRadius: '12px',
+                padding: '32px',
+                marginBottom: '24px',
+                textAlign: 'center',
+                background: isDragging ? 'rgba(0, 151, 169, 0.05)' : '#fafafa',
+                cursor: uploading ? 'wait' : 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              {uploading ? (
+                <>
+                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>⏳</div>
+                  <p style={{ color: NAVY, fontWeight: 600, marginBottom: '4px' }}>Uploading...</p>
+                </>
+              ) : isDragging ? (
+                <>
+                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>📥</div>
+                  <p style={{ color: TEAL, fontWeight: 600, marginBottom: '4px' }}>Drop your file here!</p>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>📁</div>
+                  <p style={{ color: NAVY, fontWeight: 600, marginBottom: '4px' }}>Drag & drop files here, or click to browse</p>
+                  <p style={{ color: '#94a3b8', fontSize: '14px' }}>Supports PDF, Word, Excel, PowerPoint, ZIP</p>
+                </>
+              )}
             </div>
 
             {/* Filters */}
