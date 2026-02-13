@@ -98,22 +98,28 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onNavigate, onLogout })
     setLoading(true);
     try {
       if (activeTab === 'resources') {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('resources')
           .select('*')
           .order('created_at', { ascending: false });
+        if (error) {
+          console.error('Resources load error:', error);
+          showToast(`Failed to load resources: ${error.message}`, 'error');
+        }
         setResources(data || []);
       } else if (activeTab === 'quotes') {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('daily_quotes')
           .select('*')
           .order('created_at', { ascending: false });
+        if (error) console.error('Quotes load error:', error);
         setQuotes(data || []);
       } else if (activeTab === 'events') {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('events')
           .select('*')
           .order('date', { ascending: true });
+        if (error) console.error('Events load error:', error);
         setEvents(data || []);
       }
     } catch (error) {
