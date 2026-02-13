@@ -24,7 +24,7 @@ type TabType = 'resources' | 'quotes' | 'events' | 'analytics';
 
 interface Resource {
   id: string;
-  name: string;
+  title: string;
   category: string;
   description: string;
   file_url: string;
@@ -163,7 +163,7 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onNavigate, onLogout })
     );
     if (existingDuplicate) {
       const confirmUpload = window.confirm(
-        `A resource with the filename "${file.name}" already exists ("${existingDuplicate.name}").\n\nDo you want to upload it anyway?`
+        `A resource with the filename "${file.name}" already exists ("${existingDuplicate.title}").\n\nDo you want to upload it anyway?`
       );
       if (!confirmUpload) return;
     }
@@ -208,7 +208,7 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onNavigate, onLogout })
         file_url: urlData.publicUrl,
         file_name: file.name,
         file_size: file.size,
-        name: file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
+        title: file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
         category: 'Templates',
         description: '',
         tier_access: 'All',
@@ -267,7 +267,7 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onNavigate, onLogout })
     try {
       if (editingItem?.isNew) {
         const { error } = await supabase.from('resources').insert([{
-          name: resource.name,
+          title: resource.title,
           category: resource.category,
           description: resource.description,
           file_url: resource.file_url,
@@ -279,14 +279,14 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onNavigate, onLogout })
           download_count: 0
         }]);
         if (error) throw error;
-        showToast(`✅ "${resource.name}" saved to Resource Library!`, 'success');
+        showToast(`✅ "${resource.title}" saved to Resource Library!`, 'success');
       } else {
         const { error } = await supabase
           .from('resources')
           .update(resource)
           .eq('id', editingItem.id);
         if (error) throw error;
-        showToast(`✅ "${resource.name}" updated!`, 'success');
+        showToast(`✅ "${resource.title}" updated!`, 'success');
       }
       setShowAddModal(false);
       setEditingItem(null);
@@ -385,7 +385,7 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onNavigate, onLogout })
 
   // Filter resources
   const filteredResources = resources.filter(r => {
-    const matchesSearch = r.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = r.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           r.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === 'all' || r.category === filterCategory;
     return matchesSearch && matchesCategory;
@@ -705,7 +705,7 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onNavigate, onLogout })
                        resource.category === 'Leadership Guides' ? '🧭' : '🗂️'}
                     </div>
                     <h3 style={{ fontSize: '16px', fontWeight: 600, color: NAVY, marginBottom: '8px' }}>
-                      {resource.name}
+                      {resource.title}
                     </h3>
                     <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '12px', lineHeight: 1.5 }}>
                       {resource.description || 'No description'}
@@ -1131,7 +1131,7 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onNavigate, onLogout })
                             }}>
                               #{index + 1}
                             </span>
-                            {resource.name}
+                            {resource.title}
                           </span>
                           <span style={{ fontWeight: 600, color: TEAL }}>{resource.download_count}</span>
                         </div>
@@ -1242,8 +1242,8 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onNavigate, onLogout })
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: 500 }}>Name</label>
                   <input
                     type="text"
-                    value={editingItem?.name || ''}
-                    onChange={e => setEditingItem({ ...editingItem, name: e.target.value })}
+                    value={editingItem?.title || ''}
+                    onChange={e => setEditingItem({ ...editingItem, title: e.target.value })}
                     style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e5e7eb' }}
                     required
                   />
