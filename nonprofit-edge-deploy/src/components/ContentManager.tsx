@@ -200,18 +200,34 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onNavigate, onLogout })
         .from('content')
         .getPublicUrl(filePath);
 
+      // AI categorization for single file
+      let aiMeta: any = {};
+      try {
+        const catResponse = await fetch('/api/categorize-resources', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filenames: [file.name] })
+        });
+        if (catResponse.ok) {
+          const catData = await catResponse.json();
+          aiMeta = catData.results?.[0] || {};
+        }
+      } catch (err) {
+        console.error('AI categorization failed, using defaults:', err);
+      }
+
       showToast(`✅ "${file.name}" uploaded successfully! Fill in the details below.`, 'success');
 
-      // Open modal with file info pre-filled
+      // Open modal with AI-categorized info pre-filled
       setEditingItem({
         isNew: true,
         file_url: urlData.publicUrl,
         file_name: file.name,
         file_size: file.size,
-        title: file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
-        category: 'Templates',
-        description: '',
-        tier_access: 'All',
+        title: aiMeta.title || file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
+        category: aiMeta.category || 'Templates',
+        description: aiMeta.description || '',
+        tier_access: aiMeta.tier_access || 'All',
         tags: [],
         featured: false
       });
@@ -262,29 +278,53 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onNavigate, onLogout })
     if (files.length === 1) {
       await processFileUpload(files[0]);
     } else {
-      // Multi-file upload
+      // Multi-file upload with AI categorization
       setUploading(true);
+      showToast(`🤖 Analyzing ${files.length} files with AI...`, 'success');
+
+      // Filter valid files first
+      const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'application/zip'
+      ];
+      const validFiles = files.filter(f => allowedTypes.includes(f.type));
+      const skippedCount = files.length - validFiles.length;
+
+      if (validFiles.length === 0) {
+        showToast('No supported file types found. Use PDF, Word, Excel, PowerPoint, or ZIP.', 'error');
+        setUploading(false);
+        return;
+      }
+
+      // Get AI categorization for all files at once
+      let aiResults: any[] = [];
+      try {
+        const catResponse = await fetch('/api/categorize-resources', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filenames: validFiles.map(f => f.name) })
+        });
+        if (catResponse.ok) {
+          const catData = await catResponse.json();
+          aiResults = catData.results || [];
+        }
+      } catch (err) {
+        console.error('AI categorization failed, using defaults:', err);
+      }
+
+      // Upload each file with AI metadata
       let successCount = 0;
       let failCount = 0;
 
-      for (const file of files) {
+      for (let i = 0; i < validFiles.length; i++) {
+        const file = validFiles[i];
         try {
-          const allowedTypes = [
-            'application/pdf',
-            'application/msword',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'application/vnd.ms-excel',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'application/vnd.ms-powerpoint',
-            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-            'application/zip'
-          ];
-
-          if (!allowedTypes.includes(file.type)) {
-            failCount++;
-            continue;
-          }
-
           const fileExt = file.name.split('.').pop();
           const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
           const filePath = `resources/${fileName}`;
@@ -302,14 +342,17 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onNavigate, onLogout })
             .from('content')
             .getPublicUrl(filePath);
 
+          // Use AI metadata if available, otherwise defaults
+          const aiMeta = aiResults.find(r => r.filename === file.name) || {};
+
           const { error: insertError } = await supabase.from('resources').insert([{
-            title: file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
-            category: 'Templates',
-            description: '',
+            title: aiMeta.title || file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
+            category: aiMeta.category || 'Templates',
+            description: aiMeta.description || '',
             file_url: urlData.publicUrl,
             file_name: file.name,
             file_size: file.size,
-            tier_access: 'All',
+            tier_access: aiMeta.tier_access || 'All',
             tags: [],
             featured: false,
             download_count: 0
@@ -328,11 +371,10 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onNavigate, onLogout })
       setUploading(false);
       loadData();
 
-      if (failCount === 0) {
-        showToast(`✅ ${successCount} files uploaded successfully!`, 'success');
-      } else {
-        showToast(`✅ ${successCount} uploaded, ⚠️ ${failCount} failed. Check file types.`, 'warning');
-      }
+      let message = `✅ ${successCount} files uploaded & auto-categorized!`;
+      if (failCount > 0) message += ` ⚠️ ${failCount} failed.`;
+      if (skippedCount > 0) message += ` ⏭️ ${skippedCount} skipped (unsupported type).`;
+      showToast(message, failCount > 0 ? 'warning' : 'success');
     }
   }, [resources]);
 
