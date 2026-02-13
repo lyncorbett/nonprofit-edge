@@ -75,10 +75,7 @@
       </div>
 
       <!-- Ask the Professor Card - ACTIVE -->
-      <a 
-        href="/ask-the-professor/use"
-        class="bg-gradient-to-br from-[#0D2C54] to-[#164677] rounded-2xl p-4 lg:p-5 text-white flex flex-col hover:-translate-y-0.5 hover:shadow-xl transition-all cursor-pointer no-underline"
-      >
+      <div class="bg-gradient-to-br from-[#0D2C54] to-[#164677] rounded-2xl p-4 lg:p-5 text-white flex flex-col">
         <div class="text-[11px] uppercase tracking-widest opacity-85 mb-3 lg:mb-4 font-semibold flex items-center gap-2">
           <span class="text-[#0097A9]">✨</span> Ask the Professor
           <span class="ml-auto bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded">READY</span>
@@ -86,13 +83,24 @@
         <p class="text-sm lg:text-base leading-relaxed flex-1 mb-4 lg:mb-6">
           Your personal nonprofit leadership advisor, available 24/7. Get strategic guidance tailored to your challenges.
         </p>
-        <div class="flex items-center justify-between gap-2 bg-white/20 border border-white/30 rounded-lg px-4 py-3 text-sm font-medium">
-          <span class="flex items-center gap-2">
-            💬 Start a Conversation
-          </span>
-          <span>→</span>
+        <div class="flex flex-col gap-2">
+          <a 
+            href="/ask-the-professor/use"
+            class="flex items-center justify-between gap-2 bg-white/20 border border-white/30 rounded-lg px-4 py-3 text-white text-sm font-medium hover:bg-white/30 transition-colors no-underline"
+          >
+            <span class="flex items-center gap-2">
+              💬 Start a Conversation
+            </span>
+            <span>→</span>
+          </a>
+          <a 
+            href="/signup?plan=insider"
+            class="flex items-center justify-center gap-2 bg-[#0097A9] rounded-lg px-4 py-2.5 text-white text-xs font-medium hover:bg-[#008999] transition-colors no-underline"
+          >
+            New here? Create Free Account
+          </a>
         </div>
-      </a>
+      </div>
     </div>
 
     <!-- Your Tools Section -->
