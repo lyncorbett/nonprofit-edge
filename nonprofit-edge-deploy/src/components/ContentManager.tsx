@@ -256,11 +256,85 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onNavigate, onLogout })
     e.stopPropagation();
     setIsDragging(false);
 
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length === 0) return;
+
+    if (files.length === 1) {
       await processFileUpload(files[0]);
+    } else {
+      // Multi-file upload
+      setUploading(true);
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const file of files) {
+        try {
+          const allowedTypes = [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-powerpoint',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'application/zip'
+          ];
+
+          if (!allowedTypes.includes(file.type)) {
+            failCount++;
+            continue;
+          }
+
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+          const filePath = `resources/${fileName}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from('content')
+            .upload(filePath, file, { cacheControl: '3600', upsert: false });
+
+          if (uploadError) {
+            failCount++;
+            continue;
+          }
+
+          const { data: urlData } = supabase.storage
+            .from('content')
+            .getPublicUrl(filePath);
+
+          const { error: insertError } = await supabase.from('resources').insert([{
+            title: file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
+            category: 'Templates',
+            description: '',
+            file_url: urlData.publicUrl,
+            file_name: file.name,
+            file_size: file.size,
+            tier_access: 'All',
+            tags: [],
+            featured: false,
+            download_count: 0
+          }]);
+
+          if (insertError) {
+            failCount++;
+          } else {
+            successCount++;
+          }
+        } catch {
+          failCount++;
+        }
+      }
+
+      setUploading(false);
+      loadData();
+
+      if (failCount === 0) {
+        showToast(`✅ ${successCount} files uploaded successfully!`, 'success');
+      } else {
+        showToast(`✅ ${successCount} uploaded, ⚠️ ${failCount} failed. Check file types.`, 'warning');
+      }
     }
-  }, []);
+  }, [resources]);
 
   // Save resource
   const saveResource = async (resource: Partial<Resource>) => {
