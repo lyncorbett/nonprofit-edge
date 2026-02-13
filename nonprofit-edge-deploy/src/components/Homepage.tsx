@@ -1,542 +1,660 @@
 /**
- * Homepage - The Nonprofit Edge
- * Updated: Feb 6, 2026
- * - Fixed Ask the Professor links to /ask-the-professor/use
- * - All links use onNavigate for SPA routing (no full page reloads)
- * - Fixed pricing to $97/$197/$397
+ * THE NONPROFIT EDGE - Homepage Component
+ * 
+ * A bold, editorial-inspired homepage that positions strategic clarity as the 
+ * competitive advantage for nonprofit leaders.
  */
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react';
 
-const NAVY = '#0D2C54'
-const TEAL = '#0097A9'
+// Brand colors
+const NAVY = '#1a365d';
+const NAVY_DEEP = '#0f1a2e';
+const TEAL = '#00a0b0';
+const TEAL_LIGHT = '#e6f7f9';
 
 interface HomepageProps {
-  onNavigate?: (page: string) => void
+  onNavigate?: (page: string) => void;
 }
 
 const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [billingAnnual, setBillingAnnual] = useState(false);
 
-  const handleNavigate = (path: string) => {
-    // Handle anchor links (scroll to section)
-    if (path.startsWith('#')) {
-      const el = document.getElementById(path.slice(1))
-      if (el) el.scrollIntoView({ behavior: 'smooth' })
-      return
-    }
-    // Handle external links
-    if (path.startsWith('http') || path.startsWith('mailto:')) {
-      window.open(path, '_blank')
-      return
-    }
-    // SPA navigation
-    if (onNavigate) {
-      onNavigate(path)
-    } else {
-      window.location.href = path
-    }
-  }
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const tools = [
-    { 
-      image: '/tool-strategic.jpg',
-      title: 'Strategic Plan Analysis', 
-      desc: 'Diagnose your current plan in minutes with scores & specific fixes.',
-      link: '/strategic-plan-checkup'
+    {
+      name: 'Strategic Plan Check-Up',
+      description: 'Identify exactly where your strategy breaks down—and fix it.',
+      icon: '🎯',
+      image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=600&h=400&fit=crop'
     },
-    { 
-      image: '/tool-grant.jpg',
-      title: 'Grant Review', 
-      desc: 'Win more grants with expert scoring, comments, and funder-ready polish.',
-      link: '/grant-review'
+    {
+      name: 'Board Assessment',
+      description: 'Transform passive board members into engaged champions.',
+      icon: '📊',
+      image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=400&fit=crop'
     },
-    { 
-      image: '/tool-scenario.jpg',
-      title: 'Scenario Planning', 
-      desc: 'Stress-test strategy with clear "what-if" scenarios before risks hit.',
-      link: '/scenario-planner'
+    {
+      name: 'Scenario Planner',
+      description: 'Stress-test your organization against multiple futures.',
+      icon: '🔮',
+      image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=400&fit=crop'
     },
-    { 
-      image: '/tool-ceo.jpg',
-      title: 'CEO Evaluation', 
-      desc: 'Build stronger leadership with fair, confidential performance reviews.',
-      link: '/ceo-evaluation'
+    {
+      name: 'Grant Review',
+      description: 'Expert AI analysis of your proposals before you submit.',
+      icon: '📝',
+      image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&h=400&fit=crop'
     },
-    { 
-      image: '/board-hero.jpg',
-      title: 'Board Assessment', 
-      desc: 'Strengthen governance with measurable board practices & next steps.',
-      link: '/board-assessment'
+    {
+      name: 'CEO Evaluation',
+      description: 'Fair, effective leadership assessment frameworks.',
+      icon: '⭐',
+      image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=600&h=400&fit=crop'
     },
-    { 
-      image: '/tool-resources.jpg',
-      title: 'Member Resources', 
-      desc: 'Access templates, guides, and trainings—new tools added each month.',
-      link: '/resources'
-    },
-  ]
+    {
+      name: 'Template Vault',
+      description: '147 battle-tested templates from successful nonprofits.',
+      icon: '🗂️',
+      image: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=600&h=400&fit=crop'
+    }
+  ];
+
+  const logos = [
+    'Aspiranet',
+    'SD Workforce Partnership', 
+    'San Diego Museum of Art',
+    'American Red Cross'
+  ];
 
   return (
-    <div className="min-h-screen">
-      {/* ==================== HEADER ==================== */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="flex items-center justify-between" style={{ height: '120px' }}>
-            <button onClick={() => handleNavigate('/')} className="flex items-center border-none bg-transparent cursor-pointer p-0">
-              <img 
-                src="/logo.svg" 
-                alt="The Nonprofit Edge" 
-                style={{ width: '280px', height: 'auto' }}
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/logo.jpg'
-                }}
-              />
-            </button>
-
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-8">
-              <button onClick={() => handleNavigate('/why-we-exist')} className="text-gray-600 hover:text-gray-900 font-medium transition-colors bg-transparent border-none cursor-pointer text-base">
-                Why We Exist
-              </button>
-              <button onClick={() => handleNavigate('#tools-section')} className="text-gray-600 hover:text-gray-900 font-medium transition-colors bg-transparent border-none cursor-pointer text-base">
-                Tools
-              </button>
-              <button onClick={() => handleNavigate('#pricing-section')} className="text-gray-600 hover:text-gray-900 font-medium transition-colors bg-transparent border-none cursor-pointer text-base">
-                Pricing
-              </button>
-              <button 
-                onClick={() => handleNavigate('/login')}
-                className="px-5 py-2.5 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity border-none cursor-pointer text-base"
-                style={{ backgroundColor: TEAL }}
-              >
-                Sign In
-              </button>
-            </nav>
-
-            {/* Mobile Menu Button */}
-            <button 
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-gray-600 hover:text-gray-900 bg-transparent border-none cursor-pointer"
-            >
-              {mobileMenuOpen ? (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-              ) : (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16"/>
-                </svg>
-              )}
-            </button>
-          </div>
-
-          {/* Mobile Menu */}
-          {mobileMenuOpen && (
-            <div className="md:hidden pt-4 pb-2 border-t border-gray-100 mt-4">
-              <div className="flex flex-col space-y-3">
-                <button onClick={() => { handleNavigate('/why-we-exist'); setMobileMenuOpen(false); }} className="py-2 text-gray-600 hover:text-gray-900 font-medium bg-transparent border-none cursor-pointer text-left text-base">
-                  Why We Exist
-                </button>
-                <button onClick={() => { handleNavigate('#tools-section'); setMobileMenuOpen(false); }} className="py-2 text-gray-600 hover:text-gray-900 font-medium bg-transparent border-none cursor-pointer text-left text-base">
-                  Tools
-                </button>
-                <button onClick={() => { handleNavigate('#pricing-section'); setMobileMenuOpen(false); }} className="py-2 text-gray-600 hover:text-gray-900 font-medium bg-transparent border-none cursor-pointer text-left text-base">
-                  Pricing
-                </button>
-                <button 
-                  onClick={() => { handleNavigate('/login'); setMobileMenuOpen(false); }}
-                  className="py-2.5 px-4 text-white rounded-lg font-semibold text-center border-none cursor-pointer text-base"
-                  style={{ backgroundColor: TEAL }}
-                >
-                  Sign In
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </header>
-
-      {/* ==================== MAIN CONTENT ==================== */}
-      <div className="pt-32">
-        {/* Hero Section */}
-        <section className="py-16 md:py-20 px-6" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #e6f7f9 100%)' }}>
-          <div className="max-w-6xl mx-auto">
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div>
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-6 leading-tight" style={{ color: NAVY }}>
-                  Your Mission Deserves More Than Hope—
-                  <span style={{ color: TEAL, fontStyle: 'italic' }}>It Needs an Edge.</span>
-                </h1>
-                <p className="text-lg text-gray-600 mb-8">
-                  The strategic toolkit behind $100M+ in nonprofit funding. Join 800+ leaders who've stopped guessing and started winning.
-                </p>
-                <div className="flex flex-wrap gap-4">
-                  <button 
-                    onClick={() => handleNavigate('/signup')}
-                    className="px-6 py-3 text-base font-semibold text-white rounded-lg transition hover:opacity-90 hover:shadow-lg border-none cursor-pointer"
-                    style={{ backgroundColor: TEAL }}
-                  >
-                    Start Your Free Trial
-                  </button>
-                  <button 
-                    onClick={() => handleNavigate('#tools-section')}
-                    className="px-6 py-3 text-base font-semibold rounded-lg border-2 border-gray-300 hover:border-gray-400 transition flex items-center gap-2 bg-white cursor-pointer"
-                    style={{ color: NAVY }}
-                  >
-                    <span className="w-5 h-5 bg-gray-800 rounded-full flex items-center justify-center text-white text-xs">▶</span>
-                    See How It Works
-                  </button>
-                </div>
-              </div>
-              
-              <div className="flex justify-center md:justify-start md:-ml-8">
-                <div className="overflow-hidden" style={{ width: '100%', maxWidth: '550px' }}>
-                  <img 
-                    src="/hero-image.png"
-                    alt="Nonprofit leader"
-                    className="w-full h-auto object-contain scale-110"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Trust Bar */}
-        <section className="py-10 px-6 bg-white border-b border-gray-100">
-          <div className="max-w-5xl mx-auto text-center">
-            <div className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-6">
-              Trusted by teams at
-            </div>
-            <div className="flex justify-center">
-              <img 
-                src="/trusted-logos.png" 
-                alt="Trusted by Salvation Army, YMCA, American Red Cross, San Diego Zoo"
-                className="h-16 md:h-20 lg:h-24 object-contain"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* Tools Section */}
-        <section className="py-16 px-6 bg-gray-50 scroll-mt-24" id="tools-section">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-extrabold mb-3" style={{ color: NAVY }}>
-                Stop Guessing. Start Knowing.
-              </h2>
-              <p className="text-lg text-gray-600">
-                Professional-grade tools that transform how nonprofits lead, govern, and grow.
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-6">
-              {tools.map((tool, idx) => (
-                <button 
-                  key={idx}
-                  onClick={() => handleNavigate(tool.link)}
-                  className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all group border border-gray-100 text-left cursor-pointer p-0"
-                >
-                  <div className="h-36 overflow-hidden">
-                    <img 
-                      src={tool.image}
-                      alt={tool.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                  <div className="p-5">
-                    <h3 className="text-base font-bold mb-2 text-white rounded px-3 py-2" style={{ backgroundColor: NAVY }}>
-                      {tool.title}
-                    </h3>
-                    <p className="text-sm text-gray-500 mb-3">{tool.desc}</p>
-                    <span className="text-sm font-semibold" style={{ color: TEAL }}>
-                      Find out more →
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Ask the Professor / Why We Exist Section */}
-        <section className="py-16 px-6 bg-white scroll-mt-24" id="why-section">
-          <div className="max-w-5xl mx-auto">
-            <div className="grid md:grid-cols-2 gap-10 items-center">
-              <div className="relative flex justify-center">
-                <div className="rounded-2xl overflow-hidden bg-gray-100" style={{ maxWidth: '400px' }}>
-                  <img 
-                    src="/lyn-corbett.jpg"
-                    alt="Dr. Lyn Corbett"
-                    className="w-full h-auto object-cover"
-                  />
-                </div>
-                <div 
-                  className="absolute left-1/2 -translate-x-1/2 rounded-xl py-3 px-4 text-center text-white text-sm font-semibold"
-                  style={{ backgroundColor: NAVY, maxWidth: '320px', bottom: '-16px' }}
-                >
-                  Over 25 Years of Nonprofit Experience
-                </div>
-              </div>
-              
-              <div>
-                <h2 className="text-3xl font-extrabold mb-2" style={{ color: NAVY }}>
-                  Ask the Professor
-                </h2>
-                <p className="text-lg mb-4" style={{ color: TEAL }}>
-                  Like having a $500/hour consultant — available 24/7.
-                </p>
-                <p className="text-gray-600 mb-5 leading-relaxed">
-                  Get expert strategic advice trained on Dr. Lyn Corbett's 25+ years of nonprofit consulting — real frameworks that have helped take organizations to the next level.
-                </p>
-                
-                <div className="mb-5">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
-                    Questions Leaders Are Asking:
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-start gap-2 text-gray-600 text-sm">
-                      <span style={{ color: TEAL }}>→</span>
-                      "How do I transition my board from operational to strategic?"
-                    </div>
-                    <div className="flex items-start gap-2 text-gray-600 text-sm">
-                      <span style={{ color: TEAL }}>→</span>
-                      "Should we accept this major restricted gift?"
-                    </div>
-                    <div className="flex items-start gap-2 text-gray-600 text-sm">
-                      <span style={{ color: TEAL }}>→</span>
-                      "My board chair and ED had a major blow up. What's the best approach?"
-                    </div>
-                  </div>
-                </div>
-                
-                <button
-                  onClick={() => handleNavigate('/ask-the-professor')}
-                  className="inline-block px-6 py-3 text-base font-semibold text-white rounded-lg transition hover:opacity-90 border-none cursor-pointer"
-                  style={{ backgroundColor: NAVY }}
-                >
-                  Ask Your First Question — Free
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Free Assessment CTA */}
-        <section className="py-12 px-6 bg-gray-100">
-          <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-white" style={{ fontFamily: '"Plus Jakarta Sans", sans-serif' }}>
+      
+      {/* Navigation */}
+      <nav 
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          isScrolled ? 'backdrop-blur-lg bg-white/95 shadow-sm' : 'bg-transparent'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
             <div 
-              className="inline-block px-3 py-1 rounded text-xs font-bold mb-4"
-              style={{ backgroundColor: NAVY, color: 'white' }}
+              className="text-xl font-extrabold tracking-tight cursor-pointer"
+              style={{ color: NAVY }}
+              onClick={() => onNavigate?.('home')}
             >
-              FREE ASSESSMENT
-            </div>
-            <h2 className="text-2xl md:text-3xl font-extrabold mb-3" style={{ color: NAVY }}>
-              Find the ONE Thing Holding Your Organization Back
-            </h2>
-            <p className="text-gray-600 mb-4">
-              Every nonprofit has ONE thing holding back their next breakthrough. Discover yours in 3 minutes — no login required.
-            </p>
-            <button
-              onClick={() => handleNavigate('/assessment')}
-              className="inline-block px-6 py-3 text-base font-semibold rounded-lg transition hover:opacity-90 border-none cursor-pointer"
-              style={{ backgroundColor: TEAL, color: 'white' }}
-            >
-              Take the Free Assessment →
-            </button>
-          </div>
-        </section>
-
-        {/* Pricing Section */}
-        <section className="py-16 px-6 bg-white scroll-mt-32" id="pricing-section">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-extrabold mb-3" style={{ color: NAVY }}>
-                Simple, Transparent Pricing
-              </h2>
-              <p className="text-lg text-gray-600">
-                Start free. Upgrade when ready. Cancel anytime.
-              </p>
+              The Nonprofit <span style={{ color: TEAL }}>Edge</span>
             </div>
 
-            <div className="grid md:grid-cols-4 gap-5">
-              {/* Essential */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-6">
-                <h3 className="text-lg font-bold mb-2" style={{ color: NAVY }}>Essential</h3>
-                <div className="text-3xl font-extrabold mb-1" style={{ color: NAVY }}>$79<span className="text-sm font-normal text-gray-500">/mo</span></div>
-                <div className="text-xs font-semibold mb-5" style={{ color: TEAL }}>Founding Member Rate</div>
-                <ul className="space-y-2 mb-6 text-sm">
-                  <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> 1 person</li>
-                  <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> 10 assessments/month</li>
-                  <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> 100 Ask the Professor/month</li>
-                  <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> Full Resource Library</li>
-                </ul>
-                <button 
-                  onClick={() => handleNavigate('/signup')}
-                  className="block w-full py-2.5 text-center text-sm font-semibold rounded-lg border border-gray-200 hover:border-gray-300 transition bg-white cursor-pointer"
-                  style={{ color: NAVY }}
-                >
-                  Start 3-Day Trial
-                </button>
-              </div>
-
-              {/* Professional - Popular */}
-              <div className="bg-white border-2 rounded-2xl p-6 relative shadow-lg" style={{ borderColor: TEAL }}>
-                <div 
-                  className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-bold text-white"
-                  style={{ backgroundColor: TEAL }}
-                >
-                  MOST POPULAR
-                </div>
-                <h3 className="text-lg font-bold mb-2" style={{ color: NAVY }}>Professional</h3>
-                <div className="text-3xl font-extrabold mb-1" style={{ color: NAVY }}>$159<span className="text-sm font-normal text-gray-500">/mo</span></div>
-                <div className="text-xs font-semibold mb-5" style={{ color: TEAL }}>Founding Member Rate</div>
-                <ul className="space-y-2 mb-6 text-sm">
-                  <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> Up to 5 team members</li>
-                  <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> 25 assessments/month</li>
-                  <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> Unlimited Ask the Professor</li>
-                  <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> Full Resource Library</li>
-                </ul>
-                <button 
-                  onClick={() => handleNavigate('/signup')}
-                  className="block w-full py-2.5 text-center text-sm font-semibold text-white rounded-lg transition hover:opacity-90 border-none cursor-pointer"
-                  style={{ backgroundColor: TEAL }}
-                >
-                  Start 3-Day Trial
-                </button>
-              </div>
-
-              {/* Premium */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-6">
-                <h3 className="text-lg font-bold mb-2" style={{ color: NAVY }}>Premium</h3>
-                <div className="text-3xl font-extrabold mb-1" style={{ color: NAVY }}>$329<span className="text-sm font-normal text-gray-500">/mo</span></div>
-                <div className="text-xs font-semibold mb-5" style={{ color: TEAL }}>Founding Member Rate</div>
-                <ul className="space-y-2 mb-6 text-sm">
-                  <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> Everything in Professional</li>
-                  <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> Up to 10 team members</li>
-                  <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> Unlimited assessments</li>
-                  <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> Monthly coaching call</li>
-                </ul>
-                <button 
-                  onClick={() => handleNavigate('/signup')}
-                  className="block w-full py-2.5 text-center text-sm font-semibold rounded-lg border border-gray-200 hover:border-gray-300 transition bg-white cursor-pointer"
-                  style={{ color: NAVY }}
-                >
-                  Start 3-Day Trial
-                </button>
-              </div>
-
-              {/* Enterprise */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-6">
-                <h3 className="text-lg font-bold mb-2" style={{ color: NAVY }}>Enterprise</h3>
-                <div className="text-3xl font-extrabold mb-1" style={{ color: NAVY }}>Let's Talk</div>
-                <div className="text-xs font-semibold mb-5" style={{ color: TEAL }}>Custom solutions</div>
-                <ul className="space-y-2 mb-6 text-sm">
-                  <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> Everything in Premium</li>
-                  <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> Unlimited users</li>
-                  <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> Custom integrations</li>
-                  <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> Dedicated success manager</li>
-                </ul>
-                <button 
-                  onClick={() => handleNavigate('mailto:lyn@thepivotalgroup.com')}
-                  className="block w-full py-2.5 text-center text-sm font-semibold rounded-lg border border-gray-200 hover:border-gray-300 transition bg-white cursor-pointer"
-                  style={{ color: NAVY }}
-                >
-                  Contact Sales
-                </button>
-              </div>
-            </div>
-
-            <p className="text-center mt-8 text-sm text-gray-500">
-              🔒 <strong className="text-gray-700">Founding Member Rate:</strong> Lock in these prices forever. When we raise rates, yours stays the same.
-            </p>
-          </div>
-        </section>
-      </div>
-
-      {/* ==================== FOOTER ==================== */}
-      <footer style={{ backgroundColor: NAVY }} className="text-white">
-        <div className="max-w-6xl mx-auto px-6 py-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-            {/* Brand */}
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <img 
-                  src="/logo.svg" 
-                  alt="The Nonprofit Edge" 
-                  className="h-14 w-auto brightness-0 invert"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/logo.jpg'
-                  }}
-                />
-                <span className="font-bold text-xl">The Nonprofit Edge</span>
-              </div>
-              <p className="text-gray-300 text-sm mb-4">
-                AI-powered strategic tools for nonprofit leaders. From complexity to clarity.
-              </p>
-              <p className="text-gray-400 text-sm">
-                A product of The Pivotal Group Consultants Inc.
-              </p>
-            </div>
-
-            {/* Tools */}
-            <div>
-              <h4 className="font-bold text-lg mb-4">Tools</h4>
-              <ul className="space-y-3">
-                <li><button onClick={() => handleNavigate('/ask-the-professor')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Ask the Professor</button></li>
-                <li><button onClick={() => handleNavigate('/grant-review')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Grant Review</button></li>
-                <li><button onClick={() => handleNavigate('/board-assessment')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Board Assessment</button></li>
-                <li><button onClick={() => handleNavigate('/strategic-plan-checkup')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Strategic Plan Analysis</button></li>
-                <li><button onClick={() => handleNavigate('/ceo-evaluation')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">CEO Evaluation</button></li>
-              </ul>
-            </div>
-
-            {/* Company */}
-            <div>
-              <h4 className="font-bold text-lg mb-4">Company</h4>
-              <ul className="space-y-3">
-                <li><button onClick={() => handleNavigate('/why-we-exist')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Why We Exist</button></li>
-                <li><button onClick={() => handleNavigate('#pricing-section')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Pricing</button></li>
-                <li><a href="mailto:lyn@thepivotalgroup.com" className="text-gray-300 hover:text-white text-sm transition-colors">Contact</a></li>
-                <li><a href="https://thepivotalgroup.com" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white text-sm transition-colors">The Pivotal Group</a></li>
-              </ul>
-            </div>
-
-            {/* Account */}
-            <div>
-              <h4 className="font-bold text-lg mb-4">Account</h4>
-              <ul className="space-y-3">
-                <li><button onClick={() => handleNavigate('/login')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Sign In</button></li>
-                <li><button onClick={() => handleNavigate('/signup')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Start Free Trial</button></li>
-                <li><button onClick={() => handleNavigate('/dashboard')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Member Dashboard</button></li>
-              </ul>
-              <button 
-                onClick={() => handleNavigate('/signup')}
-                className="mt-6 inline-block px-5 py-2.5 text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity border-none cursor-pointer"
-                style={{ backgroundColor: TEAL }}
+            <div className="hidden md:flex items-center gap-8">
+              <a href="#tools" className="text-gray-600 hover:text-gray-900 font-medium text-sm transition">Tools</a>
+              <a href="#pricing" className="text-gray-600 hover:text-gray-900 font-medium text-sm transition">Pricing</a>
+              <a href="#about" className="text-gray-600 hover:text-gray-900 font-medium text-sm transition">About</a>
+              <button
+                onClick={() => onNavigate?.('login')}
+                className="px-5 py-2 rounded-lg font-semibold text-sm text-white transition hover:opacity-90"
+                style={{ background: NAVY }}
               >
-                Get Started Free →
+                Member Login
               </button>
             </div>
           </div>
         </div>
+      </nav>
 
-        {/* Bottom Bar */}
-        <div className="border-t border-gray-700">
-          <div className="max-w-6xl mx-auto px-6 py-6">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <p className="text-gray-400 text-sm">© 2026 The Nonprofit Edge. All rights reserved.</p>
+      {/* Hero Section */}
+      <section className="pt-28 pb-20 px-6" style={{ background: `linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)` }}>
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <div 
+                className="inline-block text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-6"
+                style={{ background: TEAL_LIGHT, color: TEAL }}
+              >
+                For Nonprofit Leaders Who Think Strategically
+              </div>
+              
+              <h1 
+                className="text-5xl lg:text-6xl font-extrabold leading-tight mb-6"
+                style={{ color: NAVY }}
+              >
+                Stop Managing Chaos.
+                <br />
+                <span style={{ color: TEAL }}>Start Leading Change.</span>
+              </h1>
+              
+              <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+                The Nonprofit Edge gives you AI-powered strategic tools, expert frameworks, 
+                and on-demand coaching—so you can focus on impact, not firefighting.
+              </p>
+
+              <div className="flex flex-wrap gap-4 mb-12">
+                <button
+                  onClick={() => onNavigate?.('signup')}
+                  className="px-8 py-4 rounded-xl font-bold text-white text-lg transition hover:opacity-90 hover:shadow-lg"
+                  style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #122443 100%)` }}
+                >
+                  Start Free Trial
+                </button>
+                <button
+                  onClick={() => onNavigate?.('demo')}
+                  className="px-8 py-4 rounded-xl font-bold text-lg transition hover:bg-gray-100"
+                  style={{ color: NAVY, border: `2px solid ${NAVY}` }}
+                >
+                  Watch Demo
+                </button>
+              </div>
+
+              {/* Social Proof */}
               <div className="flex items-center gap-6">
-                <button onClick={() => handleNavigate('/privacy')} className="text-gray-400 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Privacy Policy</button>
-                <button onClick={() => handleNavigate('/terms')} className="text-gray-400 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Terms of Service</button>
+                <div className="flex -space-x-2">
+                  {[1,2,3,4,5].map((i) => (
+                    <div 
+                      key={i}
+                      className="w-10 h-10 rounded-full border-2 border-white flex items-center justify-center text-white text-xs font-bold"
+                      style={{ background: i % 2 === 0 ? TEAL : NAVY }}
+                    >
+                      {['LC', 'MR', 'JK', 'AB', 'SG'][i-1]}
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <div className="font-bold" style={{ color: NAVY }}>847+ organizations served</div>
+                  <div className="text-sm text-gray-500">$100M+ in funding secured</div>
+                </div>
               </div>
             </div>
+
+            {/* Hero Image */}
+            <div className="relative">
+              <div 
+                className="absolute -top-4 -left-4 w-full h-full rounded-2xl"
+                style={{ background: `linear-gradient(135deg, ${TEAL}20 0%, ${NAVY}20 100%)` }}
+              />
+              <img 
+                src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=600&fit=crop"
+                alt="Nonprofit leaders collaborating"
+                className="relative rounded-2xl shadow-2xl w-full"
+              />
+              
+              {/* Floating Stats Card */}
+              <div 
+                className="absolute -bottom-6 -left-6 bg-white rounded-xl p-4 shadow-xl border border-gray-100"
+              >
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl"
+                    style={{ background: TEAL_LIGHT }}
+                  >
+                    🎓
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold" style={{ color: NAVY }}>92%</div>
+                    <div className="text-xs text-gray-500">Strategy Score Improvement</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Logo Bar */}
+      <section className="py-12 px-6 border-y border-gray-100">
+        <div className="max-w-7xl mx-auto">
+          <p className="text-center text-sm text-gray-400 uppercase tracking-widest mb-8">
+            Trusted by leading nonprofits
+          </p>
+          <div className="flex justify-center items-center gap-12 flex-wrap opacity-60">
+            {logos.map((logo, i) => (
+              <div key={i} className="text-lg font-bold text-gray-400">{logo}</div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Problem Section */}
+      <section className="py-20 px-6">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 
+            className="text-4xl font-extrabold mb-6"
+            style={{ color: NAVY }}
+          >
+            You Didn't Become a Nonprofit Leader to Push Paper
+          </h2>
+          <p className="text-xl text-gray-600 mb-12 leading-relaxed">
+            Yet here you are—drowning in board reports, grant applications, strategic plans that 
+            gather dust, and evaluations that go nowhere. Sound familiar?
+          </p>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              { icon: '😰', problem: 'Reactive Leadership', stat: '73% of nonprofit leaders feel like they\'re constantly putting out fires' },
+              { icon: '📉', problem: 'Strategic Drift', stat: '68% of strategic plans are abandoned within 18 months' },
+              { icon: '🤷', problem: 'Board Disengagement', stat: '61% of board members are "passive" or "disengaged"' }
+            ].map((item, i) => (
+              <div key={i} className="bg-gray-50 rounded-2xl p-6 text-left">
+                <div className="text-4xl mb-4">{item.icon}</div>
+                <h3 className="text-lg font-bold mb-2" style={{ color: NAVY }}>{item.problem}</h3>
+                <p className="text-sm text-gray-600">{item.stat}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Tools Section */}
+      <section id="tools" className="py-20 px-6" style={{ background: `linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)` }}>
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <div 
+              className="inline-block text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-4"
+              style={{ background: TEAL_LIGHT, color: TEAL }}
+            >
+              Your Strategic Toolkit
+            </div>
+            <h2 
+              className="text-4xl font-extrabold mb-4"
+              style={{ color: NAVY }}
+            >
+              Six Tools. One Constraint. Total Clarity.
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Every tool is designed around the ONE Thing philosophy—identify your 
+              primary constraint and eliminate it.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {tools.map((tool, i) => (
+              <div 
+                key={i}
+                className="bg-white rounded-2xl overflow-hidden border border-gray-200 hover:shadow-xl hover:border-transparent transition-all cursor-pointer group"
+              >
+                <div className="h-48 overflow-hidden">
+                  <img 
+                    src={tool.image}
+                    alt={tool.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+                <div className="p-6">
+                  <div className="text-3xl mb-3">{tool.icon}</div>
+                  <h3 className="text-xl font-bold mb-2" style={{ color: NAVY }}>{tool.name}</h3>
+                  <p className="text-gray-600">{tool.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Ask the Professor Section */}
+      <section className="py-20 px-6 text-white" style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #122443 100%)` }}>
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div 
+                  className="w-14 h-14 rounded-xl flex items-center justify-center text-3xl"
+                  style={{ background: TEAL }}
+                >
+                  🎓
+                </div>
+                <div>
+                  <div className="text-sm text-gray-400 uppercase tracking-widest">AI-Powered Coaching</div>
+                  <div className="text-2xl font-bold">Ask the Professor</div>
+                </div>
+              </div>
+              
+              <h2 className="text-4xl font-extrabold mb-6">
+                Expert Guidance.
+                <br />
+                <span style={{ color: TEAL }}>On Demand.</span>
+              </h2>
+              
+              <p className="text-xl text-gray-300 mb-8 leading-relaxed">
+                Imagine having a PhD-level nonprofit strategist available 24/7. Ask about 
+                board dynamics, strategic pivots, funding strategies, or leadership challenges. 
+                Get thoughtful, research-backed responses—not generic advice.
+              </p>
+
+              <div className="flex items-center gap-4 mb-8">
+                <img 
+                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face"
+                  alt="Dr. Lyn Corbett"
+                  className="w-16 h-16 rounded-full border-2"
+                  style={{ borderColor: TEAL }}
+                />
+                <div>
+                  <div className="font-bold">Trained by Dr. Lyn Corbett</div>
+                  <div className="text-sm text-gray-400">PhD, 15+ years as nonprofit ED, 847+ orgs consulted</div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => onNavigate?.('signup')}
+                className="px-8 py-4 rounded-xl font-bold text-lg transition hover:opacity-90"
+                style={{ background: TEAL }}
+              >
+                Try Ask the Professor →
+              </button>
+            </div>
+
+            {/* Chat Preview */}
+            <div className="bg-white/10 rounded-2xl p-6 backdrop-blur">
+              <div className="space-y-4">
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-xs font-bold text-gray-700">YOU</div>
+                  <div className="flex-1 bg-white/10 rounded-xl p-4 text-sm">
+                    Our board chair keeps micromanaging operations. How do I address this without damaging our relationship?
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-lg" style={{ background: TEAL }}>🎓</div>
+                  <div className="flex-1 bg-white/20 rounded-xl p-4 text-sm">
+                    This is one of the most common governance challenges. The key is reframing the conversation from "boundaries" to "impact." Here's a framework I've used with dozens of EDs...
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-20 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <div 
+              className="inline-block text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-4"
+              style={{ background: TEAL_LIGHT, color: TEAL }}
+            >
+              Founding Member Pricing
+            </div>
+            <h2 
+              className="text-4xl font-extrabold mb-4"
+              style={{ color: NAVY }}
+            >
+              Lock In Your Rate Forever
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
+              Join as a founding member and keep your rate—even when prices increase.
+            </p>
+
+            {/* Billing Toggle */}
+            <div className="flex items-center justify-center gap-4 mb-12">
+              <span className={`font-medium ${!billingAnnual ? 'text-gray-900' : 'text-gray-400'}`}>Monthly</span>
+              <button
+                onClick={() => setBillingAnnual(!billingAnnual)}
+                className="w-14 h-8 rounded-full p-1 transition"
+                style={{ background: billingAnnual ? TEAL : '#e5e7eb' }}
+              >
+                <div 
+                  className={`w-6 h-6 rounded-full bg-white shadow transition-transform ${
+                    billingAnnual ? 'translate-x-6' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+              <span className={`font-medium ${billingAnnual ? 'text-gray-900' : 'text-gray-400'}`}>
+                Annual <span className="text-green-600 text-sm">(Save 20%)</span>
+              </span>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {/* Essential */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-8">
+              <h3 className="text-lg font-bold mb-2" style={{ color: NAVY }}>Essential</h3>
+              <p className="text-sm text-gray-500 mb-6">For individual leaders</p>
+              <div className="mb-6">
+                <span className="text-4xl font-extrabold" style={{ color: NAVY }}>
+                  ${billingAnnual ? '66' : '79'}
+                </span>
+                <span className="text-gray-500">/month</span>
+                {billingAnnual && <div className="text-sm text-gray-400">billed annually</div>}
+              </div>
+              <ul className="space-y-3 mb-8">
+                {['1 user', 'All 6 strategic tools', '10 Ask the Professor sessions/mo', 'Template Vault access', 'Email support'].map((feature, i) => (
+                  <li key={i} className="flex items-center gap-2 text-sm text-gray-600">
+                    <span style={{ color: TEAL }}>✓</span> {feature}
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => onNavigate?.('signup-essential')}
+                className="w-full py-3 rounded-xl font-bold transition border-2 hover:bg-gray-50"
+                style={{ borderColor: NAVY, color: NAVY }}
+              >
+                Start Free Trial
+              </button>
+            </div>
+
+            {/* Professional - Most Popular */}
+            <div 
+              className="rounded-2xl p-8 text-white relative"
+              style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #122443 100%)` }}
+            >
+              <div 
+                className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-xs font-bold"
+                style={{ background: TEAL }}
+              >
+                MOST POPULAR
+              </div>
+              <h3 className="text-lg font-bold mb-2">Professional</h3>
+              <p className="text-sm text-gray-400 mb-6">For teams up to 5</p>
+              <div className="mb-6">
+                <span className="text-4xl font-extrabold">
+                  ${billingAnnual ? '133' : '159'}
+                </span>
+                <span className="text-gray-400">/month</span>
+                {billingAnnual && <div className="text-sm text-gray-400">billed annually</div>}
+              </div>
+              <ul className="space-y-3 mb-8">
+                {['Up to 5 team members', 'Everything in Essential', '25 Ask the Professor sessions/mo', 'Board portal access', 'Priority support'].map((feature, i) => (
+                  <li key={i} className="flex items-center gap-2 text-sm text-gray-300">
+                    <span style={{ color: TEAL }}>✓</span> {feature}
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => onNavigate?.('signup-professional')}
+                className="w-full py-3 rounded-xl font-bold transition hover:opacity-90"
+                style={{ background: TEAL }}
+              >
+                Start Free Trial
+              </button>
+            </div>
+
+            {/* Premium */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-8">
+              <h3 className="text-lg font-bold mb-2" style={{ color: NAVY }}>Premium</h3>
+              <p className="text-sm text-gray-500 mb-6">For larger teams</p>
+              <div className="mb-6">
+                <span className="text-4xl font-extrabold" style={{ color: NAVY }}>
+                  ${billingAnnual ? '274' : '329'}
+                </span>
+                <span className="text-gray-500">/month</span>
+                {billingAnnual && <div className="text-sm text-gray-400">billed annually</div>}
+              </div>
+              <ul className="space-y-3 mb-8">
+                {['Up to 10 team members', 'Everything in Professional', '50 Ask the Professor sessions/mo', 'Monthly strategy call', 'Custom reporting'].map((feature, i) => (
+                  <li key={i} className="flex items-center gap-2 text-sm text-gray-600">
+                    <span style={{ color: TEAL }}>✓</span> {feature}
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => onNavigate?.('signup-premium')}
+                className="w-full py-3 rounded-xl font-bold transition border-2 hover:bg-gray-50"
+                style={{ borderColor: NAVY, color: NAVY }}
+              >
+                Start Free Trial
+              </button>
+            </div>
+          </div>
+
+          <p className="text-center text-sm text-gray-500 mt-8">
+            All plans include a 3-day free trial. No credit card required to start.
+          </p>
+        </div>
+      </section>
+
+      {/* About / Credibility Section */}
+      <section id="about" className="py-20 px-6 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <img 
+                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=600&fit=crop&crop=face"
+                alt="Dr. Lyn Corbett"
+                className="rounded-2xl shadow-xl"
+              />
+            </div>
+            <div>
+              <div 
+                className="inline-block text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-6"
+                style={{ background: TEAL_LIGHT, color: TEAL }}
+              >
+                About the Founder
+              </div>
+              <h2 
+                className="text-4xl font-extrabold mb-6"
+                style={{ color: NAVY }}
+              >
+                Built by Someone Who's Been There
+              </h2>
+              <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+                Dr. Lyn Corbett spent 15+ years as a nonprofit Executive Director before founding 
+                The Pivotal Group Consultants. He's helped 847+ organizations secure over $100M 
+                in funding and develop strategies that actually stick.
+              </p>
+              <p className="text-lg text-gray-600 mb-8 leading-relaxed">
+                The Nonprofit Edge is everything he wished he had as an ED—strategic frameworks, 
+                expert guidance, and tools that respect how busy nonprofit leaders actually work.
+              </p>
+              
+              <div className="grid grid-cols-3 gap-6">
+                {[
+                  { stat: '847+', label: 'Organizations Served' },
+                  { stat: '$100M+', label: 'Funding Secured' },
+                  { stat: 'PhD', label: 'Organizational Leadership' }
+                ].map((item, i) => (
+                  <div key={i}>
+                    <div className="text-2xl font-extrabold" style={{ color: TEAL }}>{item.stat}</div>
+                    <div className="text-sm text-gray-500">{item.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="py-20 px-6 text-white" style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #122443 100%)` }}>
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-4xl font-extrabold mb-6">
+            Ready to Lead with Clarity?
+          </h2>
+          <p className="text-xl text-gray-300 mb-8">
+            Join 847+ nonprofit leaders who've stopped managing chaos and started driving real change.
+          </p>
+          <div className="flex justify-center gap-4 flex-wrap">
+            <button
+              onClick={() => onNavigate?.('signup')}
+              className="px-8 py-4 rounded-xl font-bold text-lg transition hover:opacity-90"
+              style={{ background: TEAL }}
+            >
+              Start Your Free Trial
+            </button>
+            <button
+              onClick={() => onNavigate?.('demo')}
+              className="px-8 py-4 rounded-xl font-bold text-lg transition border-2 border-white/30 hover:bg-white/10"
+            >
+              Schedule a Demo
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Lead Magnet - Core Constraint Assessment */}
+      <section className="py-20 px-6" style={{ background: TEAL_LIGHT }}>
+        <div className="max-w-4xl mx-auto text-center">
+          <div 
+            className="inline-block text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-6"
+            style={{ background: 'white', color: TEAL }}
+          >
+            Free Assessment
+          </div>
+          <h2 
+            className="text-4xl font-extrabold mb-6"
+            style={{ color: NAVY }}
+          >
+            What's Really Holding Your Organization Back?
+          </h2>
+          <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+            Take our 5-minute Core Constraint Assessment and discover the ONE thing 
+            blocking your nonprofit's growth. Get a personalized report with actionable 
+            recommendations—completely free.
+          </p>
+          
+          <div className="bg-white rounded-2xl p-8 shadow-lg max-w-2xl mx-auto">
+            <div className="grid grid-cols-3 gap-6 mb-8">
+              {[
+                { icon: '🎯', label: 'Identify Your Constraint', desc: 'Pinpoint the bottleneck' },
+                { icon: '
+        <div className="max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <div className="text-xl font-extrabold text-white mb-4">
+                The Nonprofit <span style={{ color: TEAL }}>Edge</span>
+              </div>
+              <p className="text-sm">
+                Strategic tools for nonprofit leaders who refuse to settle for "good enough."
+              </p>
+            </div>
+            <div>
+              <h4 className="font-bold text-white mb-4">Tools</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="hover:text-white transition">Strategic Plan Check-Up</a></li>
+                <li><a href="#" className="hover:text-white transition">Board Assessment</a></li>
+                <li><a href="#" className="hover:text-white transition">Scenario Planner</a></li>
+                <li><a href="#" className="hover:text-white transition">Grant Review</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-bold text-white mb-4">Resources</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="hover:text-white transition">Template Vault</a></li>
+                <li><a href="#" className="hover:text-white transition">Book Summaries</a></li>
+                <li><a href="#" className="hover:text-white transition">Blog</a></li>
+                <li><a href="#" className="hover:text-white transition">Events</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-bold text-white mb-4">Company</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="hover:text-white transition">About</a></li>
+                <li><a href="#" className="hover:text-white transition">Contact</a></li>
+                <li><a href="#" className="hover:text-white transition">Privacy Policy</a></li>
+                <li><a href="#" className="hover:text-white transition">Terms of Service</a></li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-gray-800 pt-8 text-sm text-center">
+            © 2025 The Nonprofit Edge. A product of The Pivotal Group Consultants Inc.
           </div>
         </div>
       </footer>
     </div>
-  )
-}
+  );
+};
 
-export default Homepage
+export default Homepage;

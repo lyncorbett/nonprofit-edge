@@ -1,18 +1,6 @@
 import React from 'react';
 
-interface FooterProps {
-  onNavigate?: (route: string) => void;
-}
-
-const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
-  const handleNavigate = (route: string) => {
-    if (onNavigate) {
-      onNavigate(route);
-    } else {
-      window.location.href = route;
-    }
-  };
-
+const Footer: React.FC = () => {
   return (
     <footer className="bg-[#0D2C54] text-white">
       {/* Main Footer */}
@@ -53,12 +41,12 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           <div>
             <h3 className="text-white font-semibold mb-4">Tools</h3>
             <ul className="space-y-3">
-              <li><a href="/strategic-plan-checkup" onClick={(e) => { e.preventDefault(); handleNavigate('/strategic-plan-checkup'); }} className="text-gray-300 hover:text-white text-sm transition-colors cursor-pointer">Strategic Plan Check-Up</a></li>
-              <li><a href="/board-assessment" onClick={(e) => { e.preventDefault(); handleNavigate('/board-assessment'); }} className="text-gray-300 hover:text-white text-sm transition-colors cursor-pointer">Board Assessment</a></li>
-              <li><a href="/ceo-evaluation" onClick={(e) => { e.preventDefault(); handleNavigate('/ceo-evaluation'); }} className="text-gray-300 hover:text-white text-sm transition-colors cursor-pointer">CEO Evaluation</a></li>
-              <li><a href="/scenario-planner" onClick={(e) => { e.preventDefault(); handleNavigate('/scenario-planner'); }} className="text-gray-300 hover:text-white text-sm transition-colors cursor-pointer">PIVOT Scenario Planner</a></li>
-              <li><a href="/grant-review" onClick={(e) => { e.preventDefault(); handleNavigate('/grant-review'); }} className="text-gray-300 hover:text-white text-sm transition-colors cursor-pointer">Grant/RFP Review</a></li>
-              <li><a href="/ask-the-professor" onClick={(e) => { e.preventDefault(); handleNavigate('/ask-the-professor'); }} className="text-gray-300 hover:text-white text-sm transition-colors cursor-pointer">Ask the Professor</a></li>
+              <li><a href="/tools/strategic-plan-checkup" className="text-gray-300 hover:text-white text-sm transition-colors">Strategic Plan Check-Up</a></li>
+              <li><a href="/tools/board-assessment" className="text-gray-300 hover:text-white text-sm transition-colors">Board Assessment</a></li>
+              <li><a href="/tools/ceo-evaluation" className="text-gray-300 hover:text-white text-sm transition-colors">CEO Evaluation</a></li>
+              <li><a href="/tools/scenario-planner" className="text-gray-300 hover:text-white text-sm transition-colors">PIVOT Scenario Planner</a></li>
+              <li><a href="/tools/grant-review" className="text-gray-300 hover:text-white text-sm transition-colors">Grant/RFP Review</a></li>
+              <li><a href="/ask-the-professor" className="text-gray-300 hover:text-white text-sm transition-colors">Ask the Professor</a></li>
             </ul>
           </div>
 
