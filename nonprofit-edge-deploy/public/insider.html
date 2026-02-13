@@ -26,9 +26,9 @@
   <!-- Header -->
   <header class="bg-white border-b border-slate-200 px-4 lg:px-8 sticky top-0 z-50">
     <div class="max-w-6xl mx-auto flex items-center justify-between py-0">
-      <div class="flex items-center gap-4">
-        <img src="https://nonprofit-edge.vercel.app/logo.svg" alt="The Nonprofit Edge" class="w-[320px] h-auto -my-12" />
-        <span class="inline-block bg-amber-100 text-amber-800 text-[11px] font-semibold px-3 py-1 rounded uppercase tracking-wide">
+      <div class="flex items-center gap-2">
+        <img src="https://nonprofit-edge.vercel.app/logo.svg" alt="The Nonprofit Edge" class="w-[320px] h-auto -my-14" />
+        <span class="inline-block bg-amber-100 text-amber-800 text-[10px] font-semibold px-2 py-0.5 rounded uppercase tracking-wide -ml-2">
           Insider Circle
         </span>
       </div>
@@ -187,16 +187,38 @@
       </div>
     </div>
 
-    <!-- Quote of the Day -->
+    <!-- Quote of the Day - Rotates daily -->
+    <script>
+      const quotes = [
+        { text: "You can't read the label from inside the jar.", author: "Unknown" },
+        { text: "Culture eats strategy for breakfast.", author: "Peter Drucker" },
+        { text: "If you want to go fast, go alone. If you want to go far, go together.", author: "African Proverb" },
+        { text: "The best time to plant a tree was 20 years ago. The second best time is now.", author: "Chinese Proverb" },
+        { text: "People don't care how much you know until they know how much you care.", author: "Theodore Roosevelt" },
+        { text: "Begin with the end in mind.", author: "Stephen Covey" },
+        { text: "What gets measured gets managed.", author: "Peter Drucker" },
+        { text: "The most important thing in communication is hearing what isn't said.", author: "Peter Drucker" },
+        { text: "Leadership is not about being in charge. It's about taking care of those in your charge.", author: "Simon Sinek" },
+        { text: "Vision without execution is hallucination.", author: "Thomas Edison" },
+        { text: "The bottleneck is always at the top of the bottle.", author: "Peter Drucker" },
+        { text: "A leader is one who knows the way, goes the way, and shows the way.", author: "John C. Maxwell" },
+        { text: "The greatest leader is not necessarily one who does the greatest things, but one who gets people to do the greatest things.", author: "Ronald Reagan" },
+        { text: "Strategy is about making choices, trade-offs; it's about deliberately choosing to be different.", author: "Michael Porter" },
+      ];
+      const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+      const todaysQuote = quotes[dayOfYear % quotes.length];
+      document.getElementById('quote-text').textContent = todaysQuote.text;
+      document.getElementById('quote-author').textContent = '— ' + todaysQuote.author;
+    </script>
     <div class="bg-gradient-to-r from-[#0D2C54] to-[#1a3a5c] rounded-2xl px-5 lg:px-8 py-5 lg:py-6 shadow-lg mb-6 lg:mb-8">
       <div class="flex items-start gap-3 lg:gap-4">
         <div class="text-3xl lg:text-4xl text-[#0097A9] font-serif leading-none">"</div>
         <div class="flex-1">
-          <p class="text-sm lg:text-lg italic text-white/90 leading-relaxed mb-2 lg:mb-3">
+          <p id="quote-text" class="text-sm lg:text-lg italic text-white/90 leading-relaxed mb-2 lg:mb-3">
             You can't read the label from inside the jar.
           </p>
           <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-1">
-            <span class="text-xs lg:text-sm font-medium text-[#0097A9]">— Unknown</span>
+            <span id="quote-author" class="text-xs lg:text-sm font-medium text-[#0097A9]">— Unknown</span>
             <span class="text-[10px] text-white/40 uppercase tracking-wider">Quote of the Day</span>
           </div>
         </div>
@@ -204,13 +226,16 @@
     </div>
 
     <!-- March Forth Section -->
-    <div class="bg-gradient-to-br from-amber-50 to-amber-50/30 border border-amber-200/50 rounded-2xl p-6 lg:p-8 text-center">
-      <div class="flex items-center justify-center gap-2 mb-4">
-        <span class="text-amber-600 text-xl">📅</span>
+    <div class="bg-gradient-to-br from-[#0097A9]/10 to-[#0097A9]/5 border border-[#0097A9]/20 rounded-2xl p-6 lg:p-8 text-center">
+      <div class="flex items-center justify-center gap-3 mb-4">
+        <div class="bg-[#0D2C54] rounded-lg px-3 py-2 text-center min-w-[48px]">
+          <div class="text-lg font-bold text-white">4</div>
+          <div class="text-[9px] text-white/80 uppercase">Mar</div>
+        </div>
         <h2 class="text-xl lg:text-2xl font-bold text-[#0D2C54]">What's Coming March 4th</h2>
       </div>
       <p class="text-base lg:text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto mb-6">
-        On March 4th, we <strong class="text-[#0D2C54]">March Forth</strong> — giving full access to all 6 strategic tools, the Template Vault, and a founding member pricing opportunity.
+        On March 4th, we <strong class="text-[#0D2C54]">March Forth</strong> — giving full access to all 6 strategic tools, the Template Vault, and other resources. Founding members will receive early access. More to come!
       </p>
       <div class="flex flex-wrap justify-center gap-4 lg:gap-8">
         <div class="flex items-center gap-2 text-slate-600 text-sm">
@@ -223,7 +248,7 @@
         </div>
         <div class="flex items-center gap-2 text-slate-600 text-sm">
           <span class="text-[#0097A9]">✓</span>
-          Founding member pricing locked in
+          Founding member early access
         </div>
       </div>
     </div>
