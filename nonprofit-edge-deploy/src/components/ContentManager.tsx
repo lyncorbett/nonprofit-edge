@@ -123,6 +123,14 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onNavigate, onLogout })
   };
 
   // File upload handler - works for both input change and drag & drop
+  // Toast notification state
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
   const processFileUpload = async (file: File) => {
     if (!file) return;
 
@@ -139,8 +147,19 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onNavigate, onLogout })
     ];
     
     if (!allowedTypes.includes(file.type)) {
-      alert(`File type not supported: ${file.type || 'unknown'}. Please upload PDF, Word, Excel, PowerPoint, or ZIP files.`);
+      showToast(`File type not supported: ${file.type || 'unknown'}. Please upload PDF, Word, Excel, PowerPoint, or ZIP files.`, 'error');
       return;
+    }
+
+    // Check for duplicate by file name
+    const existingDuplicate = resources.find(
+      r => r.file_name?.toLowerCase() === file.name.toLowerCase()
+    );
+    if (existingDuplicate) {
+      const confirmUpload = window.confirm(
+        `A resource with the filename "${file.name}" already exists ("${existingDuplicate.name}").\n\nDo you want to upload it anyway?`
+      );
+      if (!confirmUpload) return;
     }
 
     setUploading(true);
@@ -160,11 +179,11 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onNavigate, onLogout })
       if (uploadError) {
         console.error('Storage upload error:', uploadError);
         if (uploadError.message?.includes('bucket') || uploadError.message?.includes('not found')) {
-          alert('Upload failed: The "content" storage bucket may not exist in Supabase. Go to Supabase → Storage → New Bucket → name it "content" and make it public.');
+          showToast('Upload failed: The "content" storage bucket may not exist in Supabase.', 'error');
         } else if (uploadError.message?.includes('policy') || uploadError.message?.includes('permission')) {
-          alert('Upload failed: Storage permissions issue. Check your Supabase Storage policies allow uploads.');
+          showToast('Upload failed: Storage permissions issue. Check your Supabase Storage policies.', 'error');
         } else {
-          alert(`Upload failed: ${uploadError.message}`);
+          showToast(`Upload failed: ${uploadError.message}`, 'error');
         }
         setUploading(false);
         return;
@@ -174,6 +193,8 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onNavigate, onLogout })
       const { data: urlData } = supabase.storage
         .from('content')
         .getPublicUrl(filePath);
+
+      showToast(`✅ "${file.name}" uploaded successfully! Fill in the details below.`, 'success');
 
       // Open modal with file info pre-filled
       setEditingItem({
@@ -191,7 +212,7 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onNavigate, onLogout })
       setShowAddModal(true);
     } catch (error: any) {
       console.error('Upload error:', error);
-      alert(`Upload failed: ${error?.message || 'Please try again.'}`);
+      showToast(`Upload failed: ${error?.message || 'Please try again.'}`, 'error');
     }
     setUploading(false);
   };
@@ -239,7 +260,7 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onNavigate, onLogout })
   const saveResource = async (resource: Partial<Resource>) => {
     try {
       if (editingItem?.isNew) {
-        await supabase.from('resources').insert([{
+        const { error } = await supabase.from('resources').insert([{
           name: resource.name,
           category: resource.category,
           description: resource.description,
@@ -251,17 +272,22 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onNavigate, onLogout })
           featured: resource.featured,
           download_count: 0
         }]);
+        if (error) throw error;
+        showToast(`✅ "${resource.name}" saved to Resource Library!`, 'success');
       } else {
-        await supabase
+        const { error } = await supabase
           .from('resources')
           .update(resource)
           .eq('id', editingItem.id);
+        if (error) throw error;
+        showToast(`✅ "${resource.name}" updated!`, 'success');
       }
       setShowAddModal(false);
       setEditingItem(null);
       loadData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Save error:', error);
+      showToast(`Save failed: ${error?.message || 'Please try again.'}`, 'error');
     }
   };
 
@@ -1426,6 +1452,33 @@ const ContentManager: React.FC<ContentManagerProps> = ({ onNavigate, onLogout })
           </div>
         </div>
       )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <div style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          padding: '16px 24px',
+          borderRadius: '12px',
+          background: toast.type === 'success' ? '#059669' : toast.type === 'error' ? '#dc2626' : '#d97706',
+          color: 'white',
+          fontWeight: 600,
+          fontSize: '14px',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+          zIndex: 10000,
+          maxWidth: '400px',
+          animation: 'slideIn 0.3s ease'
+        }}>
+          {toast.message}
+        </div>
+      )}
+      <style>{`
+        @keyframes slideIn {
+          from { transform: translateY(20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 };
