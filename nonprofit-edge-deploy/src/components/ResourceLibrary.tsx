@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import { 
   Search, X, MessageSquare, Wrench, FileText, BookOpen, 
   Bookmark, PlayCircle, Users, Award, Download, ChevronRight,
@@ -35,6 +36,8 @@ interface Resource {
   description?: string;
   price?: string;
   partner?: string | null;
+  downloadCount?: number;
+  isFromDb?: boolean;
 }
 
 interface CategoryConfig {
@@ -222,6 +225,56 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [activeSubcategory, setActiveSubcategory] = useState('all');
   const [modalSearchQuery, setModalSearchQuery] = useState('');
+  const [dbResources, setDbResources] = useState<Resource[]>([]);
+  const [loadingResources, setLoadingResources] = useState(true);
+
+  // Load resources from Supabase
+  useEffect(() => {
+    const loadResources = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('resources')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          console.error('Error loading resources:', error);
+          return;
+        }
+
+        if (data) {
+          // Map DB categories to internal type keys
+          const categoryToType: Record<string, string> = {
+            'Templates': 'templates',
+            'Playbooks': 'playbooks',
+            'Book Summaries': 'books',
+            'Leadership Guides': 'guides',
+            'Facilitation Kits': 'kits',
+            'Certifications': 'certs'
+          };
+
+          const mapped: Resource[] = data.map((r: any) => ({
+            name: r.title,
+            type: categoryToType[r.category] || 'templates',
+            url: r.file_url || '#',
+            tags: r.tags || [],
+            description: r.description || '',
+            downloadCount: r.download_count || 0,
+            isFromDb: true
+          }));
+          setDbResources(mapped);
+        }
+      } catch (err) {
+        console.error('Failed to load resources:', err);
+      }
+      setLoadingResources(false);
+    };
+    loadResources();
+  }, []);
+
+  // Merge static resources (tools only) with DB resources
+  const staticTools = resources.filter(r => r.type === 'tools');
+  const allResources = [...staticTools, ...dbResources];
 
   // Navigation helper - uses onNavigate prop from App.tsx
   const navigate = (page: string) => {
@@ -240,7 +293,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
     }
 
     const query = searchQuery.toLowerCase();
-    const matches = resources.filter(r =>
+    const matches = allResources.filter(r =>
       r.name.toLowerCase().includes(query) ||
       r.tags.some(tag => tag.includes(query))
     );
@@ -278,7 +331,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
         : certifications;
     }
 
-    let items = resources.filter(r => r.type === activeModal);
+    let items = allResources.filter(r => r.type === activeModal);
     
     if (activeSubcategory !== 'all') {
       items = items.filter(r =>
@@ -618,15 +671,22 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
                       <a
                         key={idx}
                         href={item.url}
-                        onClick={(e) => { e.preventDefault(); navigate(item.url); }}
+                        onClick={(e) => { 
+                          e.preventDefault(); 
+                          if ((item as any).isFromDb && item.url.startsWith('http')) {
+                            window.open(item.url, '_blank');
+                          } else {
+                            navigate(item.url); 
+                          }
+                        }}
                         className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-[#e6f7f8] transition-colors"
                       >
                         <div>
                           <h4 className="text-sm font-semibold text-[#0D2C54] mb-0.5">{item.name}</h4>
-                          <p className="text-xs text-slate-400">{item.tags.slice(0, 3).join(' • ')}</p>
+                          <p className="text-xs text-slate-400">{item.tags.length > 0 ? item.tags.slice(0, 3).join(' • ') : (item.description || '').slice(0, 60)}</p>
                         </div>
                         <span className="px-3 py-1.5 bg-[#0D2C54] text-white text-xs font-semibold rounded hover:bg-[#0097A9] transition-colors flex-shrink-0">
-                          {activeModal === 'tools' ? 'Open' : 'View'}
+                          {activeModal === 'tools' ? 'Open' : (item as any).isFromDb ? 'Download' : 'View'}
                         </span>
                       </a>
                     ))
@@ -677,7 +737,13 @@ const CategoryCard: React.FC<{
         </div>
         <div>
           <h3 className="text-base font-bold text-[#0D2C54]">{config.label}</h3>
-          <span className="text-xs text-slate-400">{config.count}</span>
+          <span className="text-xs text-slate-400">
+            {(() => {
+              const typeKey = Object.entries(categoryConfig).find(([_, v]) => v.label === config.label)?.[0];
+              const count = typeKey ? allResources.filter(r => r.type === typeKey).length : 0;
+              return `${count} ${config.label.toLowerCase()}`;
+            })()}
+          </span>
         </div>
       </div>
       <p className="text-sm text-slate-500 mb-3 leading-relaxed">{config.description}</p>
