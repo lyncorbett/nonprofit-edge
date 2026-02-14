@@ -69,6 +69,10 @@ const AskTheProfessor: React.FC<AskTheProfessorProps> = ({ user, onNavigate }) =
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [userName, setUserName] = useState(user?.name || 'there');
+  const [sessionStart, setSessionStart] = useState<number | null>(null);
+  const [sessionMinutes, setSessionMinutes] = useState(0);
+  const [sessionEnded, setSessionEnded] = useState(false);
+  const [warningSent, setWarningSent] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -127,11 +131,51 @@ const AskTheProfessor: React.FC<AskTheProfessorProps> = ({ user, onNavigate }) =
     scrollToBottom();
   }, [messages]);
 
+  // Session timer — track elapsed minutes
+  useEffect(() => {
+    if (!sessionStart) return;
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - sessionStart) / 60000);
+      setSessionMinutes(elapsed);
+      
+      // At 45 minutes, inject a warning from the Professor
+      if (elapsed >= 45 && !warningSent && !sessionEnded) {
+        setWarningSent(true);
+        const warningMessage: Message = {
+          id: `warning-${Date.now()}`,
+          role: 'assistant',
+          content: "We've got about 5 minutes left in this session. What's your biggest takeaway, and what's your first move this week?",
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, warningMessage]);
+      }
+      
+      // At 50 minutes, end the session
+      if (elapsed >= 50 && !sessionEnded) {
+        setSessionEnded(true);
+        const closingMessage: Message = {
+          id: `closing-${Date.now()}`,
+          role: 'assistant',
+          content: "That's our time for this session. You've got a plan — now go execute. Start a new session anytime you need me.",
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, closingMessage]);
+        clearInterval(interval);
+      }
+    }, 30000); // Check every 30 seconds
+    
+    return () => clearInterval(interval);
+  }, [sessionStart, warningSent, sessionEnded]);
+
   // Start a new chat
   const startNewChat = () => {
     setMessages([]);
     setCurrentConversationId(null);
     setShowHistory(false);
+    setSessionStart(null);
+    setSessionMinutes(0);
+    setSessionEnded(false);
+    setWarningSent(false);
   };
 
   // Load a conversation from history
@@ -155,7 +199,12 @@ const AskTheProfessor: React.FC<AskTheProfessorProps> = ({ user, onNavigate }) =
 
   // Send message to API
   const sendMessage = async (content: string) => {
-    if (!content.trim() || isLoading) return;
+    if (!content.trim() || isLoading || sessionEnded) return;
+
+    // Start session timer on first message
+    if (!sessionStart) {
+      setSessionStart(Date.now());
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -637,8 +686,9 @@ const AskTheProfessor: React.FC<AskTheProfessorProps> = ({ user, onNavigate }) =
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Ask me anything..."
+              placeholder={sessionEnded ? "Session ended — start a new conversation" : "Ask me anything..."}
               rows={1}
+              disabled={sessionEnded}
               style={{
                 flex: 1,
                 padding: '12px 14px',
@@ -650,18 +700,19 @@ const AskTheProfessor: React.FC<AskTheProfessorProps> = ({ user, onNavigate }) =
                 fontFamily: 'inherit',
                 minHeight: '48px',
                 maxHeight: '120px',
+                opacity: sessionEnded ? 0.5 : 1,
               }}
             />
             <button
               onClick={() => sendMessage(input)}
-              disabled={!input.trim() || isLoading}
+              disabled={!input.trim() || isLoading || sessionEnded}
               style={{
                 padding: '12px 16px',
-                background: !input.trim() || isLoading ? '#94a3b8' : '#0097A9',
+                background: !input.trim() || isLoading || sessionEnded ? '#94a3b8' : '#0097A9',
                 border: 'none',
                 borderRadius: '12px',
                 color: 'white',
-                cursor: !input.trim() || isLoading ? 'not-allowed' : 'pointer',
+                cursor: !input.trim() || isLoading || sessionEnded ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -678,7 +729,7 @@ const AskTheProfessor: React.FC<AskTheProfessorProps> = ({ user, onNavigate }) =
             textAlign: 'center',
             marginTop: '8px',
           }}>
-            AI assistant — please double-check important information.
+            Each coaching session is approximately 45 minutes{sessionStart && !sessionEnded ? ` · ${50 - sessionMinutes} min remaining` : ''}
           </p>
         </div>
       </div>

@@ -42,8 +42,8 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate, supabase, selectedPlan = 'p
 
   const plans = [
     { id: 'essential', name: 'Essential', price: 79, features: ['1 user', '10 assessments/mo', '10 coaching sessions/mo'] },
-    { id: 'professional', name: 'Professional', price: 159, features: ['Up to 5 team members', '25 assessments/mo', '125 coaching sessions/mo'] },
-    { id: 'premium', name: 'Premium', price: 329, features: ['Up to 10 team members', 'Unlimited assessments', 'Unlimited coaching sessions'] }
+    { id: 'professional', name: 'Professional', price: 159, features: ['Up to 5 team members', '25 assessments/mo', '25 coaching sessions per person/mo'] },
+    { id: 'premium', name: 'Premium', price: 329, features: ['Up to 10 team members', 'Unlimited assessments', '500 coaching sessions/mo'] }
   ];
 
   const updateForm = (field: string, value: string) => {

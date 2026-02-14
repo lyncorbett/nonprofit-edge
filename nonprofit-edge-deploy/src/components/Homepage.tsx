@@ -395,7 +395,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
                 <ul className="space-y-2 mb-6 text-sm">
                   <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> Up to 5 team members</li>
                   <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> 25 assessments/mo</li>
-                  <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> 125 coaching sessions/mo</li>
+                  <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> 25 coaching sessions per person/mo</li>
                   <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> Full Resource Library</li>
                 </ul>
                 <button 
@@ -416,7 +416,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
                   <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> Everything in Professional</li>
                   <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> Up to 10 team members</li>
                   <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> Unlimited assessments</li>
-                  <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> Unlimited coaching sessions</li>
+                  <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> 500 coaching sessions/mo</li>
                   <li className="flex items-start gap-2 text-gray-600"><span style={{ color: TEAL }}>✓</span> Monthly coaching call</li>
                 </ul>
                 <button 
