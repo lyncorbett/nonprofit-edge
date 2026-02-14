@@ -73,6 +73,9 @@ const AskTheProfessor: React.FC<AskTheProfessorProps> = ({ user, onNavigate }) =
   const [sessionMinutes, setSessionMinutes] = useState(0);
   const [sessionEnded, setSessionEnded] = useState(false);
   const [warningSent, setWarningSent] = useState(false);
+  const [remainingQueries, setRemainingQueries] = useState<number>(-1);
+  const [showLimitWarning, setShowLimitWarning] = useState(false);
+  const [retrying, setRetrying] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -198,25 +201,30 @@ const AskTheProfessor: React.FC<AskTheProfessorProps> = ({ user, onNavigate }) =
   };
 
   // Send message to API
-  const sendMessage = async (content: string) => {
+  const sendMessage = async (content: string, retryCount = 0) => {
     if (!content.trim() || isLoading || sessionEnded) return;
 
-    // Start session timer on first message
-    if (!sessionStart) {
+    if (!sessionStart && retryCount === 0) {
       setSessionStart(Date.now());
     }
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: content.trim(),
-      timestamp: new Date()
-    };
+    let updatedMessages: Message[];
+    if (retryCount === 0) {
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        role: 'user',
+        content: content.trim(),
+        timestamp: new Date()
+      };
+      updatedMessages = [...messages, userMessage];
+      setMessages(updatedMessages);
+      setInput('');
+    } else {
+      updatedMessages = [...messages];
+    }
 
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
-    setInput('');
     setIsLoading(true);
+    if (retryCount > 0) setRetrying(true);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -228,17 +236,64 @@ const AskTheProfessor: React.FC<AskTheProfessorProps> = ({ user, onNavigate }) =
           messages: updatedMessages.map(m => ({ role: m.role, content: m.content })),
           accessToken: session?.access_token,
           localHour: new Date().getHours(),
-          conversationId: currentConversationId // Pass existing conversation ID if continuing
+          conversationId: currentConversationId
         }),
       });
 
       const data = await response.json();
 
-      if (data.error) throw new Error(data.error);
+      if (!response.ok) {
+        if (response.status === 429) {
+          setMessages([...updatedMessages, {
+            id: (Date.now() + 1).toString(), role: 'assistant',
+            content: data.error || "You've reached your monthly query limit. Upgrade your plan for unlimited access.",
+            timestamp: new Date()
+          }]);
+          return;
+        }
 
-      // Update conversation ID if new one was created
+        if (response.status === 503 && retryCount < 2) {
+          const retryAfter = (data.retryAfter || 5) * 1000;
+          setMessages([...updatedMessages, {
+            id: 'retry-indicator', role: 'assistant',
+            content: "Give me just a moment — I'm processing a lot of questions right now...",
+            timestamp: new Date()
+          }]);
+          await new Promise(resolve => setTimeout(resolve, retryAfter));
+          setMessages(updatedMessages);
+          setIsLoading(false);
+          setRetrying(false);
+          return sendMessage(content, retryCount + 1);
+        }
+
+        if (data.action === 'new_conversation') {
+          setMessages([...updatedMessages, {
+            id: (Date.now() + 1).toString(), role: 'assistant',
+            content: "This has been a great conversation! To keep things running smoothly, let's start a fresh one. Your history is saved — click 'New Chat' to continue.",
+            timestamp: new Date()
+          }]);
+          return;
+        }
+
+        if (response.status === 401) {
+          setMessages([...updatedMessages, {
+            id: (Date.now() + 1).toString(), role: 'assistant',
+            content: "It looks like your session expired. Please refresh the page and sign in again.",
+            timestamp: new Date()
+          }]);
+          return;
+        }
+
+        throw new Error(data.error || 'Something went wrong');
+      }
+
       if (data.conversationId && !currentConversationId) {
         setCurrentConversationId(data.conversationId);
+      }
+
+      if (data.remainingQueries !== undefined && data.remainingQueries > 0) {
+        setRemainingQueries(data.remainingQueries);
+        if (data.remainingQueries <= 10) setShowLimitWarning(true);
       }
 
       const assistantMessage: Message = {
@@ -249,23 +304,18 @@ const AskTheProfessor: React.FC<AskTheProfessorProps> = ({ user, onNavigate }) =
       };
 
       setMessages([...updatedMessages, assistantMessage]);
-      
-      // Refresh history after new message
       fetchConversations();
       
     } catch (error) {
       console.error('Error:', error);
-      setMessages([
-        ...updatedMessages,
-        {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: "I'm having trouble connecting right now. Please try again in a moment.",
-          timestamp: new Date()
-        }
-      ]);
+      setMessages([...updatedMessages, {
+        id: (Date.now() + 1).toString(), role: 'assistant',
+        content: "I'm having trouble connecting right now. Please try again in a moment.",
+        timestamp: new Date()
+      }]);
     } finally {
       setIsLoading(false);
+      setRetrying(false);
     }
   };
 
