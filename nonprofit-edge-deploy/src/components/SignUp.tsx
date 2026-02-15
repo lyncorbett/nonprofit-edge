@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import { supabase } from '../lib/supabase';
 
 const NAVY = '#1a365d';
 const TEAL = '#0097a7';
@@ -11,11 +12,11 @@ const TEAL_LIGHT = '#e0f7fa';
 
 interface SignUpProps {
   onNavigate: (page: string) => void;
-  supabase: any;
+
   selectedPlan?: string;
 }
 
-const SignUp: React.FC<SignUpProps> = ({ onNavigate, supabase, selectedPlan = 'professional' }) => {
+const SignUp: React.FC<SignUpProps> = ({ onNavigate, selectedPlan = 'professional' }) => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
