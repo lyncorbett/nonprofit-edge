@@ -14,7 +14,7 @@ const MAX_TOKENS_FREE = 512;
 // Rough estimate: 1 token ≈ 4 characters
 // Claude Sonnet context window is ~200K tokens
 // We compact at ~60K tokens to leave plenty of room for system prompt + response
-const COMPACT_THRESHOLD_CHARS = 240000; // ~60K tokens
+const COMPACT_THRESHOLD_CHARS = 40000; // ~10K tokens — triggers after ~8-10 exchanges
 const COMPACT_SUMMARY_MAX_TOKENS = 1024;
 
 // Rate limiting per tier (queries per month)
@@ -28,6 +28,12 @@ const TIER_LIMITS = {
 
 // Max messages per conversation before forcing a new conversation
 const MAX_MESSAGES_PER_CONVERSATION = 60; // 30 back-and-forth exchanges
+
+// Session timing (in minutes)
+const SESSION_WRAP_UP_MINUTES = 25;     // Professor starts wrapping up
+const SESSION_SOFT_CLOSE_MINUTES = 30;  // Soft prompt to finish
+const SESSION_HARD_CLOSE_MINUTES = 35;  // Session ends, new session starts
+const SESSION_INACTIVE_GAP_MINUTES = 30; // Inactivity triggers new session
 
 // =============================================================================
 // SUPABASE CLIENT
@@ -590,6 +596,145 @@ async function getUserFromToken(accessToken) {
 
 
 // =============================================================================
+// SESSION MANAGEMENT
+// =============================================================================
+
+/**
+ * Get or create a session for the current conversation
+ * Returns session info including timing state
+ */
+async function getSession(userId, conversationId) {
+  if (!conversationId) return null;
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('professor_sessions')
+      .select('*')
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error || !data) return null;
+    return data;
+  } catch (error) {
+    console.error('Get session error:', error);
+    return null;
+  }
+}
+
+/**
+ * Create a new session
+ */
+async function createSession(userId, conversationId, sessionNumber) {
+  try {
+    const now = new Date().toISOString();
+    const { data, error } = await supabaseAdmin
+      .from('professor_sessions')
+      .insert({
+        user_id: userId,
+        conversation_id: conversationId,
+        session_number: sessionNumber || 1,
+        started_at: now,
+        last_message_at: now,
+        message_count: 0,
+        status: 'active'
+      })
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Create session error:', error);
+      return null;
+    }
+    return data;
+  } catch (error) {
+    console.error('Create session exception:', error);
+    return null;
+  }
+}
+
+/**
+ * Update session with new message
+ */
+async function updateSession(sessionId, messageCount) {
+  try {
+    await supabaseAdmin
+      .from('professor_sessions')
+      .update({
+        last_message_at: new Date().toISOString(),
+        message_count: messageCount
+      })
+      .eq('id', sessionId);
+  } catch (error) {
+    console.error('Update session error:', error);
+  }
+}
+
+/**
+ * Close a session
+ */
+async function closeSession(sessionId) {
+  try {
+    await supabaseAdmin
+      .from('professor_sessions')
+      .update({
+        status: 'completed',
+        ended_at: new Date().toISOString()
+      })
+      .eq('id', sessionId);
+  } catch (error) {
+    console.error('Close session error:', error);
+  }
+}
+
+/**
+ * Check session timing and return the session state
+ * Returns: { session, state, minutesElapsed, shouldStartNew }
+ * state: 'active' | 'wrapping_up' | 'soft_close' | 'ended' | 'new'
+ */
+async function checkSessionState(userId, conversationId) {
+  const existingSession = await getSession(userId, conversationId);
+  const now = new Date();
+
+  // No existing session — create one
+  if (!existingSession) {
+    const newSession = await createSession(userId, conversationId, 1);
+    return { session: newSession, state: 'new', minutesElapsed: 0 };
+  }
+
+  const lastMessageAt = new Date(existingSession.last_message_at);
+  const sessionStart = new Date(existingSession.started_at);
+  const minutesSinceLastMessage = (now - lastMessageAt) / (1000 * 60);
+  const minutesSinceStart = (now - sessionStart) / (1000 * 60);
+
+  // Check inactivity gap — if they've been away 30+ minutes, start new session
+  if (minutesSinceLastMessage >= SESSION_INACTIVE_GAP_MINUTES) {
+    await closeSession(existingSession.id);
+    const newSession = await createSession(userId, conversationId, (existingSession.session_number || 1) + 1);
+    return { session: newSession, state: 'new_after_gap', minutesElapsed: 0 };
+  }
+
+  // Check active session timing
+  if (minutesSinceStart >= SESSION_HARD_CLOSE_MINUTES) {
+    await closeSession(existingSession.id);
+    const newSession = await createSession(userId, conversationId, (existingSession.session_number || 1) + 1);
+    return { session: newSession, state: 'new_after_timeout', minutesElapsed: 0 };
+  }
+
+  if (minutesSinceStart >= SESSION_SOFT_CLOSE_MINUTES) {
+    return { session: existingSession, state: 'soft_close', minutesElapsed: Math.round(minutesSinceStart) };
+  }
+
+  if (minutesSinceStart >= SESSION_WRAP_UP_MINUTES) {
+    return { session: existingSession, state: 'wrapping_up', minutesElapsed: Math.round(minutesSinceStart) };
+  }
+
+  return { session: existingSession, state: 'active', minutesElapsed: Math.round(minutesSinceStart) };
+}
+
+
+// =============================================================================
 // MAIN HANDLER
 // =============================================================================
 
@@ -674,7 +819,28 @@ export default async function handler(req, res) {
     }
 
     // =========================================================================
-    // 5. CHECK CONVERSATION LENGTH — force new conversation if too long
+    // 5. CHECK SESSION TIMING
+    // =========================================================================
+    const sessionState = await checkSessionState(user.id, conversationId);
+    let sessionPrompt = '';
+
+    if (sessionState.state === 'new_after_gap') {
+      sessionPrompt = '\n\n[SYSTEM NOTE: The user has been away for 30+ minutes. This is a new session. Greet them warmly and reference what you discussed last time. Say something like "Good to see you back. Last time we were talking about [topic] — want to pick that up or work on something new?"]';
+    } else if (sessionState.state === 'new_after_timeout') {
+      sessionPrompt = '\n\n[SYSTEM NOTE: The previous session has ended (35 minutes). This is a new session in the same conversation. Naturally transition: "Great session. Ready to dive into something new, or want to keep building on what we just covered?"]';
+    } else if (sessionState.state === 'wrapping_up') {
+      sessionPrompt = '\n\n[SYSTEM NOTE: This session has been going for about 25 minutes. Start naturally wrapping up. After answering their question, summarize the key takeaways and action items from this session. Say something like "We\'ve covered a lot of ground today. Here are your action items..." Do NOT mention time or minutes — just wrap up naturally like a good consultant.]';
+    } else if (sessionState.state === 'soft_close') {
+      sessionPrompt = '\n\n[SYSTEM NOTE: This session has been going for about 30 minutes. After answering their question, give a natural close: "Ready to wrap up, or do you want to keep going? We can always pick this back up." Do NOT mention time or minutes.]';
+    }
+
+    // Update session message count
+    if (sessionState.session) {
+      updateSession(sessionState.session.id, (sessionState.session.message_count || 0) + 1);
+    }
+
+    // =========================================================================
+    // 6. CHECK CONVERSATION LENGTH — force new conversation if too long
     // =========================================================================
     if (finalMessages.length > MAX_MESSAGES_PER_CONVERSATION) {
       return res.status(400).json({
@@ -698,6 +864,9 @@ export default async function handler(req, res) {
     // =========================================================================
     // 7. CALL CLAUDE API
     // =========================================================================
+    // Append session timing prompt if needed
+    const systemWithSession = sessionPrompt ? SYSTEM_PROMPT + sessionPrompt : SYSTEM_PROMPT;
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -708,7 +877,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: CLAUDE_MODEL,
         max_tokens: MAX_TOKENS_RESPONSE,
-        system: SYSTEM_PROMPT,
+        system: systemWithSession,
         messages: finalMessages,
       }),
     });
@@ -773,7 +942,13 @@ export default async function handler(req, res) {
       usage: data.usage,
       conversationId: await savedConversationId,
       compacted: wasCompacted,
-      remainingQueries: usageCheck.remaining > 0 ? usageCheck.remaining - 1 : -1
+      remainingQueries: usageCheck.remaining > 0 ? usageCheck.remaining - 1 : -1,
+      session: {
+        state: sessionState.state,
+        minutesElapsed: sessionState.minutesElapsed,
+        sessionNumber: sessionState.session?.session_number || 1,
+        messageCount: (sessionState.session?.message_count || 0) + 1
+      }
     });
 
   } catch (error) {
