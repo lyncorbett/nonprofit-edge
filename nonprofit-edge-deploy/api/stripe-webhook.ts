@@ -56,11 +56,33 @@ export default async function handler(req: any, res: any) {
       // Get subscription details
       const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
       
-      // Update user's organization with subscription info
+      // Get metadata
       const { plan, billingCycle, userId } = session.metadata || {};
+      const customerEmail = session.customer_email || session.customer_details?.email;
+      
+      // Track discount code if used
+      const discountCode = session.total_details?.breakdown?.discounts?.[0]?.discount?.coupon?.name || null;
       
       if (userId) {
-        // Get user to find their organization
+        // Update profiles table (used by Ask the Professor for tier checks)
+        await supabase
+          .from('profiles')
+          .update({
+            tier: plan,
+            stripe_customer_id: session.customer as string,
+            stripe_subscription_id: subscription.id,
+            subscription_status: subscription.status,
+            billing_cycle: billingCycle,
+            trial_ends_at: subscription.trial_end 
+              ? new Date(subscription.trial_end * 1000).toISOString()
+              : null,
+            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            discount_code_used: discountCode,
+            subscribed_at: new Date().toISOString(),
+          })
+          .eq('id', userId);
+
+        // Also update organizations table if it exists
         const { data: user } = await supabase
           .from('users')
           .select('organization_id')
@@ -83,7 +105,49 @@ export default async function handler(req: any, res: any) {
             })
             .eq('id', user.organization_id);
         }
+      } else if (customerEmail) {
+        // If no userId, try to find by email
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', customerEmail)
+          .single();
+
+        if (profile) {
+          await supabase
+            .from('profiles')
+            .update({
+              tier: plan,
+              stripe_customer_id: session.customer as string,
+              stripe_subscription_id: subscription.id,
+              subscription_status: subscription.status,
+              billing_cycle: billingCycle,
+              trial_ends_at: subscription.trial_end 
+                ? new Date(subscription.trial_end * 1000).toISOString()
+                : null,
+              current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+              discount_code_used: discountCode,
+              subscribed_at: new Date().toISOString(),
+            })
+            .eq('id', profile.id);
+        }
       }
+
+      // Log the subscription event for analytics
+      await supabase
+        .from('subscription_events')
+        .insert({
+          event_type: 'checkout_completed',
+          user_id: userId || null,
+          email: customerEmail,
+          plan,
+          billing_cycle: billingCycle,
+          stripe_subscription_id: subscription.id,
+          discount_code: discountCode,
+          amount: session.amount_total,
+          created_at: new Date().toISOString(),
+        });
+
       break;
     }
 
@@ -91,7 +155,17 @@ export default async function handler(req: any, res: any) {
       const subscription = event.data.object as Stripe.Subscription;
       console.log('Subscription updated:', subscription.id);
 
-      // Update organization subscription status
+      // Update profiles table
+      await supabase
+        .from('profiles')
+        .update({
+          subscription_status: subscription.status,
+          current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+          cancel_at_period_end: subscription.cancel_at_period_end,
+        })
+        .eq('stripe_subscription_id', subscription.id);
+
+      // Update organizations table
       await supabase
         .from('organizations')
         .update({
@@ -107,14 +181,32 @@ export default async function handler(req: any, res: any) {
       const subscription = event.data.object as Stripe.Subscription;
       console.log('Subscription canceled:', subscription.id);
 
-      // Update organization to free/canceled status
+      // Downgrade to free on both tables
+      await supabase
+        .from('profiles')
+        .update({
+          subscription_status: 'canceled',
+          tier: 'free',
+        })
+        .eq('stripe_subscription_id', subscription.id);
+
       await supabase
         .from('organizations')
         .update({
           subscription_status: 'canceled',
-          tier: 'free', // Or handle differently
+          tier: 'free',
         })
         .eq('stripe_subscription_id', subscription.id);
+
+      // Log event
+      await supabase
+        .from('subscription_events')
+        .insert({
+          event_type: 'subscription_canceled',
+          stripe_subscription_id: subscription.id,
+          created_at: new Date().toISOString(),
+        });
+
       break;
     }
 
@@ -122,7 +214,15 @@ export default async function handler(req: any, res: any) {
       const invoice = event.data.object as Stripe.Invoice;
       console.log('Payment succeeded:', invoice.id);
       
-      // Could send a receipt email here
+      // Log for analytics
+      await supabase
+        .from('subscription_events')
+        .insert({
+          event_type: 'payment_succeeded',
+          stripe_subscription_id: invoice.subscription as string,
+          amount: invoice.amount_paid,
+          created_at: new Date().toISOString(),
+        });
       break;
     }
 
@@ -130,8 +230,15 @@ export default async function handler(req: any, res: any) {
       const invoice = event.data.object as Stripe.Invoice;
       console.log('Payment failed:', invoice.id);
       
-      // Update status and potentially send dunning email
+      // Update status to past_due
       if (invoice.subscription) {
+        await supabase
+          .from('profiles')
+          .update({
+            subscription_status: 'past_due',
+          })
+          .eq('stripe_subscription_id', invoice.subscription as string);
+
         await supabase
           .from('organizations')
           .update({
@@ -139,6 +246,16 @@ export default async function handler(req: any, res: any) {
           })
           .eq('stripe_subscription_id', invoice.subscription as string);
       }
+
+      // Log event
+      await supabase
+        .from('subscription_events')
+        .insert({
+          event_type: 'payment_failed',
+          stripe_subscription_id: invoice.subscription as string,
+          amount: invoice.amount_due,
+          created_at: new Date().toISOString(),
+        });
       break;
     }
 
@@ -146,8 +263,14 @@ export default async function handler(req: any, res: any) {
       const subscription = event.data.object as Stripe.Subscription;
       console.log('Trial ending soon:', subscription.id);
       
-      // This fires 3 days before trial ends - send reminder email
-      // You could trigger an email here via your email service
+      // Log event — email trigger can read from this table
+      await supabase
+        .from('subscription_events')
+        .insert({
+          event_type: 'trial_ending',
+          stripe_subscription_id: subscription.id,
+          created_at: new Date().toISOString(),
+        });
       break;
     }
 
