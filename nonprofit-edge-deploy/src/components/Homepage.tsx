@@ -58,7 +58,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
       link: '/scenario-planner'
     },
     {
-      image: '/tool-ceo.jpg',
+      image: '/cert-leadership.jpg',
       title: 'Edge Leadership\nAssessment',
       desc: 'Assess leadership across four dimensions — self, staff, or 180° with your team.',
       link: '/leadership-assessment'
