@@ -533,16 +533,16 @@ const App: React.FC = () => {
         return <StrategicPlanCheckupLanding />;
       
       case '/board-assessment':
-        return <BoardAssessmentLanding onNavigate={navigate} onGetStarted={() => navigate('/board-assessment/use')} />;
+        return <BoardAssessmentLanding onNavigate={navigate} onGetStarted={() => navigate('/signup')} />;
       
       case '/ceo-evaluation':
-        return <CEOEvaluationLanding onNavigate={navigate} onGetStarted={() => navigate('/ceo-evaluation/use')} />;
+        return <CEOEvaluationLanding onNavigate={navigate} onGetStarted={() => navigate('/signup')} />;
       
       case '/scenario-planner':
-        return <ScenarioPlannerLanding onNavigate={navigate} onGetStarted={() => navigate('/scenario-planner/use')} />;
+        return <ScenarioPlannerLanding onNavigate={navigate} onGetStarted={() => navigate('/signup')} />;
       
       case '/grant-review':
-        return <GrantReviewLanding onNavigate={navigate} onGetStarted={() => navigate('/grant-review/use')} />;
+        return <GrantReviewLanding onNavigate={navigate} onGetStarted={() => navigate('/signup')} />;
 
       case '/resources-landing':
         return <ResourcesLanding onNavigate={navigate} onGetStarted={() => navigate('/signup')} />;
