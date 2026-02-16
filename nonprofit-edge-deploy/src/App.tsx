@@ -450,6 +450,7 @@ const App: React.FC = () => {
     const routeMap: Record<string, string> = {
       'dashboard': '/dashboard',
       'library': '/resources',
+      'member-resources': '/resources',
       'events': '/events',
       'settings': '/settings',
       'constraint-assessment': '/constraint-assessment',
@@ -618,20 +619,23 @@ const App: React.FC = () => {
         );
 
       case '/resources':
-        return requireAuth(
+      case '/member-resources':
+        if (!user || !organization) { navigate('/login'); return null; }
+        return (
           <ResourceLibrary 
-            user={{ ...user!, full_name: user!.name }}
-            organization={organization!}
+            user={{ ...user, full_name: user.name }}
+            organization={organization}
             onNavigate={(page: string) => navigate(mapDashboardNavigation(page))}
             onLogout={handleLogout}
           />
         );
 
       case '/events':
-        return requireAuth(
+        if (!user || !organization) { navigate('/login'); return null; }
+        return (
           <EventsCalendar 
-            user={{ ...user!, full_name: user!.name }}
-            organization={organization!}
+            user={{ ...user, full_name: user.name }}
+            organization={organization}
             onNavigate={(page: string) => navigate(mapDashboardNavigation(page))}
             onLogout={handleLogout}
           />
