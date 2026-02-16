@@ -57,17 +57,17 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
       desc: 'Stress-test strategy with clear "what-if" scenarios before risks hit.',
       link: '/scenario-planner'
     },
-    { 
-      image: '/tool-ceo.jpg',
-      title: 'CEO Evaluation', 
-      desc: 'Build stronger leadership with fair, confidential performance reviews.',
-      link: '/ceo-evaluation'
+    {
+      image: '/leadership-hero.jpg',
+      title: 'Edge Leadership Assessment',
+      desc: 'Assess leadership across four dimensions — self, staff, or 180° with your team.',
+      link: '/leadership-assessment'
     },
     { 
-      image: '/board-hero.jpg',
-      title: 'Board Assessment', 
-      desc: 'Strengthen governance with measurable board practices & next steps.',
-      link: '/board-assessment'
+      image: '/tool-ceo.jpg',
+      title: 'CEO Evaluation & Board Assessment', 
+      desc: 'CEO self-assessment, board effectiveness, and board-led CEO evaluation — all in one place.',
+      link: '/ceo-board'
     },
     { 
       image: '/tool-resources.jpg',
