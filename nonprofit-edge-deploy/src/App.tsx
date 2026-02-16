@@ -423,7 +423,8 @@ const App: React.FC = () => {
 
   const requireAuth = (component: React.ReactNode): React.ReactNode => {
     if (!user) {
-      navigate('/login');
+      setCurrentRoute('/login');
+      window.history.replaceState({}, '', '/login');
       return null;
     }
     return component;
