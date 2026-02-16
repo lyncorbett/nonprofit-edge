@@ -449,7 +449,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {/* Welcome */}
           <div className="mb-6 lg:mb-7">
             <h1 className="text-2xl lg:text-[28px] font-bold text-[#0D2C54] mb-1">
-              Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user.name}
+              Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user.name.split(' ')[0]}
             </h1>
             <p className="text-slate-500 text-sm lg:text-[15px]">
               You chose <strong className="text-[#0097A9] font-semibold">Board Engagement</strong> as your focus area
