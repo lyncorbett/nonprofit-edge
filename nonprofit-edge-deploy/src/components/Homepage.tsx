@@ -246,7 +246,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
                     />
                   </div>
                   <div className="p-5">
-                    <h3 className="text-base font-bold mb-2 text-white rounded px-3 py-2" style={{ backgroundColor: NAVY }}>
+                    <h3 className="text-base font-bold mb-2 text-white rounded px-3 py-2" style={{ backgroundColor: NAVY, whiteSpace: 'pre-line', minHeight: '52px', display: 'flex', alignItems: 'center' }}>
                       {tool.title}
                     </h3>
                     <p className="text-sm text-gray-500 mb-3">{tool.desc}</p>
