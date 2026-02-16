@@ -64,7 +64,7 @@ const tools: Tool[] = [
     id: 'leadership-profile',
     name: 'Edge Leadership Assessment', 
     description: 'Assess leadership capacity across four dimensions: Vision & Clarity, People Investment, Radical Ownership, and Growth & Reflection.',
-    href: 'leadership-profile', 
+    href: 'leadership-assessment', 
     img: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop',
     features: ['Assess your own leadership', 'Assess a team member', '180° assessment with employee', 'PDF report with coaching insights']
   },
@@ -88,7 +88,7 @@ const tools: Tool[] = [
     id: 'ceo-board',
     name: 'CEO Evaluation & Board Assessment', 
     description: 'Three governance tools in one place — CEO self-assessment, board effectiveness assessment, and board-led CEO evaluation.',
-    href: 'ceo-board', 
+    href: 'ceo-evaluation', 
     img: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=400&h=300&fit=crop',
     features: ['CEO/ED self-assessment', 'Board effectiveness assessment', 'Board-led CEO evaluation', 'Facilitation guides']
   },
