@@ -78,6 +78,7 @@ import CEOEvaluationLanding from './CEOEvaluationLanding';
 import StrategicPlanCheckupLanding from './StrategicPlanCheckupLanding';
 import CertificationsLanding from './components/CertificationsLanding';
 import ResourcesLanding from './ResourcesLanding';
+import LeadershipAssessmentLanding from './LeadershipAssessmentLanding';
 
 // New Public Page Components
 import AskProfessorFree from './components/AskProfessorFree';
@@ -575,7 +576,7 @@ const App: React.FC = () => {
       // LEADERSHIP ASSESSMENT
       // ============================================
       case '/leadership-assessment':
-        return requireAuth(<LeadershipAssessment onNavigate={navigate} />);
+        return <LeadershipAssessmentLanding onNavigate={navigate} onGetStarted={() => navigate('/signup')} />;
       
       case '/leadership-assessment/report':
         return requireAuth(<LeadershipReport onNavigate={navigate} />);
