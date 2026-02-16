@@ -58,20 +58,20 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
       link: '/scenario-planner'
     },
     {
-      image: '/leadership-hero.jpg',
-      title: 'Edge Leadership Assessment',
+      image: '/tool-ceo.jpg',
+      title: 'Edge Leadership\nAssessment',
       desc: 'Assess leadership across four dimensions — self, staff, or 180° with your team.',
       link: '/leadership-assessment'
     },
     { 
       image: '/tool-ceo.jpg',
-      title: 'CEO Evaluation & Board Assessment', 
+      title: 'Board & CEO\nAssessment', 
       desc: 'CEO self-assessment, board effectiveness, and board-led CEO evaluation — all in one place.',
       link: '/ceo-board'
     },
     { 
       image: '/tool-resources.jpg',
-      title: 'Member Resources', 
+      title: 'Member\nResources', 
       desc: 'Access templates, guides, and trainings—new tools added each month.',
       link: '/resources'
     },
