@@ -72,7 +72,7 @@ const tools: Tool[] = [
     id: 'strategic-plan',
     name: 'Strategic Plan Check-Up', 
     description: 'Diagnose the health of your strategic plan and identify gaps before they become problems.',
-    href: 'strategic-checkup', 
+    href: 'strategic-plan-checkup', 
     img: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop',
     features: ['Plan health score', 'Gap analysis', 'Implementation tracker', 'Quarterly check-ins']
   },
@@ -625,9 +625,9 @@ const Dashboard: React.FC<DashboardProps> = ({
             <p className="text-sm text-slate-600 mb-5">Complete <strong>any 4</strong> of the following assessments to unlock your Organizational Health Score — a composite view of your nonprofit's strengths and growth areas.</p>
             <div className="space-y-3">
               {[
-                { name: "Strategic Plan Check-Up", desc: "Evaluate your strategic plan's clarity, metrics, and timeline", route: "strategic-checkup" },
-                { name: "Board Assessment", desc: "Assess board engagement, governance, and effectiveness", route: "board-assessment" },
-                { name: "CEO Evaluation", desc: "Evaluate executive leadership alignment and performance", route: "ceo-evaluation" },
+                { name: "Strategic Plan Check-Up", desc: "Evaluate your strategic plan's clarity, metrics, and timeline", route: "strategic-plan-checkup" },
+                { name: "Edge Leadership Assessment", desc: "Assess leadership across four dimensions", route: "leadership-assessment" },
+                { name: "CEO Evaluation & Board Assessment", desc: "CEO self-assessment, board assessment, CEO evaluation", route: "ceo-evaluation" },
                 { name: "PIVOT Scenario Planner", desc: "Test your organization's adaptability and resilience", route: "scenario-planner" },
                 { name: "Grant/RFP Review", desc: "Analyze your funding readiness and proposal strength", route: "grant-review" },
                 { name: "Ask the Professor", desc: "Complete a structured strategic coaching session", route: "ask-professor" },

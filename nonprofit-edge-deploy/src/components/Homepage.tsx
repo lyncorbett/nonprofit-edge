@@ -67,7 +67,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
       image: '/tool-ceo.jpg',
       title: 'Board & CEO\nAssessment', 
       desc: 'CEO self-assessment, board effectiveness, and board-led CEO evaluation — all in one place.',
-      link: '/ceo-board'
+      link: '/ceo-evaluation'
     },
     { 
       image: '/tool-resources.jpg',
@@ -487,9 +487,9 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
               <ul className="space-y-3">
                 <li><button onClick={() => handleNavigate('/ask-the-professor')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Ask the Professor</button></li>
                 <li><button onClick={() => handleNavigate('/grant-review')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Grant Review</button></li>
-                <li><button onClick={() => handleNavigate('/board-assessment')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Board Assessment</button></li>
+                <li><button onClick={() => handleNavigate('/leadership-assessment')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Edge Leadership Assessment</button></li>
                 <li><button onClick={() => handleNavigate('/strategic-plan-checkup')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">Strategic Plan Analysis</button></li>
-                <li><button onClick={() => handleNavigate('/ceo-evaluation')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">CEO Evaluation</button></li>
+                <li><button onClick={() => handleNavigate('/ceo-evaluation')} className="text-gray-300 hover:text-white text-sm transition-colors bg-transparent border-none cursor-pointer p-0">CEO Evaluation & Board Assessment</button></li>
               </ul>
             </div>
 
