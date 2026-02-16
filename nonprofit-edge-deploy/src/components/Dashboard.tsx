@@ -61,12 +61,12 @@ interface Tool {
 
 const tools: Tool[] = [
   { 
-    id: 'board-assessment',
-    name: 'Board Assessment', 
-    description: 'Evaluate your board\'s effectiveness across governance, engagement, and strategic contribution using BoardSource-aligned criteria.',
-    href: 'board-assessment', 
+    id: 'leadership-profile',
+    name: 'Edge Leadership Assessment', 
+    description: 'Assess leadership capacity across four dimensions: Vision & Clarity, People Investment, Radical Ownership, and Growth & Reflection.',
+    href: 'leadership-profile', 
     img: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop',
-    features: ['30-question assessment', 'Benchmark comparisons', 'Action recommendations', 'PDF report']
+    features: ['Assess your own leadership', 'Assess a team member', '180° assessment with employee', 'PDF report with coaching insights']
   },
   { 
     id: 'strategic-plan',
@@ -85,12 +85,12 @@ const tools: Tool[] = [
     features: ['Proposal scoring', 'Alignment check', 'Narrative feedback', 'Budget review']
   },
   { 
-    id: 'ceo-evaluation',
-    name: 'CEO Evaluation', 
-    description: 'Conduct comprehensive, fair CEO performance evaluations that strengthen board-ED relationships.',
-    href: 'ceo-evaluation', 
+    id: 'ceo-board',
+    name: 'CEO Evaluation & Board Assessment', 
+    description: 'Three governance tools in one place — CEO self-assessment, board effectiveness assessment, and board-led CEO evaluation.',
+    href: 'ceo-board', 
     img: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=400&h=300&fit=crop',
-    features: ['360° feedback', 'Goal alignment', 'Development plan', 'Board summary']
+    features: ['CEO/ED self-assessment', 'Board effectiveness assessment', 'Board-led CEO evaluation', 'Facilitation guides']
   },
   { 
     id: 'scenario-planner',
