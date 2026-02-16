@@ -73,9 +73,6 @@ const GrantReviewLanding: React.FC<GrantReviewLandingProps> = ({ onNavigate, onG
               >
                 Start Your Free Trial
               </button>
-              <a href="/samples/grant-review-report.pdf" className="inline-flex items-center justify-center px-6 py-3 border-2 border-[#0D2C54] text-[#0D2C54] font-semibold rounded-lg hover:bg-[#0D2C54] hover:text-white transition-all">
-                View Sample Report
-              </a>
             </div>
           </div>
           {/* Hero Image - UNIQUE for Grant Review page */}
@@ -346,9 +343,6 @@ const GrantReviewLanding: React.FC<GrantReviewLandingProps> = ({ onNavigate, onG
             >
               Start Your Free Trial
             </button>
-            <a href="/samples/grant-review-report.pdf" className="inline-flex items-center justify-center px-6 py-3 border-2 border-[#0D2C54] text-[#0D2C54] font-semibold rounded-lg hover:bg-[#0D2C54] hover:text-white transition-all">
-              View Sample Report
-            </a>
           </div>
         </div>
       </section>
