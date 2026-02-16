@@ -121,7 +121,7 @@ export default function StrategicPlanCheckupLanding() {
               For executive directors, board members, and leadership teams who need plans that actually get implemented.
             </p>
             <div style={{ display: 'flex', gap: '16px' }}>
-              <a href="/trial" style={{
+              <a href="/signup" style={{
                 display: 'inline-flex', alignItems: 'center', padding: '14px 28px',
                 background: NAVY, color: 'white', borderRadius: '8px', fontWeight: 600,
                 fontSize: '16px', textDecoration: 'none'
@@ -420,7 +420,7 @@ export default function StrategicPlanCheckupLanding() {
         <div style={{ position: 'relative', zIndex: 1, maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
           <h2 style={{ fontSize: '44px', fontWeight: 800, color: 'white', marginBottom: '16px' }}>Transform Your Strategic Plan</h2>
           <p style={{ fontSize: '20px', color: 'rgba(255,255,255,0.85)', marginBottom: '40px' }}>From shelf decoration to organizational driving force.</p>
-          <a href="/trial" style={{
+          <a href="/signup" style={{
             display: 'inline-flex', alignItems: 'center', padding: '18px 42px',
             background: 'white', color: NAVY, borderRadius: '8px', fontWeight: 700,
             fontSize: '17px', textDecoration: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
