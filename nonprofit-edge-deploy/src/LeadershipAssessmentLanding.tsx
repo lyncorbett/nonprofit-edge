@@ -84,11 +84,11 @@ const LeadershipAssessmentLanding: React.FC<LeadershipAssessmentLandingProps> = 
           </div>
           <div className="rounded-xl overflow-hidden shadow-2xl">
             <img 
-              src="/leadership-hero.jpg" 
+              src="/leaderlanding.jpg" 
               alt="Leadership assessment" 
               className="w-full h-auto"
               onError={(e) => {
-                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80';
+                (e.target as HTMLImageElement).src = '/leaderlanding.jpg';
               }}
             />
           </div>
