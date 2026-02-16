@@ -73,7 +73,7 @@ const Homepage: React.FC<HomepageProps> = ({ onNavigate }) => {
       image: '/tool-resources.jpg',
       title: 'Member\nResources', 
       desc: 'Access templates, guides, and trainings—new tools added each month.',
-      link: '/resources'
+      link: '/resources-landing'
     },
   ]
 
