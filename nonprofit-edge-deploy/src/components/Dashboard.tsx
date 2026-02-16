@@ -65,7 +65,7 @@ const tools: Tool[] = [
     name: 'Edge Leadership Assessment', 
     description: 'Assess leadership capacity across four dimensions: Vision & Clarity, People Investment, Radical Ownership, and Growth & Reflection.',
     href: 'leadership-assessment', 
-    img: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop',
+    img: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&h=300&fit=crop',
     features: ['Assess your own leadership', 'Assess a team member', '180° assessment with employee', 'PDF report with coaching insights']
   },
   { 
@@ -73,7 +73,7 @@ const tools: Tool[] = [
     name: 'Strategic Plan Check-Up', 
     description: 'Diagnose the health of your strategic plan and identify gaps before they become problems.',
     href: 'strategic-checkup', 
-    img: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&h=300&fit=crop',
+    img: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop',
     features: ['Plan health score', 'Gap analysis', 'Implementation tracker', 'Quarterly check-ins']
   },
   { 
