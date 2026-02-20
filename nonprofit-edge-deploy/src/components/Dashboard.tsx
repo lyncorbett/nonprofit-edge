@@ -1,679 +1,952 @@
-/**
- * THE NONPROFIT EDGE - Dashboard
- * With Product Tour and New Member Experience
- * 
- * Roles:
- *   owner  → Sees: Content Manager + Platform Admin + Owner Dashboard + Marketing + Links
- *   admin  → Sees: Content Manager only
- *   member → Sees: Neither (regular dashboard only)
- */
+'use client';
 
 import React, { useState, useEffect } from 'react';
-import ProductTour from './ProductTour';
+import { 
+  Folder, Download, Star, Settings, ChevronRight, ChevronDown,
+  Lightbulb, MessageSquare, CheckCircle, LogOut, X, Play, HelpCircle,
+  Target, Calendar, Heart, Menu
+} from 'lucide-react';
+import { CommitmentModal } from './CommitmentTracker';
 
-// Brand colors
-const NAVY = '#1a365d';
-const TEAL = '#00a0b0';
-const TEAL_LIGHT = '#e6f7f9';
+// ============================================
+// TYPES
+// ============================================
 
-interface DashboardProps {
-  user: any;
-  organization: any;
-  usage: any;
-  teamCount: number;
-  onNavigate: (page: string) => void;
-  onDownload: (resourceId: string) => void;
-  onStartProfessor: () => void;
-  onLogout: () => void;
-  supabase?: any;
+interface Commitment {
+  id: string;
+  text: string;
+  deadline: 'today' | 'this_week' | 'this_month' | 'custom';
+  deadlineDate: Date;
+  createdAt: Date;
+  completedAt?: Date;
+  status: 'active' | 'completed' | 'missed';
 }
 
-interface AdminAccess {
-  isAdmin: boolean;
-  isOwner: boolean;
-  role: string | null;
+interface DashboardProps {
+  user?: {
+    id: string;
+    name: string;
+    full_name?: string;
+    email: string;
+    avatar_url?: string | null;
+    profile_photo?: string | null;
+  };
+  organization?: {
+    id: string;
+    name: string;
+    tier: 'essential' | 'professional' | 'premium';
+  };
+  usage?: {
+    tools_used_this_month: number;
+    downloads_this_month: number;
+    professor_sessions_this_month: number;
+  };
+  onNavigate?: (page: string) => void;
+  onStartProfessor?: () => void;
+  onLogout?: () => void;
 }
 
 interface Tool {
   id: string;
   name: string;
-  status: string;
-  statusColor: string;
-  image: string;
-  route: string;
-  isActive?: boolean;
+  description: string;
+  href: string;
+  img: string;
+  features: string[];
 }
 
-const Dashboard: React.FC<DashboardProps> = ({
-  user,
-  organization,
-  usage,
-  teamCount,
-  onNavigate,
-  onDownload,
-  onStartProfessor,
-  onLogout,
-  supabase
-}) => {
-  const [adminAccess, setAdminAccess] = useState<AdminAccess>({
-    isAdmin: false,
-    isOwner: false,
-    role: null
-  });
-  const [loading, setLoading] = useState(true);
-  const [showWelcomeBanner, setShowWelcomeBanner] = useState(true);
-  const [showTour, setShowTour] = useState(false);
-  const [tourCompleted, setTourCompleted] = useState(false);
+// ============================================
+// TOOL DATA
+// ============================================
 
-  // Check if tour was already completed (stored in localStorage)
+// Featured standalone tools (open as direct HTML pages)
+const featuredTools = [
+  {
+    id: 'dashboard-creator',
+    name: 'Dashboard Creator',
+    description: 'Build board-ready dashboards in minutes. Customize metrics, visuals, and reports for any audience.',
+    href: '/tools/dashboard-creator.html',
+    external: true,
+    badge: 'New',
+    img: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop',
+    features: ['Board reports', 'Finance dashboards', 'Program dashboards', 'PDF export'],
+  },
+  {
+    id: 'strategic-plan-tracker',
+    name: 'Strategic Plan Tracker',
+    description: 'Turn your strategic plan into a living document. Track objectives, initiatives, and generate auto board reports.',
+    href: '/tools/strategic-plan-tracker.html',
+    external: true,
+    badge: 'New',
+    img: 'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=400&h=300&fit=crop',
+    features: ['Objective tracking', 'Board report generator', 'Custom sections', 'Progress by area'],
+  },
+];
+
+const tools: Tool[] = [
+  { 
+    id: 'leadership-profile',
+    name: 'Edge Leadership Assessment', 
+    description: 'Assess leadership capacity across four dimensions: Vision & Clarity, People Investment, Radical Ownership, and Growth & Reflection.',
+    href: 'leadership-assessment', 
+    img: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&h=300&fit=crop',
+    features: ['Assess your own leadership', 'Assess a team member', '180° assessment with employee', 'PDF report with coaching insights']
+  },
+  { 
+    id: 'strategic-plan',
+    name: 'Strategic Plan Check-Up', 
+    description: 'Diagnose the health of your strategic plan and identify gaps before they become problems.',
+    href: 'strategic-plan-checkup', 
+    img: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop',
+    features: ['Plan health score', 'Gap analysis', 'Implementation tracker', 'Quarterly check-ins']
+  },
+  { 
+    id: 'grant-review',
+    name: 'Grant/RFP Review', 
+    description: 'Get AI-powered feedback on your grant proposals before you submit. Improve clarity, alignment, and competitiveness.',
+    href: 'grant-review', 
+    img: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=300&fit=crop',
+    features: ['Proposal scoring', 'Alignment check', 'Narrative feedback', 'Budget review']
+  },
+  { 
+    id: 'ceo-board',
+    name: 'CEO Evaluation & Board Assessment', 
+    description: 'Three governance tools in one place — CEO self-assessment, board effectiveness assessment, and board-led CEO evaluation.',
+    href: 'ceo-evaluation', 
+    img: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=400&h=300&fit=crop',
+    features: ['CEO/ED self-assessment', 'Board effectiveness assessment', 'Board-led CEO evaluation', 'Facilitation guides']
+  },
+  { 
+    id: 'scenario-planner',
+    name: 'Scenario Planner', 
+    description: 'Stress-test your strategy against multiple future scenarios.',
+    href: 'scenario-planner', 
+    img: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&h=300&fit=crop',
+    features: ['3 scenario models', 'Risk assessment', 'Decision matrix', 'Contingency plans']
+  },
+  { 
+    id: 'constraint-assessment',
+    name: 'Core Constraint Assessment', 
+    description: 'Identify the ONE constraint holding your organization back using Theory of Constraints methodology.',
+    href: 'constraint-assessment', 
+    img: 'https://images.unsplash.com/photo-1568992687947-868a62a9f521?w=400&h=300&fit=crop',
+    features: ['Constraint diagnosis', 'Root cause analysis', 'Breakthrough strategy', '90-day action plan']
+  },
+];
+
+// ============================================
+// DASHBOARD COMPONENT
+// ============================================
+
+const Dashboard: React.FC<DashboardProps> = ({
+  user = { id: '1', name: 'Lyn', email: 'lyn@example.com' },
+  organization = { id: '1', name: 'The Pivotal Group', tier: 'professional' },
+  usage = { tools_used_this_month: 7, downloads_this_month: 18, professor_sessions_this_month: 3 },
+  onNavigate,
+  onStartProfessor,
+  onLogout
+}) => {
+  // State
+  const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
+  const [modalStep, setModalStep] = useState(1);
+  const [lpMode, setLpMode] = useState('self');
+  const [cbMode, setCbMode] = useState('ceo-self');
+  const [showTour, setShowTour] = useState(false);
+  const [tourStep, setTourStep] = useState(0);
+  const [showCommitmentModal, setShowCommitmentModal] = useState(false);
+  const [commitments, setCommitments] = useState<Commitment[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showHealthPopup, setShowHealthPopup] = useState(false);
+
+  // Load commitments from localStorage
   useEffect(() => {
-    const completed = localStorage.getItem('nonprofit-edge-tour-completed');
-    if (completed) {
-      setTourCompleted(true);
-      setShowWelcomeBanner(false);
+    try {
+      const savedCommitments = localStorage.getItem('nonprofit_edge_commitments');
+      if (savedCommitments) {
+        const parsed = JSON.parse(savedCommitments);
+        setCommitments(parsed.map((c: any) => ({
+          ...c,
+          deadlineDate: new Date(c.deadlineDate),
+          createdAt: new Date(c.createdAt),
+          completedAt: c.completedAt ? new Date(c.completedAt) : undefined
+        })));
+      }
+    } catch (e) {
+      console.error('Error loading commitments:', e);
     }
   }, []);
 
-  // Determine if user is new (no tools used, no downloads)
-  const isNewMember = !usage || (
-    (usage.tools_used_this_month || 0) === 0 && 
-    (usage.downloads_this_month || 0) === 0 &&
-    (usage.professor_sessions_this_month || 0) === 0
-  );
+  // Close sidebar when navigating on mobile
+  const handleNavigateAndClose = (page: string) => {
+    setSidebarOpen(false);
+    navigate(page);
+  };
 
-  // Tool data with carefully selected professional images
-  const tools: Tool[] = [
-    {
-      id: 'board-assessment',
-      name: 'Board Assessment',
-      status: isNewMember ? 'Ready' : 'In Process',
-      statusColor: isNewMember ? '#6b7280' : TEAL,
-      image: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=1200&h=600&fit=crop',
-      route: 'board-assessment',
-      isActive: !isNewMember
-    },
-    {
-      id: 'strategic-plan',
-      name: 'Strategic Plan Check-Up',
-      status: isNewMember ? 'Ready' : 'Score: 92',
-      statusColor: '#6b7280',
-      image: 'https://images.unsplash.com/photo-1542626991-cbc4e32524cc?w=1200&h=600&fit=crop',
-      route: 'strategic-checkup'
-    },
-    {
-      id: 'ceo-evaluation',
-      name: 'CEO Evaluation',
-      status: isNewMember ? 'Ready' : 'Completed',
-      statusColor: isNewMember ? '#6b7280' : '#16a34a',
-      image: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=1200&h=600&fit=crop',
-      route: 'ceo-evaluation'
-    },
-    {
-      id: 'scenario-planner',
-      name: 'Scenario Planner',
-      status: 'Ready',
-      statusColor: '#6b7280',
-      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&h=600&fit=crop',
-      route: 'scenario-planner'
-    },
-    {
-      id: 'template-vault',
-      name: 'Template Vault',
-      status: '147 templates',
-      statusColor: '#6b7280',
-      image: 'https://images.unsplash.com/photo-1568667256549-094345857637?w=1200&h=600&fit=crop',
-      route: 'templates'
-    },
-    {
-      id: 'grant-review',
-      name: 'Grant & RFP Review',
-      status: 'Ready',
-      statusColor: '#6b7280',
-      image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=1200&h=600&fit=crop',
-      route: 'grant-review'
-    }
-  ];
+  // Save commitment
+  const handleSaveCommitment = (commitment: Commitment) => {
+    const updated = [...commitments, commitment];
+    setCommitments(updated);
+    localStorage.setItem('nonprofit_edge_commitments', JSON.stringify(updated));
+    console.log('Commitment saved:', commitment);
+  };
 
-  // Check admin access
+  // Mark commitment complete
+  const handleMarkComplete = (id: string) => {
+    const updated = commitments.map(c => 
+      c.id === id ? { ...c, status: 'completed' as const, completedAt: new Date() } : c
+    );
+    setCommitments(updated);
+    localStorage.setItem('nonprofit_edge_commitments', JSON.stringify(updated));
+  };
+
+  // Check for first-time visitor
   useEffect(() => {
-    const checkAdminAccess = async () => {
-      if (!supabase || !user?.email) {
-        setLoading(false);
+    const hasSeenTour = localStorage.getItem('nonprofit_edge_tour_completed');
+    if (!hasSeenTour) {
+      const timer = setTimeout(() => setShowTour(true), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  // Navigation helper
+  const navigate = (page: string) => {
+    if (onNavigate) {
+      onNavigate(page);
+    } else {
+      window.location.href = page.startsWith('/') ? page : `/${page}`;
+    }
+  };
+
+  // Handle tool click
+  const handleToolClick = (tool: Tool) => {
+    setSelectedTool(tool);
+  };
+
+  // Start tool
+  const handleStartTool = () => {
+    if (selectedTool) {
+      if ((selectedTool.id === 'leadership-profile' || selectedTool.id === 'ceo-board') && modalStep === 1) {
+        setModalStep(2);
         return;
       }
+      navigate(selectedTool.href);
+      setSelectedTool(null);
+      setModalStep(1);
+    }
+  };
 
-      try {
-        const { data, error } = await supabase
-          .from('admin_users')
-          .select('role')
-          .eq('email', user.email)
-          .single();
+  // Close modal
+  const closeModal = () => {
+    setSelectedTool(null);
+    setModalStep(1);
+    setLpMode('self');
+    setCbMode('ceo-self');
+  };
 
-        if (data && !error) {
-          setAdminAccess({
-            isAdmin: data.role === 'admin' || data.role === 'owner',
-            isOwner: data.role === 'owner',
-            role: data.role
-          });
-        }
-      } catch (err) {
-        console.log('Not an admin user');
-      } finally {
-        setLoading(false);
+  // Tour steps
+  const tourSteps = [
+    { title: 'Welcome to The Nonprofit Edge! 🎉', content: 'Let\'s take a quick tour to help you get the most out of your membership.', target: null, position: 'center' },
+    { title: 'Your Tools', content: 'Access powerful AI-driven assessments and planning tools. Click any tool to learn more and get started.', target: 'tools-section', position: 'top' },
+    { title: 'Ask the Professor', content: 'Your 24/7 nonprofit leadership advisor. Get strategic guidance tailored to your specific challenges.', target: 'professor-card', position: 'bottom' },
+    { title: 'Member Resources', content: 'Browse templates, playbooks, book summaries, and facilitation kits in the sidebar.', target: 'sidebar-resources', position: 'right' },
+    { title: 'You\'re All Set!', content: 'Start by exploring a tool or asking the Professor a question. We\'re here to help you lead with confidence.', target: null, position: 'center' }
+  ];
+
+  const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null);
+
+  useEffect(() => {
+    if (showTour && tourSteps[tourStep].target) {
+      const element = document.getElementById(tourSteps[tourStep].target!);
+      if (element) {
+        setHighlightRect(element.getBoundingClientRect());
       }
-    };
+    } else {
+      setHighlightRect(null);
+    }
+  }, [showTour, tourStep]);
 
-    checkAdminAccess();
-  }, [supabase, user?.email]);
+  const handleTourNext = () => {
+    if (tourStep < tourSteps.length - 1) {
+      setTourStep(tourStep + 1);
+    } else {
+      localStorage.setItem('nonprofit_edge_tour_completed', 'true');
+      setShowTour(false);
+      setTourStep(0);
+    }
+  };
 
-  // Handle tour completion
-  const handleTourComplete = () => {
+  const handleTourSkip = () => {
+    localStorage.setItem('nonprofit_edge_tour_completed', 'true');
     setShowTour(false);
-    setTourCompleted(true);
-    setShowWelcomeBanner(false);
-    localStorage.setItem('nonprofit-edge-tour-completed', 'true');
+    setTourStep(0);
   };
 
-  // Get tier info
-  const getTierInfo = () => {
-    const tier = organization?.tier || 'professional';
-    const tiers: Record<string, { name: string; color: string }> = {
-      essential: { name: 'Essential', color: '#6b7280' },
-      professional: { name: 'Professional', color: TEAL },
-      premium: { name: 'Premium', color: '#8b5cf6' },
-      enterprise: { name: 'Enterprise', color: '#f59e0b' }
-    };
-    return tiers[tier] || tiers.professional;
-  };
-
-  const tierInfo = getTierInfo();
-  const firstName = user?.full_name?.split(' ')[0] || 'there';
+  // Download limits by tier
+  const downloadLimits = { essential: 10, professional: 25, premium: 100 };
+  const maxDownloads = downloadLimits[organization.tier] || 25;
+  const downloadPercent = (usage.downloads_this_month / maxDownloads) * 100;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Product Tour */}
-      <ProductTour 
-        isOpen={showTour}
-        onClose={() => setShowTour(false)}
-        onComplete={handleTourComplete}
-      />
+    <div className="min-h-screen bg-slate-50 lg:flex">
+      {/* MOBILE HEADER */}
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="p-2 -ml-2 text-slate-600 hover:text-slate-900"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+        <img src="/logo.svg" alt="The Nonprofit Edge" className="h-10" />
+        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#0D2C54] to-[#164677] text-white flex items-center justify-center font-semibold text-sm">
+          {user.name.charAt(0).toUpperCase()}
+        </div>
+      </header>
 
-      {/* Sidebar */}
-      <aside className="w-52 bg-white border-r border-gray-200 fixed h-screen flex flex-col">
+      {/* MOBILE SIDEBAR OVERLAY */}
+      {sidebarOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/50 z-50"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* LEFT SIDEBAR */}
+      <aside className={`
+        bg-white border-r border-slate-200 p-6 flex flex-col z-50 fixed top-0 left-0 h-screen lg:relative lg:h-auto lg:overflow-visible
+        w-[280px] transition-transform duration-300 ease-in-out
+        lg:translate-x-0
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        {/* Close button - mobile only */}
+        <button
+          onClick={() => setSidebarOpen(false)}
+          className="lg:hidden absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
         {/* Logo */}
-        <div className="p-4 border-b border-gray-100">
-          <div className="flex items-center gap-2">
-            <div 
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
-              style={{ backgroundColor: NAVY }}
-            >
-              NE
+        <div className="mb-2">
+          <img src="/logo.svg" alt="The Nonprofit Edge" className="w-[360px] h-auto" />
+        </div>
+
+        {/* Quick Actions */}
+        <nav className="mb-6" id="sidebar-resources">
+          <div className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold mb-3 pl-3">
+            Quick Actions
+          </div>
+          <button 
+            onClick={() => handleNavigateAndClose('library')}
+            className="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-[#0D2C54] text-sm font-medium w-full text-left"
+          >
+            <Folder className="w-5 h-5" />
+            Member Resources
+          </button>
+          <button 
+            onClick={() => handleNavigateAndClose('my-downloads')}
+            className="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-[#0D2C54] text-sm font-medium w-full text-left"
+          >
+            <Download className="w-5 h-5" />
+            My Downloads
+          </button>
+          <button 
+            onClick={() => handleNavigateAndClose('favorites')}
+            className="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-[#0D2C54] text-sm font-medium w-full text-left"
+          >
+            <Star className="w-5 h-5" />
+            Saved Favorites
+          </button>
+        </nav>
+        {/* Recent Activity */}
+        <div className="mb-6">
+          <div className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold mb-3 pl-3">
+            Recent Activity
+          </div>
+          <div className="flex items-start gap-3 px-3 py-2">
+            <span className="w-2 h-2 rounded-full bg-[#0097A9] mt-1.5 flex-shrink-0" />
+            <div>
+              <div className="text-sm font-medium text-slate-700">Board Assessment started</div>
+              <div className="text-xs text-slate-400">Today</div>
             </div>
-            <span className="font-bold text-sm" style={{ color: NAVY }}>
-              The Nonprofit Edge
-            </span>
+          </div>
+          <div className="flex items-start gap-3 px-3 py-2">
+            <span className="w-2 h-2 rounded-full bg-[#D4A84B] mt-1.5 flex-shrink-0" />
+            <div>
+              <div className="text-sm font-medium text-slate-700">Strategic Plan completed</div>
+              <div className="text-xs text-slate-400">3 days ago</div>
+            </div>
           </div>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          <a 
-            onClick={() => onNavigate('dashboard')}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer"
-            style={{ backgroundColor: TEAL_LIGHT, color: NAVY }}
-          >
-            Dashboard
-          </a>
-          
-          <a 
-            id="sidebar-library"
-            onClick={() => onNavigate('library')}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer text-gray-600 hover:bg-gray-50"
-          >
-            Resource Library
-          </a>
-
-          <a 
-            id="sidebar-events"
-            onClick={() => onNavigate('events')}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer text-gray-600 hover:bg-gray-50"
-          >
-            Events
-          </a>
-
-          <a 
-            onClick={() => onNavigate('team')}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer text-gray-600 hover:bg-gray-50"
-          >
-            Team
-          </a>
-
-          <a 
-            onClick={() => onNavigate('reports')}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer text-gray-600 hover:bg-gray-50"
-          >
-            My Reports
-          </a>
-
-          {/* Admin Section */}
-          {(adminAccess.isAdmin || adminAccess.isOwner) && (
-            <>
-              <div className="pt-4 pb-2">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-3">
-                  Admin
-                </div>
-              </div>
-              
-              <a 
-                onClick={() => onNavigate('content-manager')}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer text-gray-600 hover:bg-gray-50"
-              >
-                Content Manager
-              </a>
-
-              {adminAccess.isOwner && (
-                <>
-                  <a 
-                    onClick={() => onNavigate('owner-dashboard')}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer text-gray-600 hover:bg-gray-50"
-                  >
-                    Platform Admin
-                  </a>
-                  <a 
-                    onClick={() => onNavigate('enhanced-owner')}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer text-gray-600 hover:bg-gray-50"
-                  >
-                    Owner Dashboard
-                  </a>
-                  <a 
-                    onClick={() => onNavigate('marketing')}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer text-gray-600 hover:bg-gray-50"
-                  >
-                    Marketing
-                  </a>
-                  <a 
-                    onClick={() => onNavigate('link-manager')}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer text-gray-600 hover:bg-gray-50"
-                  >
-                    Link Manager
-                  </a>
-                  <a 
-                    onClick={() => onNavigate('team-access')}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer text-gray-600 hover:bg-gray-50"
-                  >
-                    Team Access
-                  </a>
-                </>
-              )}
-            </>
-          )}
-        </nav>
-
-        {/* User Profile */}
-        <div className="p-4 border-t border-gray-100">
-          <div className="flex items-center gap-3">
-            <div 
-              className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold"
-              style={{ backgroundColor: TEAL }}
+        {/* Upcoming Events */}
+        <div className="mb-6">
+          <div className="flex justify-between items-center px-3 mb-3">
+            <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
+              Upcoming Events
+            </span>
+            <button 
+              onClick={() => handleNavigateAndClose('events')}
+              className="text-xs text-[#0097A9] font-medium hover:underline"
             >
-              {user?.full_name?.charAt(0) || 'U'}
+              View All
+            </button>
+          </div>
+          <div className="flex items-center gap-3 px-3 py-3 border-b border-slate-100">
+            <div className="bg-[#0D2C54] rounded-lg px-3 py-2 text-center min-w-[48px]">
+              <div className="text-base font-bold text-white">18</div>
+              <div className="text-[10px] text-white/80 uppercase">Feb</div>
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold truncate" style={{ color: NAVY }}>
-                {user?.full_name || 'User'}
-              </div>
-              <div className="text-[10px] text-gray-400">{tierInfo.name}</div>
+            <div>
+              <div className="text-sm font-medium text-slate-700">Founding Member Access</div>
+              <div className="text-xs text-slate-400">Early Access Begins</div>
             </div>
           </div>
-          <button
+          <div className="flex items-center gap-3 px-3 py-3">
+            <div className="bg-[#0D2C54] rounded-lg px-3 py-2 text-center min-w-[48px]">
+              <div className="text-base font-bold text-white">4</div>
+              <div className="text-[10px] text-white/80 uppercase">Mar</div>
+            </div>
+            <div>
+              <div className="text-sm font-medium text-slate-700">🚀 Platform Launch</div>
+              <div className="text-xs text-slate-400">12:00 PM EST</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Downloads Counter */}
+        <div className="bg-gradient-to-br from-[#0097A9] to-[#00b4cc] rounded-xl p-4 text-white mb-5">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-[13px] font-semibold">Remaining Downloads</span>
+            <span className="text-xs font-semibold">{maxDownloads - usage.downloads_this_month} of {maxDownloads}</span>
+          </div>
+          <div className="h-1.5 bg-white/30 rounded-full mb-3">
+            <div 
+              className="h-full bg-white rounded-full transition-all" 
+              style={{ width: `${100 - downloadPercent}%` }}
+            />
+          </div>
+          <span className="inline-block text-[10px] font-bold bg-white text-[#0D2C54] px-2.5 py-1 rounded tracking-wide uppercase">
+            {organization.tier}
+          </span>
+        </div>
+
+        {/* Settings & Tour */}
+        <button 
+          onClick={() => handleNavigateAndClose('settings')}
+          className="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-[#0D2C54] text-sm font-medium w-full text-left"
+        >
+          <Settings className="w-5 h-5" />
+          Settings
+        </button>
+        <button 
+          onClick={() => { setTourStep(0); setShowTour(true); setSidebarOpen(false); }}
+          className="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-[#0D2C54] text-sm font-medium w-full text-left"
+        >
+          <HelpCircle className="w-5 h-5" />
+          Take the Tour
+        </button>
+
+        {/* User Profile */}
+        <div className="mt-auto pt-4 border-t border-slate-200">
+          <div className="flex items-center gap-3 py-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#0D2C54] to-[#164677] text-white flex items-center justify-center font-semibold text-base">
+              {user.name.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div className="text-sm font-semibold text-slate-700">{user.name}</div>
+              <div className="text-xs text-slate-400">{organization.name}</div>
+            </div>
+          </div>
+          <button 
             onClick={onLogout}
-            className="mt-3 w-full text-xs text-gray-500 hover:text-gray-700 py-1"
+            className="text-[13px] text-slate-400 hover:text-red-500 px-3 py-2 w-full text-left flex items-center gap-2"
           >
-            Sign out
+            <LogOut className="w-4 h-4" />
+            Sign Out
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <div className="flex-1 ml-52">
-        <div className="p-6 flex gap-6">
-          {/* Center Content */}
-          <div className="flex-1 space-y-6">
+      {/* MAIN CONTENT */}
+      <main className="lg:ml-0 p-4 lg:p-8 flex-1 pt-20 lg:pt-8">
+        <div className="max-w-[1000px] mx-auto">
+          {/* Welcome */}
+          <div className="mb-6 lg:mb-7">
+            <h1 className="text-2xl lg:text-[28px] font-bold text-[#0D2C54] mb-1">
+              Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user.name.split(' ')[0]}
+            </h1>
+            <p className="text-slate-500 text-sm lg:text-[15px]">
+              You chose <strong className="text-[#0097A9] font-semibold">Board Engagement</strong> as your focus area
+              <button className="ml-2 lg:ml-3 text-xs lg:text-[13px] text-slate-400 underline underline-offset-2 hover:text-[#0097A9]">
+                Change focus
+              </button>
+            </p>
+          </div>
 
-            {/* Welcome Banner - For new members, with Tour button */}
-            {isNewMember && showWelcomeBanner && !tourCompleted && (
-              <div 
-                className="rounded-2xl p-6 text-white relative overflow-hidden"
-                style={{ background: `linear-gradient(135deg, ${TEAL}, #008090)` }}
+          {/* Top Cards - Stack on mobile */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-5 mb-6 lg:mb-8">
+            {/* Today's Insight */}
+            <div className="bg-gradient-to-br from-[#0097A9] to-[#00b4cc] rounded-2xl p-4 lg:p-5 text-white flex flex-col">
+              <div className="text-[11px] uppercase tracking-widest opacity-85 mb-3 lg:mb-4 font-semibold flex items-center gap-2">
+                <Lightbulb className="w-3.5 h-3.5" />
+                Today's Insight
+              </div>
+              <p className="text-sm lg:text-base leading-relaxed flex-1 mb-4 lg:mb-6">
+                The most effective boards don't just govern—they champion. When was the last time you asked your board members what excites them about your mission?
+              </p>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowCommitmentModal(true);
+                }}
+                className="flex items-center justify-between gap-2 bg-white/20 border border-white/30 rounded-lg px-4 py-3 text-white text-sm font-medium w-full hover:bg-white/30 transition-colors"
               >
-                <button
-                  onClick={() => setShowWelcomeBanner(false)}
-                  className="absolute top-4 right-4 text-white/70 hover:text-white text-xl"
+                <span className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4" />
+                  Make a Commitment
+                </span>
+                <ChevronDown className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Ask the Professor */}
+            <div 
+              id="professor-card"
+              onClick={() => {
+                if (onStartProfessor) {
+                  onStartProfessor();
+                } else {
+                  navigate('ask-the-professor');
+                }
+              }}
+              className="bg-gradient-to-br from-[#0D2C54] to-[#164677] rounded-2xl p-4 lg:p-5 text-white flex flex-col hover:-translate-y-0.5 hover:shadow-xl transition-all cursor-pointer"
+            >
+              <div className="text-[11px] uppercase tracking-widest opacity-85 mb-3 lg:mb-4 font-semibold flex items-center gap-2">
+                <MessageSquare className="w-3.5 h-3.5 text-[#0097A9]" />
+                Ask the Professor
+              </div>
+              <p className="text-sm lg:text-base leading-relaxed flex-1 mb-4 lg:mb-6">
+                Your personal nonprofit leadership advisor, available 24/7. Get strategic guidance tailored to your challenges.
+              </p>
+              <div className="flex items-center justify-between gap-2 bg-white/20 border border-white/30 rounded-lg px-4 py-3 text-sm font-medium">
+                <span className="flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4" />
+                  Ask me anything
+                </span>
+                <ChevronRight className="w-4 h-4" />
+              </div>
+            </div>
+          </div>
+
+          {/* Featured Tools — Dashboard Creator & Strategic Plan Tracker */}
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-lg font-bold text-[#0D2C54]">Featured Tools</h2>
+            <span className="text-xs font-semibold text-[#0097A9] bg-[#0097A9]/10 px-2.5 py-1 rounded-full">New</span>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-5 mb-6 lg:mb-8">
+            {featuredTools.map((tool) => (
+              <div
+                key={tool.id}
+                onClick={() => window.open(tool.href, '_blank')}
+                className="bg-white rounded-xl overflow-hidden border border-slate-200 hover:-translate-y-1 hover:shadow-lg transition-all cursor-pointer"
+              >
+                <div
+                  className="h-[100px] lg:h-[130px] bg-cover bg-center flex items-end p-3 lg:p-4 relative"
+                  style={{ backgroundImage: `url('${tool.img}')` }}
                 >
-                  ✕
-                </button>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-2xl">🎉</span>
-                  <h2 className="text-xl font-bold">Welcome to The Nonprofit Edge, {firstName}!</h2>
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0D2C54]/90" />
+                  <div className="relative w-full">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[10px] font-bold uppercase tracking-wider bg-[#0097A9] text-white px-2 py-0.5 rounded-full">{tool.badge}</span>
+                    </div>
+                    <span className="text-white font-bold text-sm lg:text-base">{tool.name}</span>
+                  </div>
                 </div>
-                <p className="text-white/90 mb-4 max-w-xl">
-                  You now have access to strategic tools built specifically for nonprofit leaders like you. 
-                  Take a quick 30-second tour to get familiar with the platform.
-                </p>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setShowTour(true)}
-                    className="px-4 py-2 bg-white rounded-lg font-semibold text-sm hover:bg-gray-100 transition"
-                    style={{ color: NAVY }}
-                  >
-                    Take a Quick Tour (30 sec)
-                  </button>
-                  <button
-                    onClick={() => setShowWelcomeBanner(false)}
-                    className="px-4 py-2 bg-white/20 rounded-lg font-semibold text-sm text-white hover:bg-white/30 transition"
-                  >
-                    I'll explore on my own
-                  </button>
+                <div className="p-3 lg:p-4">
+                  <p className="text-xs text-slate-500 leading-relaxed mb-3">{tool.description}</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {tool.features.map((f, i) => (
+                      <span key={i} className="text-[10px] font-semibold text-[#0D2C54] bg-slate-100 px-2 py-0.5 rounded-full">{f}</span>
+                    ))}
+                  </div>
                 </div>
               </div>
-            )}
+            ))}
+          </div>
 
-            {/* Recommended First Steps - For new members */}
-            {isNewMember && (
-              <div className="bg-white rounded-2xl border border-gray-300 overflow-hidden">
-                <div className="px-5 py-3 border-b border-gray-300">
-                  <h2 className="text-sm font-bold" style={{ color: NAVY }}>Recommended First Steps</h2>
+          {/* Your Tools */}
+          <div className="flex justify-between items-center mb-4" id="tools-section">
+            <h2 className="text-lg font-bold text-[#0D2C54]">Your Tools</h2>
+          </div>
+
+          {/* Tools Grid - 2 cols on mobile, 3 on desktop */}
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-5 mb-6 lg:mb-8">
+            {tools.map((tool) => (
+              <div
+                key={tool.id}
+                onClick={() => handleToolClick(tool)}
+                className="bg-white rounded-xl overflow-hidden border border-slate-200 hover:-translate-y-1 hover:shadow-lg transition-all cursor-pointer"
+              >
+                <div
+                  className="h-[80px] lg:h-[120px] bg-cover bg-center flex items-end p-3 lg:p-4 relative"
+                  style={{ backgroundImage: `url('${tool.img}')` }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0D2C54]/85" />
+                  <span className="relative text-white font-semibold text-xs lg:text-[15px] line-clamp-2">{tool.name}</span>
                 </div>
-                <div className="p-5">
-                  <div className="grid grid-cols-4 gap-4">
-                    {/* Step 1: Complete Profile */}
-                    <div 
-                      onClick={() => onNavigate('settings')}
-                      className="rounded-xl border-2 border-gray-200 p-4 cursor-pointer hover:shadow-lg hover:border-[#00a0b0] transition bg-white group"
-                    >
-                      <div 
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold mb-3 group-hover:scale-110 transition"
-                        style={{ backgroundColor: NAVY }}
-                      >
-                        1
-                      </div>
-                      <div className="font-bold text-sm mb-1" style={{ color: NAVY }}>
-                        Complete Your Profile
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        Upload your pic and agency logo
-                      </div>
-                    </div>
+              </div>
+            ))}
+          </div>
 
-                    {/* Step 2: Template Vault */}
-                    <div 
-                      onClick={() => onNavigate('templates')}
-                      className="rounded-xl border-2 border-gray-200 p-4 cursor-pointer hover:shadow-lg hover:border-[#00a0b0] transition bg-white group"
-                    >
-                      <div 
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold mb-3 group-hover:scale-110 transition"
-                        style={{ backgroundColor: NAVY }}
-                      >
-                        2
-                      </div>
-                      <div className="font-bold text-sm mb-1" style={{ color: NAVY }}>
-                        Explore the Template Vault
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        147+ ready-to-use templates
-                      </div>
-                    </div>
-
-                    {/* Step 3: Strategic Plan Check-Up (Highlighted) */}
-                    <div 
-                      onClick={() => onNavigate('strategic-checkup')}
-                      className="rounded-xl border-2 p-4 cursor-pointer hover:shadow-lg transition group"
-                      style={{ borderColor: TEAL, backgroundColor: TEAL_LIGHT }}
-                    >
-                      <div 
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold mb-3 group-hover:scale-110 transition"
-                        style={{ backgroundColor: TEAL }}
-                      >
-                        3
-                      </div>
-                      <div className="font-bold text-sm mb-1" style={{ color: NAVY }}>
-                        Run Your Strategic Plan Check-Up
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        See how your plan scores
-                      </div>
-                    </div>
-
-                    {/* Step 4: Scenario Planner */}
-                    <div 
-                      onClick={() => onNavigate('scenario-planner')}
-                      className="rounded-xl border-2 border-gray-200 p-4 cursor-pointer hover:shadow-lg hover:border-[#00a0b0] transition bg-white group"
-                    >
-                      <div 
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold mb-3 group-hover:scale-110 transition"
-                        style={{ backgroundColor: NAVY }}
-                      >
-                        4
-                      </div>
-                      <div className="font-bold text-sm mb-1" style={{ color: NAVY }}>
-                        Test Your Future Strategy
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        With our Scenario Planner
-                      </div>
+          {/* Quote of the Day */}
+          {(() => {
+            const quotes = [
+              { text: "You can't read the label from inside the jar.", author: "Unknown" },
+              { text: "Culture eats strategy for breakfast.", author: "Peter Drucker" },
+              { text: "If you want to go fast, go alone. If you want to go far, go together.", author: "African Proverb" },
+              { text: "The best time to plant a tree was 20 years ago. The second best time is now.", author: "Chinese Proverb" },
+              { text: "People don't care how much you know until they know how much you care.", author: "Theodore Roosevelt" },
+              { text: "Begin with the end in mind.", author: "Stephen Covey" },
+              { text: "What gets measured gets managed.", author: "Peter Drucker" },
+              { text: "The most important thing in communication is hearing what isn't said.", author: "Peter Drucker" },
+              { text: "Leadership is not about being in charge. It's about taking care of those in your charge.", author: "Simon Sinek" },
+              { text: "Vision without execution is hallucination.", author: "Thomas Edison" },
+              { text: "The bottleneck is always at the top of the bottle.", author: "Peter Drucker" },
+              { text: "A leader is one who knows the way, goes the way, and shows the way.", author: "John C. Maxwell" },
+              { text: "The greatest leader is not necessarily one who does the greatest things, but one who gets people to do the greatest things.", author: "Ronald Reagan" },
+              { text: "Strategy is about making choices, trade-offs; it's about deliberately choosing to be different.", author: "Michael Porter" },
+            ];
+            const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+            const todaysQuote = quotes[dayOfYear % quotes.length];
+            
+            return (
+              <div className="bg-gradient-to-r from-[#0D2C54] to-[#1a3a5c] rounded-2xl px-5 lg:px-8 py-5 lg:py-6 shadow-lg">
+                <div className="flex items-start gap-3 lg:gap-4">
+                  <div className="text-3xl lg:text-4xl text-[#0097A9] font-serif leading-none">"</div>
+                  <div className="flex-1">
+                    <p className="text-sm lg:text-lg italic text-white/90 leading-relaxed mb-2 lg:mb-3">
+                      {todaysQuote.text}
+                    </p>
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-1">
+                      <span className="text-xs lg:text-sm font-medium text-[#0097A9]">— {todaysQuote.author}</span>
+                      <span className="text-[10px] text-white/40 uppercase tracking-wider">Quote of the Day</span>
                     </div>
                   </div>
                 </div>
               </div>
-            )}
+            );
+          })()}
 
-            {/* Today's Insight */}
-            <div 
-              className="rounded-2xl p-5 text-white"
-              style={{ background: `linear-gradient(135deg, ${NAVY}, #122443)` }}
-            >
-              <div className="text-amber-400 text-xs font-bold uppercase tracking-wider mb-2">
-                TODAY'S INSIGHT
+          {/* Organizational Health Score Progress Tracker */}
+          <div className="mt-6 lg:mt-8 bg-white rounded-xl border border-slate-200 p-5 lg:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-base lg:text-lg font-bold text-[#0D2C54]">🏥 Organizational Health Score</h3>
+                <p className="text-xs lg:text-sm text-slate-500 mt-1">Complete any 4 assessments to unlock your score</p>
               </div>
-              <p className="text-base font-semibold leading-relaxed mb-2">
-                "The board's job isn't to run the organization. It's to make sure the organization is well-run."
-              </p>
-              <p className="text-xs text-gray-400">
-                — "Governance as Leadership" by Chait, Ryan & Taylor
-              </p>
+              <button
+                onClick={() => setShowHealthPopup(true)}
+                className="text-xs lg:text-sm text-[#0097A9] font-semibold hover:underline bg-transparent border-none cursor-pointer"
+              >
+                View All Assessments →
+              </button>
+            </div>
+            {(() => {
+              const completed = 0;
+              const needed = 4;
+              const pct = Math.min(100, Math.round((completed / needed) * 100));
+              return (
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="flex-1 bg-slate-100 rounded-full h-3">
+                      <div className="h-3 rounded-full bg-gradient-to-r from-[#0097A9] to-[#0D2C54] transition-all duration-500" style={{ width: pct + "%" }} />
+                    </div>
+                    <span className="text-sm font-bold text-[#0D2C54]">{completed}/{needed}</span>
+                  </div>
+                  {completed === 0 && (
+                    <p className="text-sm text-slate-400 italic">No assessments completed yet. Start your first one from the tools above!</p>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      </main>
+
+
+      {/* HEALTH SCORE POPUP */}
+      {showHealthPopup && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4" onClick={() => setShowHealthPopup(false)}>
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 lg:p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-[#0D2C54]">🏥 Organizational Health Score</h2>
+              <button onClick={() => setShowHealthPopup(false)} className="text-slate-400 hover:text-slate-600 text-2xl bg-transparent border-none cursor-pointer">×</button>
+            </div>
+            <p className="text-sm text-slate-600 mb-5">Complete <strong>any 4</strong> of the following assessments to unlock your Organizational Health Score — a composite view of your nonprofit's strengths and growth areas.</p>
+            <div className="space-y-3">
+              {[
+                { name: "Strategic Plan Check-Up", desc: "Evaluate your strategic plan's clarity, metrics, and timeline", route: "strategic-plan-checkup" },
+                { name: "Edge Leadership Assessment", desc: "Assess leadership across four dimensions", route: "leadership-assessment" },
+                { name: "CEO Evaluation & Board Assessment", desc: "CEO self-assessment, board assessment, CEO evaluation", route: "ceo-evaluation" },
+                { name: "Scenario Planner", desc: "Test your organization's adaptability and resilience", route: "scenario-planner" },
+                { name: "Grant/RFP Review", desc: "Analyze your funding readiness and proposal strength", route: "grant-review" },
+                { name: "Ask the Professor", desc: "Complete a structured strategic coaching session", route: "ask-professor" },
+                { name: "Edge Leadership Assessment", desc: "Discover your leadership style and growth areas", route: "leadership-assessment" },
+                { name: "Constraint Assessment", desc: "Identify your organization's primary bottleneck", route: "constraint-assessment" },
+              ].map((tool, i) => (
+                <button
+                  key={i}
+                  onClick={() => { setShowHealthPopup(false); onNavigate(tool.route); }}
+                  className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-[#0097A9] hover:bg-[#0097A9]/5 transition-all bg-white cursor-pointer"
+                >
+                  <div className="font-semibold text-sm text-[#0D2C54]">⭕ {tool.name}</div>
+                  <div className="text-xs text-slate-500 mt-0.5">{tool.desc}</div>
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-slate-400 mt-4 text-center">Pick the assessments most relevant to your organization</p>
+          </div>
+        </div>
+      )}
+
+      {/* TOOL MODAL */}
+      {selectedTool && (
+        <div 
+          className="fixed inset-0 bg-[#0D2C54]/70 flex items-center justify-center z-50 p-4"
+          onClick={closeModal}
+        >
+          <div 
+            className="bg-white rounded-2xl w-full max-w-[500px] overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+            style={{ animation: 'modalSlideIn 0.25s ease' }}
+          >
+            {/* Tool Image Header */}
+            <div 
+              className="h-[140px] lg:h-[180px] bg-cover bg-center relative"
+              style={{ backgroundImage: `url('${selectedTool.img}')` }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-b from-[#0D2C54]/30 to-[#0D2C54]/90" />
+              <button 
+                onClick={closeModal}
+                className="absolute top-4 right-4 w-8 h-8 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div className="absolute bottom-4 left-5 right-5 lg:left-6 lg:right-6">
+                <h3 className="text-xl lg:text-2xl font-bold text-white">{selectedTool.name}</h3>
+              </div>
             </div>
 
-            {/* Your Tools */}
-            <div id="tools-section" className="bg-white rounded-2xl border border-gray-300 overflow-hidden">
-              <div className="px-5 py-3 border-b border-gray-300">
-                <h2 className="text-sm font-bold" style={{ color: NAVY }}>Your Tools</h2>
-              </div>
-              <div className="p-5">
-                <div className="grid grid-cols-3 gap-4">
-                  {tools.map((tool) => (
-                    <div 
-                      key={tool.id}
-                      onClick={() => onNavigate(tool.route)}
-                      className={`rounded-xl border-2 cursor-pointer hover:shadow-lg transition-all overflow-hidden group ${
-                        tool.isActive 
-                          ? 'border-[#00a0b0]' 
-                          : 'border-gray-200 hover:border-[#00a0b0]'
-                      }`}
-                    >
-                      <div className="h-40 overflow-hidden relative bg-gray-100">
-                        <img 
-                          src={tool.image} 
-                          alt={tool.name}
-                          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                      <div 
-                        className="p-3 text-center"
-                        style={{ backgroundColor: tool.isActive ? TEAL_LIGHT : '#fff' }}
-                      >
-                        <div className="font-semibold text-sm" style={{ color: NAVY }}>
-                          {tool.name}
-                        </div>
-                        <div 
-                          className="text-xs mt-1 font-medium"
-                          style={{ color: tool.statusColor }}
-                        >
-                          {tool.status}
-                        </div>
-                      </div>
+            {/* Content - Step 1 */}
+            {modalStep === 1 && (
+            <div className="p-5 lg:p-6">
+              <p className="text-slate-600 mb-5 leading-relaxed text-sm lg:text-base">
+                {selectedTool.description}
+              </p>
+              <div className="mb-6">
+                <div className="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-3">
+                  {selectedTool.id === 'leadership-profile' || selectedTool.id === 'ceo-board' ? "What's Available" : "What's Included"}
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                  {selectedTool.features.map((feature, idx) => (
+                    <div key={idx} className="flex items-center gap-2 text-sm text-slate-600">
+                      <CheckCircle className="w-4 h-4 text-[#0097A9] flex-shrink-0" />
+                      {feature}
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
-
-            {/* Recommended For You - For returning members */}
-            {!isNewMember && (
-              <div className="bg-white rounded-2xl border border-gray-300 overflow-hidden">
-                <div className="px-5 py-3 border-b border-gray-300 flex justify-between items-center">
-                  <h2 className="text-sm font-bold" style={{ color: NAVY }}>Recommended For You</h2>
-                  <a 
-                    onClick={() => onNavigate('library')}
-                    className="text-xs font-semibold cursor-pointer hover:underline"
-                    style={{ color: TEAL }}
-                  >
-                    See all →
-                  </a>
-                </div>
-                <div className="p-5">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div 
-                      onClick={() => onNavigate('library')}
-                      className="bg-gray-50 rounded-xl p-4 cursor-pointer hover:bg-gray-100 transition"
-                    >
-                      <span className="inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded mb-2 bg-blue-100 text-blue-700">
-                        TEMPLATE
-                      </span>
-                      <div className="font-bold text-sm mb-1" style={{ color: NAVY }}>
-                        Board Member Expectations Agreement
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        Clarify roles and commitments upfront
-                      </div>
-                    </div>
-                    <div 
-                      onClick={() => onNavigate('library')}
-                      className="bg-gray-50 rounded-xl p-4 cursor-pointer hover:bg-gray-100 transition"
-                    >
-                      <span className="inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded mb-2 bg-amber-100 text-amber-700">
-                        BOOK SUMMARY
-                      </span>
-                      <div className="font-bold text-sm mb-1" style={{ color: NAVY }}>
-                        Governance as Leadership
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        Reframing board work · 8 min read
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <div className="flex gap-3">
+                <button onClick={closeModal} className="flex-1 px-4 py-3 border border-slate-200 rounded-lg text-slate-600 font-medium hover:bg-slate-50 transition-colors text-sm lg:text-base">Cancel</button>
+                <button onClick={handleStartTool} className="flex-1 px-4 py-3 bg-[#0097A9] hover:bg-[#007f8f] text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors text-sm lg:text-base">
+                  <Play className="w-4 h-4" />
+                  Start Tool
+                </button>
               </div>
+            </div>
+            )}
+
+            {/* Step 2: Leadership Profile */}
+            {modalStep === 2 && selectedTool.id === 'leadership-profile' && (
+            <div className="p-5 lg:p-6">
+              <div className="bg-[#0D2C54] -mx-5 -mt-5 lg:-mx-6 lg:-mt-6 px-6 py-5 mb-5">
+                <div style={{fontSize:'10px',fontWeight:700,color:'#0097A9',letterSpacing:'1.2px',textTransform:'uppercase',marginBottom:'4px'}}>Edge Leadership Profile™</div>
+                <h2 className="text-lg font-extrabold text-white">Who is this assessment for?</h2>
+              </div>
+              {[
+                {id:'self',icon:'👤',title:'Assess Myself',desc:'Rate yourself on all 48 questions. Get your full report with scores, insights, and growth plan.'},
+                {id:'staff',icon:'👥',title:'Assess a Team Member',desc:'Rate a direct report. They get a development report. You get a coaching guide for the conversation.'},
+                {id:'180',icon:'🔄',title:'180° Assessment',desc:'You assess an employee and they assess themselves. Both get a combined report with a conversation guide.'},
+              ].map((mode) => (
+                <button key={mode.id} onClick={() => setLpMode(mode.id)}
+                  className="w-full flex items-start gap-3 p-4 mb-2 border-2 rounded-xl text-left transition-all"
+                  style={{borderColor: lpMode===mode.id ? '#0097A9' : '#e2e8f0', background: lpMode===mode.id ? 'rgba(0,151,169,0.05)' : '#fff'}}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0" style={{background: lpMode===mode.id ? '#0097A9' : '#f1f5f9'}}>{mode.icon}</div>
+                  <div className="flex-1">
+                    <div className="text-sm font-bold text-[#0D2C54]">{mode.title}</div>
+                    <div className="text-xs text-slate-500 leading-snug mt-0.5">{mode.desc}</div>
+                  </div>
+                  <div className="w-5 h-5 rounded-full flex-shrink-0 mt-1.5 transition-all" style={{border: lpMode===mode.id ? '6px solid #0097A9' : '2px solid #cbd5e1'}} />
+                </button>
+              ))}
+              <div className="flex gap-3 mt-4">
+                <button onClick={() => setModalStep(1)} className="flex-1 px-4 py-3 border border-slate-200 rounded-lg text-slate-600 font-medium hover:bg-slate-50 transition-colors text-sm">← Back</button>
+                <button onClick={handleStartTool} className="flex-1 px-4 py-3 bg-[#0097A9] hover:bg-[#007f8f] text-white rounded-lg font-medium text-sm transition-colors">
+                  {lpMode === 'self' ? 'Start Assessment →' : 'Start & Send Invitation →'}
+                </button>
+              </div>
+            </div>
+            )}
+
+            {/* Step 2: CEO & Board */}
+            {modalStep === 2 && selectedTool.id === 'ceo-board' && (
+            <div className="p-5 lg:p-6">
+              <div className="bg-[#0D2C54] -mx-5 -mt-5 lg:-mx-6 lg:-mt-6 px-6 py-5 mb-5">
+                <div style={{fontSize:'10px',fontWeight:700,color:'#0097A9',letterSpacing:'1.2px',textTransform:'uppercase',marginBottom:'4px'}}>CEO & Board Assessments</div>
+                <h2 className="text-lg font-extrabold text-white">What would you like to do?</h2>
+              </div>
+              {[
+                {id:'ceo-self',icon:'👤',title:'CEO Self-Assessment',desc:'Reflect on your executive leadership privately. Covers board relationship, strategic positioning, organizational health, and succession readiness. ~10 min.',badge:''},
+                {id:'board',icon:'📋',title:'Board Assessment',desc:'Evaluate board effectiveness across governance, strategy, fundraising, and oversight. Sent to all board members. CEO participation is optional. Responses aggregated anonymously.',badge:''},
+                {id:'eval',icon:'📊',title:'CEO Evaluation',desc:'Board members evaluate the CEO anonymously. CEO self-assessment is optional. Both sides receive a combined report with a structured meeting agenda.',badge:'Board → CEO · Responses aggregated anonymously'},
+              ].map((path) => (
+                <button key={path.id} onClick={() => setCbMode(path.id)}
+                  className="w-full flex items-start gap-3 p-4 mb-2 border-2 rounded-xl text-left transition-all"
+                  style={{borderColor: cbMode===path.id ? '#0097A9' : '#e2e8f0', background: cbMode===path.id ? 'rgba(0,151,169,0.05)' : '#fff'}}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0" style={{background: cbMode===path.id ? '#0097A9' : '#f1f5f9'}}>{path.icon}</div>
+                  <div className="flex-1">
+                    <div className="text-sm font-bold text-[#0D2C54]">{path.title}</div>
+                    <div className="text-xs text-slate-500 leading-snug mt-0.5">{path.desc}</div>
+                    {path.badge && <div className="inline-block mt-1.5 px-2 py-0.5 bg-red-50 text-red-600 text-xs font-semibold rounded">{path.badge}</div>}
+                  </div>
+                  <div className="w-5 h-5 rounded-full flex-shrink-0 mt-1.5 transition-all" style={{border: cbMode===path.id ? '6px solid #0097A9' : '2px solid #cbd5e1'}} />
+                </button>
+              ))}
+              <div className="flex gap-3 mt-4">
+                <button onClick={() => setModalStep(1)} className="flex-1 px-4 py-3 border border-slate-200 rounded-lg text-slate-600 font-medium hover:bg-slate-50 transition-colors text-sm">← Back</button>
+                <button onClick={handleStartTool} className="flex-1 px-4 py-3 bg-[#0097A9] hover:bg-[#007f8f] text-white rounded-lg font-medium text-sm transition-colors">
+                  {cbMode === 'ceo-self' ? 'Start Self-Assessment →' : cbMode === 'board' ? 'Send to Board →' : 'Set Up Evaluation →'}
+                </button>
+              </div>
+            </div>
             )}
           </div>
+        </div>
+      )}
 
-          {/* Right Sidebar */}
-          <div className="w-72 space-y-6">
-            {/* Ask the Professor Card */}
+      {/* PRODUCT TOUR - Hidden on mobile for better UX */}
+      {showTour && (
+        <>
+          <div 
+            className="fixed inset-0 z-[98]"
+            style={{
+              background: highlightRect ? 'transparent' : 'rgba(13, 44, 84, 0.8)'
+            }}
+          />
+
+          {highlightRect && (
             <div 
-              id="professor-card"
-              className="rounded-2xl p-5 text-white cursor-pointer hover:shadow-xl transition"
-              style={{ background: `linear-gradient(135deg, ${TEAL}, #007d8a)` }}
-              onClick={onStartProfessor}
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-2xl">🎓</span>
-                <span className="font-bold">Ask the Professor</span>
-              </div>
-              <p className="text-sm text-white/80 mb-3">
-                Need a thinking partner? Get expert guidance on strategy, governance, and leadership.
+              className="fixed z-[99] pointer-events-none transition-all duration-300 hidden lg:block"
+              style={{
+                top: highlightRect.top - 8,
+                left: highlightRect.left - 8,
+                width: highlightRect.width + 16,
+                height: highlightRect.height + 16,
+                border: '3px solid #0097A9',
+                borderRadius: '16px',
+                boxShadow: '0 0 0 9999px rgba(13, 44, 84, 0.8)',
+              }}
+            />
+          )}
+          
+          <div 
+            className="fixed z-[100] bg-white rounded-2xl w-[calc(100%-32px)] lg:w-[420px] overflow-hidden shadow-2xl left-4 right-4 lg:left-auto lg:right-auto"
+            style={{
+              ...(highlightRect && window.innerWidth >= 1024 ? {
+                top: tourSteps[tourStep].position === 'top' 
+                  ? highlightRect.top - 240
+                  : tourSteps[tourStep].position === 'bottom'
+                  ? highlightRect.bottom + 20
+                  : highlightRect.top + highlightRect.height / 2,
+                left: tourSteps[tourStep].position === 'right'
+                  ? highlightRect.right + 20
+                  : Math.max(20, Math.min(highlightRect.left + highlightRect.width / 2 - 210, window.innerWidth - 440)),
+                transform: tourSteps[tourStep].position === 'right' ? 'translateY(-50%)' : 'none'
+              } : {
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)'
+              }),
+              animation: 'modalSlideIn 0.3s ease'
+            }}
+          >
+            <div className="h-1 bg-slate-100">
+              <div 
+                className="h-full bg-[#0097A9] transition-all duration-300"
+                style={{ width: `${((tourStep + 1) / tourSteps.length) * 100}%` }}
+              />
+            </div>
+
+            <div className="p-5 lg:p-6">
+              <h3 className="text-lg lg:text-xl font-bold text-[#0D2C54] mb-2 text-center">
+                {tourSteps[tourStep].title}
+              </h3>
+              <p className="text-slate-600 mb-5 lg:mb-6 leading-relaxed text-center text-sm lg:text-base">
+                {tourSteps[tourStep].content}
               </p>
-              <div className="text-xs bg-white/20 rounded-lg px-3 py-2 text-center">
-                {usage?.professor_sessions_this_month || 0} / {organization?.tier === 'essential' ? '10' : '∞'} sessions this month
-              </div>
-            </div>
 
-            {/* Upcoming Events */}
-            <div className="bg-white rounded-2xl border border-gray-300 overflow-hidden">
-              <div className="px-4 py-3 border-b border-gray-300 flex justify-between items-center">
-                <h3 className="text-sm font-bold" style={{ color: NAVY }}>Upcoming Events</h3>
-                <a 
-                  onClick={() => onNavigate('events')}
-                  className="text-xs font-semibold cursor-pointer hover:underline"
-                  style={{ color: TEAL }}
+              <div className="flex gap-3">
+                <button
+                  onClick={handleTourSkip}
+                  className="flex-1 px-4 py-2.5 border border-slate-200 rounded-lg text-slate-500 font-medium hover:bg-slate-50 transition-colors text-sm"
                 >
-                  See all →
-                </a>
+                  Skip Tour
+                </button>
+                <button
+                  onClick={handleTourNext}
+                  className="flex-1 px-4 py-2.5 bg-[#0097A9] hover:bg-[#007f8f] text-white rounded-lg font-medium transition-colors text-sm"
+                >
+                  {tourStep === tourSteps.length - 1 ? 'Get Started' : 'Next'}
+                </button>
               </div>
-              <div className="p-4 space-y-3">
-                <div className="flex gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
-                  <div 
-                    className="w-12 h-12 rounded-lg flex flex-col items-center justify-center text-white text-xs font-bold"
-                    style={{ backgroundColor: NAVY }}
-                  >
-                    <span>JAN</span>
-                    <span className="text-lg">15</span>
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-semibold" style={{ color: NAVY }}>
-                      Board Engagement Strategies
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      12:00 PM PT · Live Webinar
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
-                  <div 
-                    className="w-12 h-12 rounded-lg flex flex-col items-center justify-center text-white text-xs font-bold"
-                    style={{ backgroundColor: TEAL }}
-                  >
-                    <span>JAN</span>
-                    <span className="text-lg">22</span>
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-semibold" style={{ color: NAVY }}>
-                      Strategic Planning Workshop
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      10:00 AM PT · Interactive
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            {/* Quick Stats */}
-            <div className="bg-white rounded-2xl border border-gray-300 p-4">
-              <h3 className="text-sm font-bold mb-3" style={{ color: NAVY }}>This Month</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500">Tools Used</span>
-                  <span className="text-sm font-bold" style={{ color: NAVY }}>
-                    {usage?.tools_used_this_month || 0}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500">Downloads</span>
-                  <span className="text-sm font-bold" style={{ color: NAVY }}>
-                    {usage?.downloads_this_month || 0}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500">Professor Sessions</span>
-                  <span className="text-sm font-bold" style={{ color: NAVY }}>
-                    {usage?.professor_sessions_this_month || 0}
-                  </span>
-                </div>
+              <div className="flex justify-center gap-2 mt-4">
+                {tourSteps.map((_, idx) => (
+                  <div 
+                    key={idx}
+                    className={`w-2 h-2 rounded-full transition-colors ${
+                      idx === tourStep ? 'bg-[#0097A9]' : idx < tourStep ? 'bg-[#0097A9]/50' : 'bg-slate-200'
+                    }`}
+                  />
+                ))}
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
+
+      {/* Commitment Modal */}
+      <CommitmentModal
+        isOpen={showCommitmentModal}
+        onClose={() => setShowCommitmentModal(false)}
+        onSave={handleSaveCommitment}
+        existingCommitments={commitments}
+        userEmail={user?.email}
+      />
+
+      {/* Animation keyframes */}
+      <style>{`
+        @keyframes modalSlideIn {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   );
 };
