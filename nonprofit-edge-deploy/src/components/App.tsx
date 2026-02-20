@@ -1,13 +1,18 @@
 /**
  * THE NONPROFIT EDGE - App.tsx
- * Complete Routing with Usage Tracking Integration
+ * Real Supabase Authentication + Complete Routing
  * 
- * FIXED: February 1, 2026
- * - Corrected all import paths to ./components/
- * - Added Leadership Assessment routes
+ * UPDATED: February 3, 2026
+ * - Real Supabase auth (no more mock users)
+ * - Listens to onAuthStateChange for login/logout/magic links
+ * - Loads user profile and organization from Supabase
+ * - Falls back to user_metadata if no profile table exists yet
+ * - All public routes (free tools, pages) work without login
  */
 
 import React, { useState, useEffect } from 'react';
+import { supabase } from './lib/supabase';
+import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
 
 // ============================================
 // COMPONENT IMPORTS
@@ -51,26 +56,34 @@ import WelcomeModal from './components/WelcomeModal';
 import AIGuideChatbot from './components/AIGuideChatbot';
 
 // ============================================
-// TOOL COMPONENTS - FIXED PATHS
+// TOOL COMPONENTS
 // ============================================
 import StrategicPlanCheckup from './components/StrategicPlanCheckup';
 import CEOEvaluation from './components/CEOEvaluation';
 import BoardAssessment from './components/BoardAssessment';
 import GrantReview from './components/GrantReview';
+import GrantReviewLanding from "./GrantReviewLanding";
 import ScenarioPlanner from './components/ScenarioPlanner';
 import AskTheProfessor from './components/AskTheProfessor';
 
-// Leadership Assessment (NEW)
+// Leadership Assessment
 import LeadershipAssessment from './components/LeadershipAssessment';
 import LeadershipReport from './components/LeadershipReport';
 import LeadershipProfile from './components/LeadershipProfile';
 
 // Landing Page Components
-import ScenarioPlannerLanding from './components/ScenarioPlannerLanding';
-import BoardAssessmentLanding from './components/BoardAssessmentLanding';
-import CEOEvaluationLanding from './components/CEOEvaluationLanding';
-import StrategicPlanCheckupLanding from './components/StrategicPlanCheckupLanding';
+import ScenarioPlannerLanding from './ScenarioPlannerLanding';
+import BoardAssessmentLanding from './BoardAssessmentLanding';
+import CEOEvaluationLanding from './CEOEvaluationLanding';
+import StrategicPlanCheckupLanding from './StrategicPlanCheckupLanding';
 import CertificationsLanding from './components/CertificationsLanding';
+import ResourcesLanding from './ResourcesLanding';
+
+// New Public Page Components
+import AskProfessorFree from './components/AskProfessorFree';
+import WhyWeExist from './components/WhyWeExist';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import TermsOfService from './components/TermsOfService';
 
 // Tracking utilities
 import { 
@@ -85,7 +98,7 @@ import {
 // TYPES
 // ============================================
 
-interface User {
+interface AppUser {
   id: string;
   email: string;
   name: string;
@@ -130,7 +143,7 @@ const TEAL = '#0097A9';
 // LOGO COMPONENT
 // ============================================
 
-const Logo = ({ width = 180 }: { width?: number }) => (
+const Logo = ({ width = 280 }: { width?: number }) => (
   <img 
     src="/logo.svg" 
     alt="The Nonprofit Edge" 
@@ -139,12 +152,41 @@ const Logo = ({ width = 180 }: { width?: number }) => (
 );
 
 // ============================================
+// HELPER: Build user & org from Supabase session
+// ============================================
+
+const buildUserFromSession = (supabaseUser: SupabaseUser): { user: AppUser; org: Organization } => {
+  const meta = supabaseUser.user_metadata || {};
+  
+  const user: AppUser = {
+    id: supabaseUser.id,
+    email: supabaseUser.email || '',
+    name: meta.full_name || meta.name || supabaseUser.email?.split('@')[0] || 'User',
+    full_name: meta.full_name || meta.name || supabaseUser.email?.split('@')[0] || 'User',
+    role: meta.role || 'member',
+    organization_id: meta.organization_id || 'org_' + supabaseUser.id.slice(0, 8),
+    avatar_url: meta.avatar_url || null,
+    profile_photo: null,
+    created_at: supabaseUser.created_at,
+  };
+
+  const org: Organization = {
+    id: user.organization_id,
+    name: meta.organization || 'My Organization',
+    tier: meta.plan || 'professional',
+    logo_url: null,
+  };
+
+  return { user, org };
+};
+
+// ============================================
 // MAIN APP COMPONENT
 // ============================================
 
 const App: React.FC = () => {
   const [currentRoute, setCurrentRoute] = useState<string>(window.location.pathname);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentSession, setCurrentSession] = useState<ToolSession | null>(null);
@@ -158,33 +200,122 @@ const App: React.FC = () => {
     report_downloads: 0,
   });
 
+  // ============================================
+  // SUPABASE AUTH LISTENER
+  // ============================================
   useEffect(() => {
-    const handlePopState = () => {
-      setCurrentRoute(window.location.pathname);
-    };
+    // Handle browser back/forward
+    const handlePopState = () => setCurrentRoute(window.location.pathname);
     window.addEventListener('popstate', handlePopState);
 
-    try {
-      const savedUser = localStorage.getItem('nonprofit_edge_user');
-      const savedOrg = localStorage.getItem('nonprofit_edge_org');
-      const savedUsage = localStorage.getItem('nonprofit_edge_usage');
+    // Check for existing session on load
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          const { user: appUser, org } = buildUserFromSession(session.user);
+          setUser(appUser);
+          setOrganization(org);
+
+          // Try to load profile from profiles table (if it exists)
+          try {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+
+            if (profile) {
+              setUser(prev => prev ? {
+                ...prev,
+                name: profile.full_name || prev.name,
+                full_name: profile.full_name || prev.full_name,
+                role: profile.role || prev.role,
+                organization_id: profile.organization_id || prev.organization_id,
+                avatar_url: profile.avatar_url || prev.avatar_url,
+              } : prev);
+            }
+          } catch {
+            // profiles table might not exist yet — that's fine, use metadata
+          }
+
+          // Try to load org details
+          try {
+            const { data: orgData } = await supabase
+              .from('organizations')
+              .select('*')
+              .eq('id', appUser.organization_id)
+              .single();
+
+            if (orgData) {
+              setOrganization({
+                id: orgData.id,
+                name: orgData.name || 'My Organization',
+                tier: orgData.tier || 'professional',
+                logo_url: orgData.logo_url || null,
+              });
+            }
+          } catch {
+            // organizations table might not exist yet — use defaults
+          }
+
+          // Load saved usage
+          const savedUsage = localStorage.getItem('nonprofit_edge_usage');
+          if (savedUsage) {
+            try { setUsage(JSON.parse(savedUsage)); } catch {}
+          }
+        }
+      } catch (err) {
+        console.error('[App] Auth init error:', err);
+      }
       
-      if (savedUser) setUser(JSON.parse(savedUser));
-      if (savedOrg) setOrganization(JSON.parse(savedOrg));
-      if (savedUsage) setUsage(JSON.parse(savedUsage));
-    } catch (e) {
-      console.error('Error loading saved data:', e);
-    }
-    
-    setIsLoading(false);
-    return () => window.removeEventListener('popstate', handlePopState);
+      setIsLoading(false);
+    };
+
+    initAuth();
+
+    // Listen for auth state changes (login, logout, magic link callbacks)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('[Auth]', event, session?.user?.email);
+
+        if (event === 'SIGNED_IN' && session?.user) {
+          const { user: appUser, org } = buildUserFromSession(session.user);
+          setUser(appUser);
+          setOrganization(org);
+
+          // If we're on login/signup page, redirect to dashboard
+          if (currentRoute === '/login' || currentRoute === '/signup' || currentRoute === '/') {
+            navigate('/dashboard');
+          }
+        }
+
+        if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setOrganization(null);
+          localStorage.removeItem('nonprofit_edge_usage');
+          navigate('/');
+        }
+      }
+    );
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      subscription.unsubscribe();
+    };
   }, []);
 
+  // Persist usage
   useEffect(() => {
     if (user) {
       localStorage.setItem('nonprofit_edge_usage', JSON.stringify(usage));
     }
   }, [usage, user]);
+
+  // ============================================
+  // NAVIGATION
+  // ============================================
 
   const navigate = (route: string) => {
     setCurrentRoute(route);
@@ -192,39 +323,49 @@ const App: React.FC = () => {
     window.scrollTo(0, 0);
   };
 
-  const handleLogin = (email: string) => {
-    const newUser: User = {
-      id: 'user_' + Date.now(),
-      email: email,
-      name: email.split('@')[0],
-      full_name: email.split('@')[0],
-      role: email.includes('owner') ? 'owner' : 'member',
-      organization_id: 'org_1',
+  // ============================================
+  // AUTH HANDLERS
+  // ============================================
+
+  const handleLoginSuccess = (userData: { id: string; email: string; name: string; role: string }) => {
+    // Build user/org from the data Login.tsx passes back
+    const appUser: AppUser = {
+      id: userData.id,
+      email: userData.email,
+      name: userData.name,
+      full_name: userData.name,
+      role: (userData.role as 'owner' | 'admin' | 'member') || 'member',
+      organization_id: 'org_' + userData.id.slice(0, 8),
       created_at: new Date().toISOString(),
     };
-    
-    const newOrg: Organization = {
-      id: 'org_1',
-      name: 'Your Organization',
+
+    const org: Organization = {
+      id: appUser.organization_id,
+      name: 'My Organization',
       tier: 'professional',
     };
-    
-    setUser(newUser);
-    setOrganization(newOrg);
-    localStorage.setItem('nonprofit_edge_user', JSON.stringify(newUser));
-    localStorage.setItem('nonprofit_edge_org', JSON.stringify(newOrg));
+
+    setUser(appUser);
+    setOrganization(org);
     navigate('/dashboard');
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error('[App] Logout error:', err);
+    }
     setUser(null);
     setOrganization(null);
     setCurrentSession(null);
-    localStorage.removeItem('nonprofit_edge_user');
-    localStorage.removeItem('nonprofit_edge_org');
     localStorage.removeItem('nonprofit_edge_usage');
     navigate('/');
   };
+
+  // ============================================
+  // TOOL TRACKING HANDLERS
+  // ============================================
 
   const handleToolStart = async (toolId: string, toolName: string): Promise<string | null> => {
     if (!user || !organization) return null;
@@ -275,44 +416,9 @@ const App: React.FC = () => {
     navigate('/ask-the-professor/use');
   };
 
-  interface ToolWrapperProps {
-    toolId: string;
-    toolName: string;
-    children: React.ReactNode;
-  }
-
-  const ToolPageWrapper: React.FC<ToolWrapperProps> = ({ toolId, toolName, children }) => {
-    const [sessionId, setSessionId] = useState<string | null>(null);
-
-    useEffect(() => {
-      handleToolStart(toolId, toolName).then(id => setSessionId(id));
-    }, [toolId, toolName]);
-
-    const onComplete = (score?: number) => {
-      if (sessionId) handleToolComplete(sessionId, toolName, score);
-    };
-
-    return (
-      <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: 'system-ui, sans-serif' }}>
-        <header style={{ background: 'white', padding: '12px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <Logo width={140} />
-            <span style={{ color: '#cbd5e1' }}>|</span>
-            <span style={{ color: NAVY, fontWeight: 600 }}>{toolName}</span>
-          </div>
-          <button onClick={() => navigate('/dashboard')} style={{ padding: '8px 16px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-            ← Back to Dashboard
-          </button>
-        </header>
-        {React.Children.map(children, child => {
-          if (React.isValidElement(child)) {
-            return React.cloneElement(child, { onComplete, sessionId, onBack: () => navigate('/dashboard') } as any);
-          }
-          return child;
-        })}
-      </div>
-    );
-  };
+  // ============================================
+  // AUTH GUARD
+  // ============================================
 
   const requireAuth = (component: React.ReactNode): React.ReactNode => {
     if (!user) {
@@ -322,21 +428,30 @@ const App: React.FC = () => {
     return component;
   };
 
+  // ============================================
+  // LOADING STATE
+  // ============================================
+
   if (isLoading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
         <div style={{ textAlign: 'center' }}>
-          <Logo width={200} />
+          <Logo width={320} />
           <p style={{ color: '#64748b', marginTop: '16px' }}>Loading...</p>
         </div>
       </div>
     );
   }
 
+  // ============================================
+  // DASHBOARD NAVIGATION MAP
+  // ============================================
+
   const mapDashboardNavigation = (page: string): string => {
     const routeMap: Record<string, string> = {
       'dashboard': '/dashboard',
       'library': '/resources',
+      'member-resources': '/resources',
       'events': '/events',
       'settings': '/settings',
       'constraint-assessment': '/constraint-assessment',
@@ -361,17 +476,26 @@ const App: React.FC = () => {
     return routeMap[page] || `/${page}`;
   };
 
+  // ============================================
+  // ROUTING
+  // ============================================
+
   const renderRoute = (): React.ReactNode => {
     switch (currentRoute) {
-      // PUBLIC ROUTES
+      // ============================================
+      // PUBLIC ROUTES (No login required)
+      // ============================================
       case '/':
         return <Homepage onNavigate={navigate} />;
       
       case '/login':
-        return <Login onLogin={handleLogin} onNavigate={navigate} />;
+        // If already logged in, go to dashboard
+        if (user) { navigate('/dashboard'); return null; }
+        return <Login onLoginSuccess={handleLoginSuccess} onNavigate={navigate} />;
       
       case '/signup':
-        return <SignUp onSignUp={handleLogin} onNavigate={navigate} />;
+        if (user) { navigate('/dashboard'); return null; }
+        return <SignUp onSignUpSuccess={handleLoginSuccess} onNavigate={navigate} />;
       
       case '/signup/success':
         return <SignUpSuccess onNavigate={navigate} />;
@@ -386,9 +510,27 @@ const App: React.FC = () => {
       case '/assessment':
         return <CoreConstraintAssessment onNavigate={navigate} />;
 
+      // ASK THE PROFESSOR - FREE PREVIEW (Public, one question, no login)
+      case '/ask-the-professor':
+      case '/ask-free':
+        return <AskProfessorFree onNavigate={navigate} />;
+
+      // WHY WE EXIST PAGE
+      case '/why-we-exist':
+        return <WhyWeExist onNavigate={navigate} />;
+
+      // PRIVACY & TERMS
+      case '/privacy':
+        return <PrivacyPolicy onNavigate={navigate} />;
+      
+      case '/terms':
+        return <TermsOfService onNavigate={navigate} />;
+
+      // ============================================
       // TOOL LANDING PAGES (Public)
+      // ============================================
       case '/strategic-plan-checkup':
-        return <StrategicPlanCheckupLanding onNavigate={navigate} onGetStarted={() => navigate('/strategic-plan-checkup/use')} />;
+        return <StrategicPlanCheckupLanding />;
       
       case '/board-assessment':
         return <BoardAssessmentLanding onNavigate={navigate} onGetStarted={() => navigate('/board-assessment/use')} />;
@@ -399,10 +541,18 @@ const App: React.FC = () => {
       case '/scenario-planner':
         return <ScenarioPlannerLanding onNavigate={navigate} onGetStarted={() => navigate('/scenario-planner/use')} />;
       
+      case '/grant-review':
+        return <GrantReviewLanding onNavigate={navigate} onGetStarted={() => navigate('/grant-review/use')} />;
+
+      case '/resources-landing':
+        return <ResourcesLanding onNavigate={navigate} onGetStarted={() => navigate('/signup')} />;
+
       case '/certifications':
         return <CertificationsLanding onNavigate={navigate} />;
 
-      // TOOL PAGES (Require Auth) - Direct render without wrapper
+      // ============================================
+      // TOOL PAGES (Require Auth) - Direct render
+      // ============================================
       case '/strategic-plan-checkup/use':
         return requireAuth(<StrategicPlanCheckup onNavigate={navigate} />);
       
@@ -421,14 +571,18 @@ const App: React.FC = () => {
       case '/ask-the-professor/use':
         return requireAuth(<AskTheProfessor onNavigate={navigate} />);
 
-      // LEADERSHIP ASSESSMENT (NEW)
+      // ============================================
+      // LEADERSHIP ASSESSMENT
+      // ============================================
       case '/leadership-assessment':
         return requireAuth(<LeadershipAssessment onNavigate={navigate} />);
       
       case '/leadership-assessment/report':
         return requireAuth(<LeadershipReport onNavigate={navigate} />);
 
-      // USER PAGES
+      // ============================================
+      // USER PAGES (Require Auth)
+      // ============================================
       case '/settings':
         return requireAuth(<Settings onNavigate={navigate} onLogout={handleLogout} />);
 
@@ -438,7 +592,7 @@ const App: React.FC = () => {
       case '/favorites':
         return requireAuth(<SavedFavorites onNavigate={navigate} />);
 
-      // CONSTRAINT ASSESSMENT
+      // CONSTRAINT ASSESSMENT (Full Member Version)
       case '/constraint-assessment':
       case '/dashboard/constraint-assessment':
         return requireAuth(<ConstraintAssessment onNavigate={navigate} />);
@@ -447,7 +601,9 @@ const App: React.FC = () => {
       case '/dashboard/constraint-report':
         return requireAuth(<ConstraintReport onNavigate={navigate} />);
 
+      // ============================================
       // DASHBOARD
+      // ============================================
       case '/dashboard':
         if (!user || !organization) {
           navigate('/login');
@@ -467,26 +623,31 @@ const App: React.FC = () => {
         );
 
       case '/resources':
-        return requireAuth(
+      case '/member-resources':
+        if (!user || !organization) { navigate('/login'); return null; }
+        return (
           <ResourceLibrary 
-            user={{ ...user!, full_name: user!.name }}
-            organization={organization!}
+            user={{ ...user, full_name: user.name }}
+            organization={organization}
             onNavigate={(page: string) => navigate(mapDashboardNavigation(page))}
             onLogout={handleLogout}
           />
         );
 
       case '/events':
-        return requireAuth(
+        if (!user || !organization) { navigate('/login'); return null; }
+        return (
           <EventsCalendar 
-            user={{ ...user!, full_name: user!.name }}
-            organization={organization!}
+            user={{ ...user, full_name: user.name }}
+            organization={organization}
             onNavigate={(page: string) => navigate(mapDashboardNavigation(page))}
             onLogout={handleLogout}
           />
         );
 
+      // ============================================
       // ADMIN ROUTES
+      // ============================================
       case '/admin':
       case '/admin/owner':
       case '/admin/enhanced':
@@ -507,7 +668,9 @@ const App: React.FC = () => {
       case '/admin/platform':
         return requireAuth(<AdminDashboard />);
 
+      // ============================================
       // LEGACY REDIRECTS
+      // ============================================
       case '/tools/strategic-plan':
         navigate('/strategic-plan-checkup/use');
         return null;
@@ -532,7 +695,9 @@ const App: React.FC = () => {
         navigate('/ask-the-professor/use');
         return null;
 
+      // ============================================
       // DEFAULT
+      // ============================================
       default:
         if (currentRoute.startsWith('/tools/')) {
           navigate('/dashboard');

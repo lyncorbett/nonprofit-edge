@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
 import { 
   Search, X, MessageSquare, Wrench, FileText, BookOpen, 
   Bookmark, PlayCircle, Users, Award, Download, ChevronRight,
@@ -36,8 +35,6 @@ interface Resource {
   description?: string;
   price?: string;
   partner?: string | null;
-  downloadCount?: number;
-  isFromDb?: boolean;
 }
 
 interface CategoryConfig {
@@ -130,13 +127,14 @@ const categoryConfig: Record<string, CategoryConfig> = {
 
 const resources: Resource[] = [
   // Tools
+  { name: 'Dashboard Creator', type: 'tools', url: '/tools/dashboard-creator.html', tags: ['dashboard', 'reports', 'board'], featured: true },
+  { name: 'Strategic Plan Tracker', type: 'tools', url: '/tools/strategic-plan-tracker.html', tags: ['strategy', 'planning', 'tracking'], featured: true },
+  { name: 'Ask the Professor', type: 'tools', url: '/ask-the-professor/use', tags: ['ai', 'coaching', 'advisor'], featured: true },
   { name: 'Edge Leadership Profile™', type: 'tools', url: '/tools/leadership-profile', tags: ['leadership', 'assessment'] },
   { name: 'Board Assessment', type: 'tools', url: '/tools/board-assessment', tags: ['board', 'governance', 'assessment'] },
   { name: 'Core Constraint Assessment', type: 'tools', url: '/tools/core-constraint', tags: ['strategy', 'assessment'] },
   { name: 'Grant/RFP Review', type: 'tools', url: '/tools/grant-review', tags: ['grants', 'fundraising'] },
   { name: 'Scenario Planner', type: 'tools', url: '/tools/scenario-planner', tags: ['strategy', 'planning'] },
-  { name: 'Strategic Planning Tracker', type: 'tools', url: '/tools/strategic-tracker', tags: ['strategy', 'planning'] },
-  { name: 'Dashboards', type: 'tools', url: '/tools/dashboards', tags: ['data', 'tracking'] },
   { name: 'CEO Evaluation', type: 'tools', url: '/tools/ceo-evaluation', tags: ['leadership', 'evaluation'] },
   { name: 'Strategic Plan Check-Up', type: 'tools', url: '/tools/strategic-checkup', tags: ['strategy', 'assessment'] },
   
@@ -225,56 +223,6 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [activeSubcategory, setActiveSubcategory] = useState('all');
   const [modalSearchQuery, setModalSearchQuery] = useState('');
-  const [dbResources, setDbResources] = useState<Resource[]>([]);
-  const [loadingResources, setLoadingResources] = useState(true);
-
-  // Load resources from Supabase
-  useEffect(() => {
-    const loadResources = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('resources')
-          .select('*')
-          .order('created_at', { ascending: false });
-        
-        if (error) {
-          console.error('Error loading resources:', error);
-          return;
-        }
-
-        if (data) {
-          // Map DB categories to internal type keys
-          const categoryToType: Record<string, string> = {
-            'Templates': 'templates',
-            'Playbooks': 'playbooks',
-            'Book Summaries': 'books',
-            'Leadership Guides': 'guides',
-            'Facilitation Kits': 'kits',
-            'Certifications': 'certs'
-          };
-
-          const mapped: Resource[] = data.map((r: any) => ({
-            name: r.title,
-            type: categoryToType[r.category] || 'templates',
-            url: r.file_url || '#',
-            tags: r.tags || [],
-            description: r.description || '',
-            downloadCount: r.download_count || 0,
-            isFromDb: true
-          }));
-          setDbResources(mapped);
-        }
-      } catch (err) {
-        console.error('Failed to load resources:', err);
-      }
-      setLoadingResources(false);
-    };
-    loadResources();
-  }, []);
-
-  // Merge static resources (tools only) with DB resources
-  const staticTools = resources.filter(r => r.type === 'tools');
-  const allResources = [...staticTools, ...dbResources];
 
   // Navigation helper - uses onNavigate prop from App.tsx
   const navigate = (page: string) => {
@@ -293,7 +241,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
     }
 
     const query = searchQuery.toLowerCase();
-    const matches = allResources.filter(r =>
+    const matches = resources.filter(r =>
       r.name.toLowerCase().includes(query) ||
       r.tags.some(tag => tag.includes(query))
     );
@@ -331,7 +279,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
         : certifications;
     }
 
-    let items = allResources.filter(r => r.type === activeModal);
+    let items = resources.filter(r => r.type === activeModal);
     
     if (activeSubcategory !== 'all') {
       items = items.filter(r =>
@@ -486,35 +434,68 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
 
         {/* Category Cards Grid */}
         <div className="grid grid-cols-3 gap-5 mb-8">
-          {/* Ask the Professor - Spans 2 columns */}
+          {/* Ask the Professor - Single column */}
           <div
-            className="col-span-2 bg-gradient-to-br from-[#0D2C54] to-[#1a3a5c] rounded-2xl p-6 cursor-pointer hover:-translate-y-1 hover:shadow-xl transition-all relative overflow-hidden group"
+            onClick={() => onStartProfessor ? onStartProfessor() : navigate('ask-the-professor')}
+            className="bg-gradient-to-br from-[#0D2C54] to-[#1a3a5c] rounded-2xl p-5 cursor-pointer hover:-translate-y-1 hover:shadow-xl transition-all relative overflow-hidden group"
           >
-            <div className="absolute top-[-50%] right-[-20%] w-[300px] h-[300px] bg-[radial-gradient(circle,rgba(0,151,169,0.15)_0%,transparent_70%)]" />
+            <div className="absolute top-[-50%] right-[-20%] w-[200px] h-[200px] bg-[radial-gradient(circle,rgba(0,151,169,0.15)_0%,transparent_70%)]" />
             <div className="relative z-10">
-              <span className="inline-flex items-center gap-1.5 bg-[#0097A9] text-white px-3 py-1 rounded-full text-xs font-semibold mb-4">
+              <span className="inline-flex items-center gap-1.5 bg-[#0097A9] text-white px-2.5 py-0.5 rounded-full text-[10px] font-semibold mb-3">
                 <Star className="w-3 h-3" />
                 AI-Powered
               </span>
-              <div className="flex items-center gap-4 mb-3">
-                <div className="w-12 h-12 rounded-xl bg-[rgba(0,151,169,0.2)] border-2 border-[#0097A9] flex items-center justify-center">
-                  <MessageSquare className="w-6 h-6 text-[#5fd4e0]" />
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-[rgba(0,151,169,0.2)] border border-[#0097A9] flex items-center justify-center">
+                  <MessageSquare className="w-5 h-5 text-[#5fd4e0]" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white">Ask the Professor</h3>
-                  <p className="text-sm text-[#5fd4e0]">Your nonprofit leadership advisor</p>
+                  <h3 className="text-base font-bold text-white">Ask the Professor</h3>
+                  <p className="text-xs text-[#5fd4e0]">Your leadership advisor</p>
                 </div>
               </div>
-              <p className="text-white/70 text-sm mb-5 leading-relaxed">
-                Get instant expert guidance on strategy, governance, fundraising, and any leadership challenge. Drawing from 15+ years of consulting experience with 800+ nonprofits.
+              <p className="text-white/70 text-xs mb-4 leading-relaxed line-clamp-2">
+                Get instant expert guidance on strategy, governance, fundraising, and leadership.
               </p>
-              <button
-                onClick={() => onStartProfessor ? onStartProfessor() : navigate('ask-the-professor')}
-                className="inline-flex items-center gap-2 bg-[#0097A9] text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#5fd4e0] transition-colors"
-              >
-                Start a Conversation
+              <div className="flex items-center gap-2 text-[#0097A9] text-sm font-semibold group-hover:text-[#5fd4e0] transition-colors">
+                Start Conversation
                 <ChevronRight className="w-4 h-4" />
-              </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Dashboard Creator - Single column */}
+          <div
+            onClick={() => navigate('dashboard-creator')}
+            className="bg-gradient-to-br from-[#D4A84B] to-[#b8922f] rounded-2xl p-5 cursor-pointer hover:-translate-y-1 hover:shadow-xl transition-all relative overflow-hidden group"
+          >
+            <div className="absolute top-[-50%] right-[-20%] w-[200px] h-[200px] bg-[radial-gradient(circle,rgba(255,255,255,0.15)_0%,transparent_70%)]" />
+            <div className="relative z-10">
+              <span className="inline-flex items-center gap-1.5 bg-white/20 text-white px-2.5 py-0.5 rounded-full text-[10px] font-semibold mb-3">
+                <Star className="w-3 h-3" />
+                New
+              </span>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="7" height="7" rx="1" strokeWidth="2"/>
+                    <rect x="14" y="3" width="7" height="7" rx="1" strokeWidth="2"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1" strokeWidth="2"/>
+                    <rect x="14" y="14" width="7" height="7" rx="1" strokeWidth="2"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Dashboard Creator</h3>
+                  <p className="text-xs text-white/80">Build custom dashboards</p>
+                </div>
+              </div>
+              <p className="text-white/70 text-xs mb-4 leading-relaxed line-clamp-2">
+                Create personalized dashboards to track your organization's key metrics and goals.
+              </p>
+              <div className="flex items-center gap-2 text-white text-sm font-semibold group-hover:text-white/80 transition-colors">
+                Create Dashboard
+                <ChevronRight className="w-4 h-4" />
+              </div>
             </div>
           </div>
 
@@ -671,22 +652,15 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
                       <a
                         key={idx}
                         href={item.url}
-                        onClick={(e) => { 
-                          e.preventDefault(); 
-                          if ((item as any).isFromDb && item.url.startsWith('http')) {
-                            window.open(item.url, '_blank');
-                          } else {
-                            navigate(item.url); 
-                          }
-                        }}
+                        onClick={(e) => { e.preventDefault(); navigate(item.url); }}
                         className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-[#e6f7f8] transition-colors"
                       >
                         <div>
                           <h4 className="text-sm font-semibold text-[#0D2C54] mb-0.5">{item.name}</h4>
-                          <p className="text-xs text-slate-400">{item.tags.length > 0 ? item.tags.slice(0, 3).join(' • ') : (item.description || '').slice(0, 60)}</p>
+                          <p className="text-xs text-slate-400">{item.tags.slice(0, 3).join(' • ')}</p>
                         </div>
                         <span className="px-3 py-1.5 bg-[#0D2C54] text-white text-xs font-semibold rounded hover:bg-[#0097A9] transition-colors flex-shrink-0">
-                          {activeModal === 'tools' ? 'Open' : (item as any).isFromDb ? 'Download' : 'View'}
+                          {activeModal === 'tools' ? 'Open' : 'View'}
                         </span>
                       </a>
                     ))
@@ -737,13 +711,7 @@ const CategoryCard: React.FC<{
         </div>
         <div>
           <h3 className="text-base font-bold text-[#0D2C54]">{config.label}</h3>
-          <span className="text-xs text-slate-400">
-            {(() => {
-              const typeKey = Object.entries(categoryConfig).find(([_, v]) => v.label === config.label)?.[0];
-              const count = typeKey ? allResources.filter(r => r.type === typeKey).length : 0;
-              return `${count} ${config.label.toLowerCase()}`;
-            })()}
-          </span>
+          <span className="text-xs text-slate-400">{config.count}</span>
         </div>
       </div>
       <p className="text-sm text-slate-500 mb-3 leading-relaxed">{config.description}</p>

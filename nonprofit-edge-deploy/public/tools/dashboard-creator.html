@@ -1,0 +1,2140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Generator — The Nonprofit Edge</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --navy:#0D2C54; --navy2:#1a4175; --teal:#0097A9; --teal2:#00b8cc;
+  --gold:#f59e0b; --green:#10b981; --red:#ef4444; --purple:#6366f1;
+  --orange:#f97316; --slate:#64748b; --border:#e2e8f0;
+  --bg:#f1f5f9; --white:#fff; --text:#1e293b; --text2:#475569;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ===== NAV ===== */
+nav{
+  background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);
+  height:58px;display:flex;align-items:center;padding:0 22px;
+  gap:14px;position:sticky;top:0;z-index:200;
+  box-shadow:0 4px 20px rgba(13,44,84,.4);
+}
+.nav-brand{display:flex;align-items:center;gap:11px;flex:1;min-width:0;}
+.nav-tne-logo{
+  width:36px;height:36px;border-radius:9px;flex-shrink:0;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'DM Serif Display',serif;font-size:13px;font-weight:700;
+  color:#fff;letter-spacing:.02em;overflow:hidden;
+}
+.nav-tne-logo img{width:100%;height:100%;object-fit:cover;}
+.nav-divider{width:1px;height:22px;background:rgba(255,255,255,.15);flex-shrink:0;}
+.nav-logo{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;white-space:nowrap;}
+.nav-logo em{color:var(--teal);font-style:normal;}
+.nav-back{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.07);color:rgba(255,255,255,.75);
+  font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;
+  cursor:pointer;text-decoration:none;transition:all .15s;white-space:nowrap;
+  flex-shrink:0;
+}
+.nav-back:hover{background:rgba(255,255,255,.15);color:#fff;}
+
+/* ===== HEADER CUSTOMIZE MODAL ===== */
+.hdr-modal-overlay{display:none;position:fixed;inset:0;background:rgba(13,44,84,.55);backdrop-filter:blur(4px);z-index:600;align-items:center;justify-content:center;padding:20px;}
+.hdr-modal-overlay.show{display:flex;}
+.hdr-modal{background:#fff;border-radius:20px;width:100%;max-width:420px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.25);}
+.hdr-modal-head{padding:20px 24px;background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);position:relative;}
+.hdr-modal-close{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.12);border:none;border-radius:7px;width:28px;height:28px;cursor:pointer;color:#fff;font-size:15px;display:flex;align-items:center;justify-content:center;}
+.hdr-modal-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:2px;}
+.hdr-modal-sub{font-size:12px;color:rgba(255,255,255,.6);}
+.hdr-modal-body{padding:22px 24px;display:flex;flex-direction:column;gap:18px;}
+.hm-section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--slate);margin-bottom:8px;}
+/* logo upload zone */
+.logo-upload-zone{
+  border:2px dashed var(--border);border-radius:12px;padding:20px;
+  text-align:center;cursor:pointer;transition:all .15s;position:relative;overflow:hidden;
+}
+.logo-upload-zone:hover{border-color:var(--teal);background:rgba(0,151,169,.04);}
+.logo-upload-zone.has-logo{border-style:solid;border-color:var(--teal);padding:10px;}
+.logo-upload-zone img{max-height:60px;max-width:200px;object-fit:contain;display:block;margin:0 auto;}
+.logo-upload-hint{font-size:12px;color:var(--slate);margin-top:6px;}
+.logo-upload-icon{font-size:28px;margin-bottom:6px;}
+.logo-clear-btn{
+  margin-top:8px;padding:4px 12px;background:transparent;border:1px solid var(--border);
+  border-radius:7px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;
+  color:var(--slate);cursor:pointer;transition:all .12s;
+}
+.logo-clear-btn:hover{border-color:var(--red);color:var(--red);}
+/* color swatches */
+.color-swatches{display:flex;flex-wrap:wrap;gap:8px;}
+.color-swatch{
+  width:36px;height:36px;border-radius:9px;cursor:pointer;
+  border:2px solid transparent;transition:all .15s;flex-shrink:0;
+}
+.color-swatch:hover{transform:scale(1.1);}
+.color-swatch.selected{border-color:var(--text);box-shadow:0 0 0 2px #fff inset;}
+.custom-color-wrap{display:flex;align-items:center;gap:8px;margin-top:6px;}
+.custom-color-input{width:44px;height:36px;padding:2px;border:1px solid var(--border);border-radius:8px;cursor:pointer;background:none;}
+.custom-color-label{font-size:12px;color:var(--slate);}
+/* preview swatch */
+.hdr-preview{
+  border-radius:12px;padding:14px 16px;margin-top:4px;
+  display:flex;align-items:center;gap:12px;
+}
+.hdr-preview-logo{width:40px;height:40px;border-radius:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;overflow:hidden;flex-shrink:0;}
+.hdr-preview-logo img{width:100%;height:100%;object-fit:contain;}
+.hdr-preview-text{flex:1;}
+.hdr-preview-org{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;}
+.hdr-preview-sub{font-size:11px;color:rgba(255,255,255,.6);margin-top:1px;}
+.hdr-apply-btn{width:100%;padding:12px;background:var(--teal);border:none;border-radius:11px;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:background .12s;}
+.hdr-apply-btn:hover{background:var(--teal2);}
+.nav-tabs{display:flex;gap:3px;}
+.nav-tab{
+  padding:7px 16px;border-radius:8px;border:none;cursor:pointer;
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;
+  transition:all .18s;
+}
+.nav-tab.on{background:var(--teal);color:#fff;}
+.nav-tab:not(.on){background:rgba(255,255,255,.08);color:rgba(255,255,255,.65);}
+.nav-tab:not(.on):hover{background:rgba(255,255,255,.15);color:#fff;}
+.nav-actions{display:flex;gap:8px;margin-left:12px;}
+.nbtn{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:7px 16px;border-radius:9px;border:none;
+  font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;
+  cursor:pointer;transition:all .15s;
+}
+.nbtn-save{background:var(--green);color:#fff;}
+.nbtn-save:hover{background:#0ea271;}
+.nbtn-pdf{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.18);}
+.nbtn-pdf:hover{background:rgba(255,255,255,.18);}
+.nbtn-new{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.18);}
+.nbtn-new:hover{background:rgba(255,255,255,.18);}
+
+/* ===== PAGES ===== */
+.page{display:none;}
+.page.active{display:block;}
+
+/* ===== HOME PAGE ===== */
+.home-wrap{max-width:1100px;margin:0 auto;padding:36px 28px;}
+.home-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;}
+.home-title{font-family:'DM Serif Display',serif;font-size:26px;color:var(--navy);}
+.home-sub{font-size:13px;color:var(--slate);margin-top:3px;}
+.home-new-btn{
+  display:inline-flex;align-items:center;gap:7px;padding:11px 22px;
+  background:var(--teal);border:none;border-radius:11px;
+  color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;
+  cursor:pointer;transition:background .15s;
+}
+.home-new-btn:hover{background:var(--teal2);}
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;}
+.dash-card{
+  background:var(--white);border-radius:14px;border:1px solid var(--border);
+  overflow:hidden;cursor:pointer;transition:all .18s;
+  box-shadow:0 1px 4px rgba(0,0,0,.05);
+}
+.dash-card:hover{box-shadow:0 6px 24px rgba(0,0,0,.1);transform:translateY(-2px);}
+.dash-card-banner{height:72px;display:flex;align-items:center;justify-content:center;position:relative;}
+.dash-card-badge{
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;color:#fff;letter-spacing:.02em;
+}
+.dash-card-body{padding:16px 18px;}
+.dash-card-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.dash-card-meta{font-size:11px;color:var(--slate);}
+.dash-card-actions{display:flex;gap:6px;margin-top:12px;}
+.dc-btn{
+  flex:1;padding:7px 10px;border-radius:8px;border:none;
+  font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .12s;
+}
+.dc-open{background:var(--navy);color:#fff;}
+.dc-open:hover{background:var(--navy2);}
+.dc-del{background:#f8fafc;color:var(--slate);border:1px solid var(--border);}
+.dc-del:hover{background:#fff0f0;color:var(--red);border-color:var(--red);}
+.empty-home{
+  text-align:center;padding:80px 40px;
+  grid-column:1/-1;
+}
+.empty-icon{
+  width:80px;height:80px;border-radius:20px;
+  background:rgba(0,151,169,.1);display:flex;align-items:center;justify-content:center;
+  margin:0 auto 18px;font-size:32px;
+}
+.empty-title{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:6px;}
+.empty-sub{font-size:13px;color:var(--slate);margin-bottom:24px;max-width:340px;margin-left:auto;margin-right:auto;}
+
+/* ===== EDITOR LAYOUT ===== */
+.editor{display:flex;height:calc(100vh - 58px);}
+.editor-sidebar{
+  width:230px;min-width:230px;background:var(--white);
+  border-right:1px solid var(--border);overflow-y:auto;
+  display:flex;flex-direction:column;
+}
+.sidebar-sec{padding:16px 14px 6px;}
+.sidebar-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);margin-bottom:10px;}
+.sidebar-item{
+  padding:10px 12px;border-radius:9px;border:1px solid var(--border);
+  margin-bottom:7px;cursor:pointer;transition:all .12s;background:#fafafa;
+}
+.sidebar-item:hover{border-color:var(--teal);background:rgba(0,151,169,.04);}
+.sidebar-item.active{border-color:var(--teal);background:rgba(0,151,169,.07);}
+.si-name{font-size:12px;font-weight:600;color:var(--text);}
+.si-meta{font-size:10px;color:var(--slate);margin-top:2px;}
+.sidebar-new{
+  width:100%;padding:9px;background:none;
+  border:1px dashed var(--border);border-radius:9px;
+  color:var(--teal);font-size:12px;font-weight:600;
+  cursor:pointer;font-family:'DM Sans',sans-serif;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  transition:all .12s;margin-bottom:8px;
+}
+.sidebar-new:hover{border-color:var(--teal);background:rgba(0,151,169,.05);}
+.editor-content{flex:1;overflow-y:auto;}
+
+/* ===== EDITOR PANELS ===== */
+.epanel{display:none;max-width:860px;margin:0 auto;padding:30px 28px;}
+.epanel.active{display:block;}
+.ep-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:26px;}
+.ep-title{font-family:'DM Serif Display',serif;font-size:21px;color:var(--navy);}
+.ep-sub{font-size:13px;color:var(--slate);margin-top:3px;}
+
+/* cards */
+.ec{background:var(--white);border-radius:13px;border:1px solid var(--border);padding:22px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.ec-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:15px;display:flex;align-items:center;gap:7px;}
+.ec-bar{width:3px;height:15px;border-radius:2px;flex-shrink:0;}
+
+/* form */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+.fg3{grid-template-columns:1fr 1fr 1fr;}
+.fg1{grid-template-columns:1fr;}
+.fgi{display:flex;flex-direction:column;gap:5px;}
+.fgi.full{grid-column:1/-1;}
+.flabel{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--slate);}
+input[type=text],input[type=number],input[type=email],textarea,select{
+  padding:9px 12px;border:1px solid var(--border);border-radius:9px;
+  font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);
+  outline:none;transition:border .12s;background:#fafafa;
+}
+input:focus,textarea:focus,select:focus{border-color:var(--teal);background:#fff;}
+textarea{resize:vertical;}
+
+/* setup toggles */
+.section-toggle-row{
+  display:flex;align-items:center;gap:10px;padding:10px 13px;
+  border-radius:10px;border:1px solid var(--border);margin-bottom:8px;
+  background:#fafafa;
+}
+.toggle-switch{position:relative;width:36px;height:20px;flex-shrink:0;}
+.toggle-switch input{opacity:0;width:0;height:0;}
+.toggle-track{
+  position:absolute;inset:0;background:#cbd5e1;border-radius:20px;
+  cursor:pointer;transition:background .2s;
+}
+.toggle-switch input:checked+.toggle-track{background:var(--teal);}
+.toggle-knob{
+  position:absolute;top:2px;left:2px;width:16px;height:16px;
+  border-radius:50%;background:#fff;transition:transform .2s;
+  pointer-events:none;
+}
+.toggle-switch input:checked~.toggle-knob{transform:translateX(16px);}
+.toggle-info{flex:1;}
+.toggle-name{font-size:13px;font-weight:600;color:var(--text);}
+.toggle-desc{font-size:11px;color:var(--slate);margin-top:1px;}
+.section-controls{display:flex;gap:8px;align-items:center;}
+.chart-select{
+  padding:5px 9px;border-radius:7px;border:1px solid var(--border);
+  font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--text2);
+  background:#fff;outline:none;cursor:pointer;
+}
+
+/* KPI picker */
+.kpi-picker-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.kpi-pick{
+  display:flex;align-items:center;gap:8px;padding:9px 11px;
+  border-radius:9px;border:1px solid var(--border);cursor:pointer;
+  transition:all .12s;background:#fafafa;
+}
+.kpi-pick input{width:14px;height:14px;accent-color:var(--teal);}
+.kpi-pick-name{font-size:12px;font-weight:600;color:var(--text2);}
+.kpi-pick.selected{border-color:var(--teal);background:rgba(0,151,169,.06);}
+.kpi-pick.selected .kpi-pick-name{color:var(--teal);}
+
+/* ===== DATA ENTRY ===== */
+.period-bar{
+  background:var(--white);border-bottom:1px solid var(--border);
+  padding:10px 28px;display:flex;align-items:center;gap:12px;
+  position:sticky;top:0;z-index:50;
+}
+.period-label{font-size:12px;font-weight:600;color:var(--slate);}
+.period-input{padding:7px 11px;border-radius:8px;border:1px solid var(--border);font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none;width:150px;}
+.period-input:focus{border-color:var(--teal);}
+
+/* data section */
+.ds{background:var(--white);border-radius:13px;border:1px solid var(--border);margin-bottom:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.ds-head{padding:13px 18px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;}
+.ds-title-wrap{display:flex;align-items:center;gap:8px;}
+.ds-title-input{
+  border:1px dashed #d1d5db;border-radius:6px;
+  background:transparent;padding:4px 9px;
+  font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;color:var(--navy);
+  outline:none;min-width:120px;transition:border .12s;
+}
+.ds-title-input:focus{border-color:var(--teal);border-style:solid;background:#fff;}
+.ds-add-btn{
+  padding:6px 13px;border-radius:8px;border:1px solid var(--border);
+  background:#f8fafc;color:var(--teal);font-family:'DM Sans',sans-serif;
+  font-size:12px;font-weight:700;cursor:pointer;transition:all .12s;
+}
+.ds-add-btn:hover{background:var(--teal);color:#fff;border-color:var(--teal);}
+
+/* data table */
+.dt{width:100%;border-collapse:collapse;}
+.dt-hrow{border-bottom:2px solid var(--border);}
+.dt-hrow th{padding:8px 12px;text-align:left;}
+.dt-hrow th:not(:first-child){text-align:right;}
+/* editable header cells */
+.col-header{
+  border:1px dashed #d1d5db;border-radius:6px;background:transparent;
+  padding:4px 8px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.07em;color:var(--slate);
+  outline:none;text-align:right;width:100px;transition:border .12s;
+}
+.col-header:focus{border-color:var(--teal);border-style:solid;background:#fff;}
+.col-header-first{
+  border:1px dashed #d1d5db;border-radius:6px;background:transparent;
+  padding:4px 8px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.07em;color:var(--slate);
+  outline:none;text-align:left;width:160px;transition:border .12s;
+}
+.col-header-first:focus{border-color:var(--teal);border-style:solid;background:#fff;}
+.dt-row{border-bottom:1px solid #f8fafc;transition:background .1s;}
+.dt-row:hover{background:#f8fafc;}
+.dt-row td{padding:7px 12px;}
+.dt-row td:not(:first-child){text-align:right;}
+.dt-row td:last-child{text-align:center;width:36px;}
+.row-label-input{
+  background:none;border:none;outline:none;
+  font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);
+  font-weight:500;width:100%;padding:2px 0;
+  border-bottom:1px dashed transparent;transition:border .12s;
+}
+.row-label-input:focus{border-bottom-color:var(--teal);}
+.num-input{
+  background:none;border:none;outline:none;
+  font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);
+  text-align:right;width:100px;padding:2px 0;
+  border-bottom:1px dashed transparent;transition:border .12s;
+}
+.num-input:focus{border-bottom-color:var(--teal);}
+.del-row-btn{background:none;border:none;cursor:pointer;color:#cbd5e1;font-size:16px;transition:color .12s;padding:0 4px;}
+.del-row-btn:hover{color:var(--red);}
+/* variance calc */
+.var-cell{font-size:12px;font-weight:600;}
+.var-pos{color:var(--green);}
+.var-neg{color:var(--red);}
+
+/* alerts section */
+.alert-item{display:flex;gap:8px;align-items:flex-start;padding:8px 12px;border-bottom:1px solid #f8fafc;}
+.alert-type{padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;margin-top:2px;}
+.alert-text-input{flex:1;background:none;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);padding:2px 0;border-bottom:1px dashed #d1d5db;transition:border .12s;}
+.alert-text-input:focus{border-bottom-color:var(--teal);}
+.alert-type-select{padding:3px 7px;border-radius:6px;border:1px solid var(--border);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;outline:none;cursor:pointer;}
+
+/* LUNA box */
+.luna-box{background:linear-gradient(135deg,rgba(13,44,84,.04) 0%,rgba(0,151,169,.04) 100%);border:1px solid rgba(0,151,169,.2);border-radius:12px;padding:18px 20px;margin:0 18px 16px;}
+.luna-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px;}
+.luna-desc{font-size:11px;color:var(--slate);margin-bottom:14px;line-height:1.5;}
+.luna-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.luna-result{background:var(--white);border-radius:10px;border:1px solid var(--border);padding:12px 14px;text-align:center;}
+.luna-result-num{font-family:'DM Serif Display',serif;font-size:26px;color:var(--navy);margin-bottom:2px;}
+.luna-result-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--slate);}
+.luna-status{font-size:11px;font-weight:700;margin-top:4px;}
+.luna-good{color:var(--green);}
+.luna-warn{color:var(--gold);}
+.luna-bad{color:var(--red);}
+
+/* ===== PREVIEW ===== */
+.preview-wrap{max-width:1000px;margin:0 auto;padding:28px;}
+.prev-header{
+  background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);
+  border-radius:16px;padding:26px;margin-bottom:18px;color:#fff;
+  display:flex;align-items:flex-start;justify-content:space-between;
+}
+.prev-logo-box{
+  width:52px;height:52px;border-radius:10px;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:800;color:#fff;
+  cursor:pointer;overflow:hidden;flex-shrink:0;
+}
+.prev-logo-box img{width:100%;height:100%;object-fit:cover;}
+.prev-org{font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:3px;}
+.prev-sub{font-size:12px;color:rgba(255,255,255,.65);}
+.prev-period{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px;}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:18px;}
+.kpi-card{background:var(--white);border-radius:12px;border:1px solid var(--border);padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+.kpi-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--slate);margin-bottom:5px;}
+.kpi-val{font-family:'DM Serif Display',serif;font-size:24px;color:var(--navy);margin-bottom:3px;}
+.kpi-pct{font-size:11px;font-weight:700;}
+.kpi-green{color:var(--green);}
+.kpi-gold{color:var(--gold);}
+.kpi-red{color:var(--red);}
+.prev-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.prev-chart-card{background:var(--white);border-radius:13px;border:1px solid var(--border);padding:20px;}
+.prev-chart-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:14px;}
+.prev-table-card{background:var(--white);border-radius:13px;border:1px solid var(--border);padding:20px;margin-bottom:16px;}
+.prev-table{width:100%;border-collapse:collapse;font-size:13px;}
+.prev-table th{padding:8px 10px;text-align:left;border-bottom:2px solid var(--border);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--slate);}
+.prev-table th:not(:first-child){text-align:right;}
+.prev-table td{padding:8px 10px;border-bottom:1px solid #f8fafc;}
+.prev-table td:not(:first-child){text-align:right;}
+.prev-table tr:last-child td{font-weight:700;border-top:2px solid var(--border);border-bottom:none;}
+.alert-preview{background:var(--white);border-radius:13px;border:1px solid var(--border);padding:20px;margin-bottom:16px;}
+.alert-preview-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px;}
+.alert-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:6px;width:100%;}
+.alert-action{background:rgba(239,68,68,.1);color:var(--red);}
+.alert-info{background:rgba(0,151,169,.1);color:var(--teal);}
+.alert-success{background:rgba(16,185,129,.1);color:var(--green);}
+.president-card{background:var(--white);border-radius:13px;border:1px solid var(--border);padding:20px;margin-bottom:16px;}
+.president-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:8px;}
+.president-text{font-size:13px;color:var(--text2);line-height:1.75;}
+.luna-footnote{font-size:11px;color:var(--slate);text-align:center;margin-top:4px;font-style:italic;}
+
+/* NSD */
+.nsd-btn{
+  display:inline-flex;align-items:center;gap:6px;padding:8px 15px;
+  background:transparent;border:1px dashed #cbd5e1;border-radius:10px;
+  color:var(--slate);font-size:12px;font-weight:500;
+  cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .12s;
+}
+.nsd-btn:hover{border-color:var(--teal);color:var(--teal);background:rgba(0,151,169,.05);}
+
+/* ===== MODAL ===== */
+.overlay{display:none;position:fixed;inset:0;background:rgba(13,44,84,.5);backdrop-filter:blur(4px);z-index:500;align-items:center;justify-content:center;padding:20px;}
+.overlay.show{display:flex;}
+.modal{background:#fff;border-radius:20px;width:100%;max-width:460px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.2);}
+.mhead{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);padding:22px 26px;position:relative;}
+.mclose{position:absolute;top:13px;right:13px;background:rgba(255,255,255,.12);border:none;border-radius:7px;width:28px;height:28px;cursor:pointer;color:#fff;font-size:15px;display:flex;align-items:center;justify-content:center;}
+.micon{font-size:26px;margin-bottom:9px;}
+.mtitle{font-size:17px;font-weight:700;color:#fff;}
+.msub{font-size:12px;color:rgba(255,255,255,.6);margin-top:3px;}
+.mbody{padding:22px 26px;}
+.radio-opt{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:9px;border:1px solid var(--border);cursor:pointer;margin-bottom:6px;transition:all .12s;}
+.radio-opt:hover{border-color:var(--teal);background:rgba(0,151,169,.04);}
+.radio-opt.sel{border-color:var(--teal);background:rgba(0,151,169,.07);}
+.rdot{width:16px;height:16px;border-radius:50%;border:2px solid #cbd5e1;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .12s;}
+.radio-opt.sel .rdot{border-color:var(--teal);background:var(--teal);}
+.rdot-inner{width:6px;height:6px;border-radius:50%;background:#fff;display:none;}
+.radio-opt.sel .rdot-inner{display:block;}
+.rtext{font-size:13px;color:var(--text2);}
+.radio-opt.sel .rtext{color:var(--text);font-weight:600;}
+.m-textarea{width:100%;padding:10px 13px;border:1px solid var(--border);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;resize:vertical;margin-top:10px;}
+.m-textarea:focus{border-color:var(--teal);}
+.m-input{width:100%;padding:9px 13px;border:1px solid var(--border);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;margin-top:10px;outline:none;}
+.m-input:focus{border-color:var(--teal);}
+.m-submit{width:100%;padding:12px;background:var(--teal);border:none;border-radius:11px;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:13px;transition:background .12s;}
+.m-submit:hover{background:var(--teal2);}
+.m-submit:disabled{background:#cbd5e1;cursor:not-allowed;}
+.msuccess{text-align:center;padding:36px 28px;}
+.msuccess-icon{font-size:52px;margin-bottom:14px;}
+.msuccess-title{font-size:19px;font-weight:700;color:var(--navy);margin-bottom:7px;}
+.msuccess-text{font-size:13px;color:var(--slate);line-height:1.7;margin-bottom:22px;}
+.m-close-btn{padding:10px 30px;background:var(--navy);border:none;border-radius:11px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
+
+/* toast */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--navy);color:#fff;padding:11px 18px;border-radius:11px;font-size:12px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.2);transform:translateY(70px);opacity:0;transition:all .28s;z-index:600;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.green{background:var(--green);}
+
+@keyframes spin{to{transform:rotate(360deg);}}
+.spin{animation:spin .8s linear infinite;display:inline-block;}
+
+/* ===== ADD CUSTOM TABLE ===== */
+.add-table-bar{display:flex;align-items:center;justify-content:center;padding:20px 0 8px;}
+.add-table-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:12px 24px;border-radius:12px;
+  background:var(--white);border:2px dashed var(--border);
+  color:var(--teal);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;
+  cursor:pointer;transition:all .18s;
+}
+.add-table-btn:hover{border-color:var(--teal);background:rgba(0,151,169,.05);box-shadow:0 4px 14px rgba(0,151,169,.12);}
+.add-col-btn{
+  background:rgba(0,151,169,.08);border:1px dashed rgba(0,151,169,.4);
+  border-radius:7px;padding:4px 10px;font-family:'DM Sans',sans-serif;
+  font-size:11px;font-weight:700;color:var(--teal);cursor:pointer;
+  transition:all .12s;white-space:nowrap;
+}
+.add-col-btn:hover{background:var(--teal);color:#fff;border-style:solid;}
+/* new table modal */
+.nt-overlay{display:none;position:fixed;inset:0;background:rgba(13,44,84,.55);backdrop-filter:blur(4px);z-index:700;align-items:center;justify-content:center;padding:20px;}
+.nt-overlay.show{display:flex;}
+.nt-modal{background:#fff;border-radius:20px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.25);}
+.nt-head{padding:20px 24px;background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);position:relative;}
+.nt-close{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.12);border:none;border-radius:7px;width:28px;height:28px;cursor:pointer;color:#fff;font-size:15px;display:flex;align-items:center;justify-content:center;}
+.nt-title{font-size:16px;font-weight:700;color:#fff;}
+.nt-sub{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px;}
+.nt-body{padding:22px 24px;display:flex;flex-direction:column;gap:16px;}
+.nt-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--slate);margin-bottom:6px;}
+.nt-col-chips{display:flex;flex-wrap:wrap;gap:7px;min-height:36px;}
+.nt-col-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;background:#f1f5f9;border:1px solid var(--border);font-size:12px;font-weight:600;color:var(--text2);}
+.nt-col-chip-del{background:none;border:none;cursor:pointer;color:#94a3b8;font-size:14px;padding:0;line-height:1;transition:color .12s;}
+.nt-col-chip-del:hover{color:var(--red);}
+.nt-add-col-row{display:flex;gap:8px;}
+.nt-add-col-input{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;}
+.nt-add-col-input:focus{border-color:var(--teal);}
+.nt-add-col-go{padding:8px 14px;border-radius:9px;background:rgba(0,151,169,.1);border:1px solid rgba(0,151,169,.3);color:var(--teal);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .12s;white-space:nowrap;}
+.nt-add-col-go:hover{background:var(--teal);color:#fff;border-color:var(--teal);}
+.nt-create-btn{width:100%;padding:12px;background:var(--teal);border:none;border-radius:11px;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:background .12s;}
+.nt-create-btn:hover{background:var(--teal2);}
+.nt-create-btn:disabled{background:#cbd5e1;cursor:not-allowed;}
+
+/* ===== WELCOME / ONBOARDING MODAL ===== */
+.welcome-overlay{position:fixed;inset:0;background:rgba(13,44,84,.6);backdrop-filter:blur(6px);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;}
+.welcome-modal{background:#fff;border-radius:22px;width:100%;max-width:560px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.25);}
+.wm-head{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);padding:32px 32px 24px;text-align:center;position:relative;}
+.wm-logo{width:52px;height:52px;border-radius:13px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:16px;font-weight:700;color:#fff;margin:0 auto 14px;overflow:hidden;}
+.wm-logo img{width:100%;height:100%;object-fit:contain;}
+.wm-title{font-family:'DM Serif Display',serif;font-size:22px;color:#fff;margin-bottom:6px;}
+.wm-sub{font-size:13px;color:rgba(255,255,255,.65);line-height:1.5;}
+.wm-body{padding:28px 32px;}
+.wm-steps{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px;}
+.wm-step{background:#f8fafc;border-radius:12px;padding:14px 16px;border:1px solid var(--border);}
+.wm-step-num{width:26px;height:26px;border-radius:8px;background:var(--navy);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:8px;}
+.wm-step-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:3px;}
+.wm-step-desc{font-size:11px;color:var(--slate);line-height:1.5;}
+.wm-uses{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:20px;}
+.wm-use-chip{padding:5px 12px;border-radius:20px;background:rgba(0,151,169,.08);border:1px solid rgba(0,151,169,.2);font-size:12px;font-weight:600;color:var(--teal);}
+.wm-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.wm-btn-sample{padding:12px;border-radius:12px;border:2px solid var(--border);background:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;color:var(--navy);cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:7px;}
+.wm-btn-sample:hover{border-color:var(--teal);color:var(--teal);background:rgba(0,151,169,.04);}
+.wm-btn-start{padding:12px;border-radius:12px;border:none;background:var(--teal);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;color:#fff;cursor:pointer;transition:all .15s;}
+.wm-btn-start:hover{background:var(--teal2);}
+.wm-skip{text-align:center;margin-top:12px;font-size:11px;color:#94a3b8;cursor:pointer;transition:color .12s;}
+.wm-skip:hover{color:var(--slate);}
+
+/* ===== SAMPLE REPORT MODAL ===== */
+.sample-overlay{display:none;position:fixed;inset:0;background:rgba(13,44,84,.7);backdrop-filter:blur(4px);z-index:950;overflow-y:auto;padding:20px;}
+.sample-overlay.show{display:block;}
+.sample-modal{background:#fff;border-radius:18px;max-width:900px;margin:0 auto;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.3);}
+.sample-modal-head{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);padding:18px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+.sample-modal-title{font-size:15px;font-weight:700;color:#fff;}
+.sample-modal-sub{font-size:12px;color:rgba(255,255,255,.55);margin-top:2px;}
+.sample-close{background:rgba(255,255,255,.12);border:none;border-radius:8px;padding:8px 16px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:background .12s;}
+.sample-close:hover{background:rgba(255,255,255,.22);}
+.sample-body{padding:28px;}
+
+/* ===== REPORT TYPE SELECTOR ===== */
+.report-type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4px;}
+.rt-card{
+  padding:12px 14px;border-radius:11px;border:2px solid var(--border);
+  cursor:pointer;transition:all .15s;background:#fafafa;
+}
+.rt-card:hover{border-color:var(--teal);background:rgba(0,151,169,.04);}
+.rt-card.selected{border-color:var(--teal);background:rgba(0,151,169,.07);}
+.rt-icon{font-size:20px;margin-bottom:5px;}
+.rt-name{font-size:12px;font-weight:700;color:var(--navy);}
+.rt-desc{font-size:10px;color:var(--slate);margin-top:2px;line-height:1.4;}
+.rt-card.selected .rt-name{color:var(--teal);}
+
+/* help button */
+.help-btn{
+  display:inline-flex;align-items:center;gap:5px;padding:6px 12px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);
+  border-radius:8px;color:rgba(255,255,255,.75);font-family:'DM Sans',sans-serif;
+  font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;
+}
+.help-btn:hover{background:rgba(255,255,255,.15);color:#fff;}
+.sample-btn-inline{
+  display:inline-flex;align-items:center;gap:5px;padding:7px 13px;
+  background:transparent;border:1px dashed #cbd5e1;border-radius:9px;
+  color:var(--slate);font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;
+  cursor:pointer;transition:all .12s;
+}
+.sample-btn-inline:hover{border-color:var(--teal);color:var(--teal);background:rgba(0,151,169,.04);}
+
+@media print{
+  nav,.editor-sidebar,.nbtn,.nsd-btn,.period-bar,.ds-add-btn,.del-row-btn{display:none!important;}
+  .editor-content,.preview-wrap{margin:0!important;padding:10px!important;}
+  .page.active,.epanel.active{display:block!important;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <div class="nav-tne-logo" id="nav-tne-logo-box">TNE</div>
+    <div class="nav-divider"></div>
+    <div class="nav-logo">The Nonprofit <em>Edge</em> &nbsp;<span style="font-family:'DM Sans';font-size:12px;font-weight:400;opacity:.5">|</span>&nbsp; <span style="font-family:'DM Sans';font-size:13px;font-weight:500;opacity:.65">Dashboard Creator</span></div>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab on" onclick="goTab('home')">My Dashboards</button>
+    <button class="nav-tab" id="tab-setup" onclick="goTab('setup')" style="display:none">Setup</button>
+    <button class="nav-tab" id="tab-data" onclick="goTab('data')" style="display:none">Data Entry</button>
+    <button class="nav-tab" id="tab-preview" onclick="goTab('preview')" style="display:none">Preview</button>
+  </div>
+  <div class="nav-actions">
+    <a class="nav-back" href="/resources" onclick="return goResources()">← Resources</a>
+    <button class="help-btn" onclick="openWelcome()">? How it works</button>
+    <button class="nbtn nbtn-new" id="btn-new" onclick="newDashboard()">+ New Dashboard</button>
+    <button class="nbtn nbtn-save" id="btn-save" style="display:none" onclick="saveDashboard()">💾 Save</button>
+    <button class="nbtn nbtn-pdf" id="btn-pdf" style="display:none" onclick="window.print()">↓ PDF</button>
+  </div>
+</nav>
+
+<!-- ==================== WELCOME MODAL ==================== -->
+<div class="welcome-overlay" id="welcome-overlay" style="display:none;">
+  <div class="welcome-modal">
+    <div class="wm-head">
+      <!-- swap: <img src="/tne-logo.png"> -->
+      <div class="wm-logo">TNE</div>
+      <div class="wm-title">Dashboard Creator</div>
+      <div class="wm-sub">Build professional reports for any audience — boards, funders, staff, or leadership — in minutes, not hours.</div>
+    </div>
+    <div class="wm-body">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--slate);margin-bottom:10px;">Works for any report type</div>
+      <div class="wm-uses">
+        <span class="wm-use-chip">Board Financial Report</span>
+        <span class="wm-use-chip">Finance Committee</span>
+        <span class="wm-use-chip">Program Impact Report</span>
+        <span class="wm-use-chip">Donor Report</span>
+        <span class="wm-use-chip">Staff Dashboard</span>
+        <span class="wm-use-chip">Funder Update</span>
+        <span class="wm-use-chip">Grant Report</span>
+        <span class="wm-use-chip">Annual Report Summary</span>
+      </div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--slate);margin-bottom:10px;">How it works — 3 steps</div>
+      <div class="wm-steps">
+        <div class="wm-step">
+          <div class="wm-step-num">1</div>
+          <div class="wm-step-title">Choose your report type & setup</div>
+          <div class="wm-step-desc">Pick a report type, name your dashboard, toggle which sections to include, and choose chart types.</div>
+        </div>
+        <div class="wm-step">
+          <div class="wm-step-num">2</div>
+          <div class="wm-step-title">Enter your data</div>
+          <div class="wm-step-desc">Click any label or number to edit it. Rename columns. Add rows. Add custom tables. All inline — no spreadsheet needed.</div>
+        </div>
+        <div class="wm-step">
+          <div class="wm-step-num">3</div>
+          <div class="wm-step-title">Preview & export</div>
+          <div class="wm-step-desc">See your board-ready report instantly. Upload your logo, pick a header color, then export to PDF with one click.</div>
+        </div>
+        <div class="wm-step">
+          <div class="wm-step-num">4</div>
+          <div class="wm-step-title">Save & reuse</div>
+          <div class="wm-step-desc">Dashboards save automatically. Reopen any time to update for the next reporting period.</div>
+        </div>
+      </div>
+      <div class="wm-actions">
+        <button class="wm-btn-sample" onclick="closeWelcomeOpenSample()">📊 View Sample Report</button>
+        <button class="wm-btn-start" onclick="closeWelcome()">Get Started →</button>
+      </div>
+      <div class="wm-skip" onclick="closeWelcomeDontShow()">Don't show this again</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SAMPLE REPORT MODAL ==================== -->
+<div class="sample-overlay" id="sample-overlay">
+  <div class="sample-modal">
+    <div class="sample-modal-head">
+      <div>
+        <div class="sample-modal-title">Sample Completed Report — Hope Forward</div>
+        <div class="sample-modal-sub">This is what a finished dashboard looks like. Your data, your colors, your logo.</div>
+      </div>
+      <button class="sample-close" onclick="closeSample()">✕ Close</button>
+    </div>
+    <div class="sample-body" id="sample-body">
+      <!-- injected by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ==================== HOME PAGE ==================== -->
+<div class="page active" id="page-home">
+  <div class="home-wrap">
+    <div class="home-header">
+      <div>
+        <div class="home-title">My Dashboards</div>
+        <div class="home-sub">Create professional reports for boards, funders, staff, and leadership</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button class="sample-btn-inline" onclick="openSample()">📊 View sample report</button>
+        <button class="sample-btn-inline" onclick="openWelcome()" style="border-color:rgba(0,151,169,.3);color:var(--teal);">? How it works</button>
+        <button class="home-new-btn" onclick="newDashboard()">+ Create New Dashboard</button>
+      </div>
+    </div>
+    <div class="dash-grid" id="home-grid"></div>
+  </div>
+</div>
+
+<!-- ==================== EDITOR ==================== -->
+<div class="page" id="page-editor">
+  <div class="editor">
+
+    <!-- Sidebar -->
+    <div class="editor-sidebar">
+      <div class="sidebar-sec">
+        <div class="sidebar-lbl">My Dashboards</div>
+        <button class="sidebar-new" onclick="newDashboard()">+ New Dashboard</button>
+        <div id="sidebar-list"></div>
+      </div>
+    </div>
+
+    <!-- Editor content -->
+    <div class="editor-content">
+
+      <!-- SETUP PANEL -->
+      <div class="epanel active" id="epanel-setup">
+        <div class="ep-head">
+          <div>
+            <div class="ep-title">Dashboard Setup</div>
+            <div class="ep-sub">Configure your organization, sections, chart types, and KPIs</div>
+          </div>
+          <button class="nsd-btn" onclick="openNSD()">💬 Need something different?</button>
+        </div>
+
+        <!-- Report Type -->
+        <div class="ec">
+          <div class="ec-title"><div class="ec-bar" style="background:var(--navy)"></div>Report Type <span style="font-size:11px;font-weight:400;color:var(--slate);margin-left:6px;">— sets default labels and sections for your audience</span></div>
+          <div class="report-type-grid" id="report-type-grid"></div>
+          <button class="sample-btn-inline" style="margin-top:10px;" onclick="openSample()">📊 View a sample completed report</button>
+        </div>
+
+        <!-- Org info -->
+        <div class="ec">
+          <div class="ec-title"><div class="ec-bar" style="background:var(--teal)"></div>Organization Details</div>
+          <div class="fg">
+            <div class="fgi"><div class="flabel">Dashboard Name</div><input type="text" id="d-name" placeholder="Board Financial Dashboard" oninput="refreshSidebar()"></div>
+            <div class="fgi"><div class="flabel">Organization Name</div><input type="text" id="d-org" placeholder="Your Nonprofit"></div>
+            <div class="fgi"><div class="flabel">Fiscal Year</div><input type="text" id="d-fy" placeholder="FY 2025–2026"></div>
+            <div class="fgi" id="meeting-field"><div class="flabel" id="meeting-label">Board Meeting Date</div><input type="text" id="d-meeting" placeholder="March 15, 2026"></div>
+          </div>
+        </div>
+
+        <!-- Sections -->
+        <div class="ec">
+          <div class="ec-title"><div class="ec-bar" style="background:var(--gold)"></div>Sections — Toggle & Configure</div>
+          <div id="section-toggles"></div>
+        </div>
+
+        <!-- KPI picker -->
+        <div class="ec">
+          <div class="ec-title"><div class="ec-bar" style="background:var(--purple)"></div>KPI Cards — Choose What Appears at Top</div>
+          <div class="kpi-picker-grid" id="kpi-picker"></div>
+        </div>
+      </div>
+
+      <!-- DATA ENTRY PANEL -->
+      <div class="epanel" id="epanel-data">
+        <div class="period-bar">
+          <span class="period-label">Reporting Period:</span>
+          <input type="text" class="period-input" id="d-period" placeholder="January 2026 / Q3 FY2026">
+          <span style="font-size:11px;color:var(--slate);margin-left:8px;">← Click column headers below to rename them</span>
+        </div>
+
+        <div style="padding:20px 28px;">
+          <div class="ep-head" style="margin-bottom:20px;">
+            <div>
+              <div class="ep-title">Data Entry</div>
+              <div class="ep-sub">Click any label, number, or column header to edit it directly</div>
+            </div>
+            <button class="nsd-btn" onclick="openNSD()">💬 Need something different?</button>
+          </div>
+
+          <!-- Financial section -->
+          <div class="ds" id="ds-financial">
+            <div class="ds-head">
+              <div class="ds-title-wrap">
+                <input type="text" class="ds-title-input" id="st-financial" value="Financial Performance">
+              </div>
+              <button class="ds-add-btn" onclick="addRow('financial')">+ Add Row</button>
+            </div>
+            <table class="dt">
+              <thead class="dt-hrow">
+                <tr>
+                  <th><input type="text" class="col-header-first" id="ch-fin-0" value="Metric"></th>
+                  <th><input type="text" class="col-header" id="ch-fin-1" value="Current"></th>
+                  <th><input type="text" class="col-header" id="ch-fin-2" value="Prior Year"></th>
+                  <th><input type="text" class="col-header" id="ch-fin-3" value="Goal / Budget"></th>
+                  <th style="text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--slate);padding:8px 10px;">Variance</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="tb-financial"></tbody>
+            </table>
+          </div>
+
+          <!-- Fundraising section -->
+          <div class="ds" id="ds-fundraising">
+            <div class="ds-head">
+              <div class="ds-title-wrap">
+                <input type="text" class="ds-title-input" id="st-fundraising" value="Fundraising">
+              </div>
+              <button class="ds-add-btn" onclick="addRow('fundraising')">+ Add Row</button>
+            </div>
+            <table class="dt">
+              <thead class="dt-hrow">
+                <tr>
+                  <th><input type="text" class="col-header-first" id="ch-fun-0" value="Metric"></th>
+                  <th><input type="text" class="col-header" id="ch-fun-1" value="Raised"></th>
+                  <th><input type="text" class="col-header" id="ch-fun-2" value="Prior Year"></th>
+                  <th><input type="text" class="col-header" id="ch-fun-3" value="Goal"></th>
+                  <th style="text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--slate);padding:8px 10px;">% of Goal</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="tb-fundraising"></tbody>
+            </table>
+          </div>
+
+          <!-- Program section -->
+          <div class="ds" id="ds-program">
+            <div class="ds-head">
+              <div class="ds-title-wrap">
+                <input type="text" class="ds-title-input" id="st-program" value="Program Impact">
+              </div>
+              <button class="ds-add-btn" onclick="addRow('program')">+ Add Row</button>
+            </div>
+            <table class="dt">
+              <thead class="dt-hrow">
+                <tr>
+                  <th><input type="text" class="col-header-first" id="ch-prg-0" value="Metric"></th>
+                  <th><input type="text" class="col-header" id="ch-prg-1" value="Current"></th>
+                  <th><input type="text" class="col-header" id="ch-prg-2" value="Prior Year"></th>
+                  <th><input type="text" class="col-header" id="ch-prg-3" value="Target"></th>
+                  <th style="text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--slate);padding:8px 10px;">% of Target</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="tb-program"></tbody>
+            </table>
+          </div>
+
+          <!-- LUNA box -->
+          <div class="ds" id="ds-luna">
+            <div class="ds-head">
+              <div class="ds-title-wrap">
+                <input type="text" class="ds-title-input" id="st-luna" value="LUNA Calculator">
+              </div>
+            </div>
+            <div class="luna-box">
+              <div class="luna-title">Liquid Unrestricted Net Assets (LUNA)</div>
+              <div class="luna-desc">LUNA measures how many months your organization can operate using only available unrestricted cash reserves. Best practice is 3–6 months. Enter values below to calculate automatically.</div>
+              <div class="fg fg3" style="margin-bottom:14px;">
+                <div class="fgi"><div class="flabel">Unrestricted Cash / Liquid Assets ($)</div><input type="number" id="luna-assets" placeholder="0" oninput="calcLUNA()"></div>
+                <div class="fgi"><div class="flabel">Monthly Operating Expenses ($)</div><input type="number" id="luna-expenses" placeholder="0" oninput="calcLUNA()"></div>
+                <div class="fgi"><div class="flabel">Board-Designated Reserves ($)</div><input type="number" id="luna-reserves" placeholder="0" oninput="calcLUNA()"></div>
+              </div>
+              <div class="luna-grid" id="luna-results">
+                <div class="luna-result"><div class="luna-result-num" id="luna-months">—</div><div class="luna-result-lbl">Months of LUNA</div><div class="luna-status" id="luna-status-lbl">Enter values above</div></div>
+                <div class="luna-result"><div class="luna-result-num" id="luna-ratio">—</div><div class="luna-result-lbl">Reserve Ratio</div><div class="luna-status" id="luna-ratio-lbl" style="color:var(--slate);">Reserves ÷ Assets</div></div>
+                <div class="luna-result"><div class="luna-result-num" id="luna-runway">—</div><div class="luna-result-lbl">Full Runway (months)</div><div class="luna-status" id="luna-runway-lbl" style="color:var(--slate);">Incl. reserves</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notable items -->
+          <div class="ds" id="ds-alerts">
+            <div class="ds-head">
+              <div class="ds-title-wrap">
+                <input type="text" class="ds-title-input" id="st-alerts" value="Notable Items">
+              </div>
+              <button class="ds-add-btn" onclick="addAlert()">+ Add Item</button>
+            </div>
+            <div id="alert-list"></div>
+          </div>
+
+          <!-- President's message -->
+          <div class="ds" id="ds-president">
+            <div class="ds-head">
+              <div class="ds-title-wrap">
+                <input type="text" class="ds-title-input" id="st-president" value="President / ED Message">
+              </div>
+            </div>
+            <div style="padding:14px 18px;">
+              <textarea id="president-msg" rows="5" placeholder="Add a message from the President or Executive Director for the board..." style="width:100%;"></textarea>
+            </div>
+          </div>
+
+          <!-- ===== CUSTOM TABLES ===== -->
+          <div id="custom-tables-container"></div>
+
+          <!-- Add Table Button -->
+          <div class="add-table-bar">
+            <button class="add-table-btn" onclick="openNewTableModal()">
+              <span style="font-size:18px;line-height:1;">⊞</span>
+              Add Custom Table
+            </button>
+          </div>
+
+        </div>
+      </div>
+      <div class="epanel" id="epanel-preview">
+        <div class="preview-wrap">
+          <div class="ep-head" style="margin-bottom:22px;">
+            <div>
+              <div class="ep-title">Dashboard Preview</div>
+              <div class="ep-sub">Board-ready output — print or export as PDF</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="nsd-btn" onclick="openNSD()">💬 Need something different?</button>
+              <button class="nbtn nbtn-pdf" onclick="window.print()" style="background:var(--navy);color:#fff;border:none;padding:9px 20px;">↓ Export PDF</button>
+            </div>
+          </div>
+          <div id="preview-output"></div>
+        </div>
+      </div>
+
+    </div><!-- /editor-content -->
+  </div><!-- /editor -->
+</div><!-- /page-editor -->
+
+<!-- NEW TABLE MODAL -->
+<div class="nt-overlay" id="nt-overlay">
+  <div class="nt-modal">
+    <div class="nt-head">
+      <button class="nt-close" onclick="closeNewTableModal()">✕</button>
+      <div class="nt-title">Add a Custom Table</div>
+      <div class="nt-sub">Name it, define your columns, then add rows in data entry</div>
+    </div>
+    <div class="nt-body">
+      <div>
+        <div class="nt-label">Table Name *</div>
+        <input type="text" id="nt-name" placeholder="e.g. Board Attendance, Staff Summary, Grant Pipeline…" style="width:100%;padding:10px 13px;border:1px solid var(--border);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" oninput="checkNTReady()" onfocus="this.style.borderColor='var(--teal)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+      <div>
+        <div class="nt-label">Columns <span style="text-transform:none;font-weight:400;letter-spacing:0;color:var(--slate);">— first column is always the row label</span></div>
+        <div class="nt-col-chips" id="nt-col-chips">
+          <span class="nt-col-chip" style="background:#f8fafc;color:var(--slate);font-style:italic;border-style:dashed;">Row Label</span>
+        </div>
+        <div class="nt-add-col-row" style="margin-top:10px;">
+          <input type="text" class="nt-add-col-input" id="nt-col-input" placeholder="Column name (e.g. Q1, Amount, Status…)" onkeydown="if(event.key==='Enter')addNTCol()">
+          <button class="nt-add-col-go" onclick="addNTCol()">+ Add Column</button>
+        </div>
+      </div>
+      <div>
+        <div class="nt-label">Starting Rows</div>
+        <select id="nt-rows" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;background:#fafafa;">
+          <option value="2">2 rows</option>
+          <option value="3" selected>3 rows</option>
+          <option value="4">4 rows</option>
+          <option value="5">5 rows</option>
+          <option value="6">6 rows</option>
+        </select>
+      </div>
+      <button class="nt-create-btn" id="nt-create-btn" onclick="createCustomTable()" disabled>Create Table</button>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER CUSTOMIZE MODAL -->
+<div class="hdr-modal-overlay" id="hdr-overlay">
+  <div class="hdr-modal">
+    <div class="hdr-modal-head">
+      <button class="hdr-modal-close" onclick="closeHdrModal()">✕</button>
+      <div class="hdr-modal-title">Customize Dashboard Header</div>
+      <div class="hdr-modal-sub">Upload your logo and choose a header color</div>
+    </div>
+    <div class="hdr-modal-body">
+
+      <!-- Logo upload -->
+      <div>
+        <div class="hm-section-label">Organization Logo</div>
+        <div class="logo-upload-zone" id="logo-zone" onclick="triggerLogoUpload()">
+          <div id="logo-zone-inner">
+            <div class="logo-upload-icon">🖼</div>
+            <div style="font-size:13px;font-weight:600;color:var(--text2);">Click to upload logo</div>
+            <div class="logo-upload-hint">PNG, JPG, SVG — displays in dashboard header</div>
+          </div>
+        </div>
+        <input type="file" id="logo-file-input" accept="image/*" style="display:none" onchange="handleLogoUpload(this)">
+      </div>
+
+      <!-- Color picker -->
+      <div>
+        <div class="hm-section-label">Header Color</div>
+        <div class="color-swatches" id="color-swatches"></div>
+        <div class="custom-color-wrap">
+          <input type="color" class="custom-color-input" id="custom-color" value="#0D2C54" oninput="pickCustomColor(this.value)">
+          <span class="custom-color-label">Custom color</span>
+        </div>
+      </div>
+
+      <!-- Live preview -->
+      <div>
+        <div class="hm-section-label">Preview</div>
+        <div class="hdr-preview" id="hdr-live-preview" style="background:linear-gradient(135deg,#0D2C54 0%,#1a4175 100%);">
+          <div class="hdr-preview-logo" id="hdr-preview-logo">TNE</div>
+          <div class="hdr-preview-text">
+            <div class="hdr-preview-org" id="hdr-preview-org">Organization Name</div>
+            <div class="hdr-preview-sub" id="hdr-preview-sub">Board Dashboard · FY 2025–2026</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="hdr-apply-btn" onclick="applyHeaderCustomization()">Apply to Dashboard</button>
+    </div>
+  </div>
+</div>
+
+<!-- NSD MODAL -->
+<div class="overlay" id="nsd-overlay">
+  <div class="modal">
+    <div id="nsd-form">
+      <div class="mhead">
+        <button class="mclose" onclick="closeNSD()">✕</button>
+        <div class="micon">💬</div>
+        <div class="mtitle">Need something different?</div>
+        <div class="msub">Tell us what would make the Dashboard Creator more useful.</div>
+      </div>
+      <div class="mbody">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--slate);margin-bottom:9px;">What kind of change? *</div>
+        <div id="nsd-opts"></div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--slate);margin-top:13px;margin-bottom:3px;">Describe what you need *</div>
+        <textarea class="m-textarea" id="nsd-desc" rows="3" placeholder="The more detail the better..."></textarea>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--slate);margin-top:11px;margin-bottom:2px;">Email <span style="font-weight:400;text-transform:none">(optional)</span></div>
+        <input type="email" class="m-input" id="nsd-email" placeholder="you@yourorg.org">
+        <button class="m-submit" id="nsd-btn" onclick="submitNSD()" disabled>Send Request</button>
+      </div>
+    </div>
+    <div id="nsd-success" style="display:none;">
+      <div class="msuccess">
+        <div class="msuccess-icon">✅</div>
+        <div class="msuccess-title">Got it — thank you!</div>
+        <div class="msuccess-text">Your request goes directly to Lyn and the team. We build the most-requested features first.</div>
+        <button class="m-close-btn" onclick="closeNSD()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== CONFIG ====================
+const SECTION_CONFIG = [
+  {key:'financial',  label:'Financial Performance', chart:'bar',  desc:'Revenue, expenses, budget vs. actual'},
+  {key:'fundraising',label:'Fundraising',           chart:'bar',  desc:'Campaigns, donors, goal progress'},
+  {key:'program',    label:'Program Impact',        chart:'bar',  desc:'People served, outcomes, metrics'},
+  {key:'luna',       label:'LUNA Calculator',       chart:'none', desc:'Liquid Unrestricted Net Assets calculator'},
+  {key:'alerts',     label:'Notable Items',         chart:'none', desc:'Action items and board highlights'},
+  {key:'president',  label:'President / ED Message',chart:'none', desc:'Executive narrative for the board'},
+];
+const KPI_OPTIONS = [
+  {key:'total-revenue',   label:'Total Revenue',   prefix:'$'},
+  {key:'net-income',      label:'Net Income',      prefix:'$'},
+  {key:'cash',            label:'Cash on Hand',    prefix:'$'},
+  {key:'luna-months',     label:'Months of LUNA',  prefix:'',  suffix:' mo'},
+  {key:'people-served',   label:'People Served',   prefix:'',  suffix:''},
+  {key:'fundraising-pct', label:'% of Fundraising Goal', prefix:'',suffix:'%'},
+];
+const CHART_TYPES = ['Bar','Line','Area','Pie','Table'];
+const NSD_OPTS = ['New integration / data source','Different chart type','Additional column or field','Export format (Excel, Word)','Automation or workflow feature','Something else'];
+
+// ==================== STATE ====================
+let dashboards = JSON.parse(localStorage.getItem('npe_dash_v6')||'[]');
+let currentId  = null;
+let sectionEnabled = {financial:true,fundraising:true,program:true,luna:true,alerts:true,president:true};
+let sectionCharts  = {financial:'Bar',fundraising:'Bar',program:'Bar'};
+let kpiSelected    = {'total-revenue':true,'luna-months':true,'people-served':true,'fundraising-pct':true};
+let rows = { financial:[], fundraising:[], program:[] };
+let alerts = [];
+let charts = {};
+let nsdSel = '';
+
+// ==================== INIT ====================
+function init(){
+  buildSectionToggles();
+  buildKPIPicker();
+  buildDefaultRows();
+  buildAlerts();
+  buildNSDOpts();
+  buildReportTypeGrid();
+  renderHomeGrid();
+  showWelcomeIfNew();
+  // Close sample on backdrop click
+  document.getElementById('sample-overlay').addEventListener('click',function(e){if(e.target===this)closeSample();});
+}
+
+function buildDefaultRows(){
+  if(!rows.financial.length) rows.financial=[
+    {label:'Total Revenue',    c1:'',c2:'',c3:''},
+    {label:'Program Expenses', c1:'',c2:'',c3:''},
+    {label:'Admin Expenses',   c1:'',c2:'',c3:''},
+    {label:'Fundraising Costs',c1:'',c2:'',c3:''},
+    {label:'Net Income',       c1:'',c2:'',c3:''},
+  ];
+  if(!rows.fundraising.length) rows.fundraising=[
+    {label:'Individual Donors',c1:'',c2:'',c3:''},
+    {label:'Major Gifts',      c1:'',c2:'',c3:''},
+    {label:'Grants',           c1:'',c2:'',c3:''},
+    {label:'Events',           c1:'',c2:'',c3:''},
+    {label:'Total Raised',     c1:'',c2:'',c3:''},
+  ];
+  if(!rows.program.length) rows.program=[
+    {label:'People Served',    c1:'',c2:'',c3:''},
+    {label:'Volunteer Hours',  c1:'',c2:'',c3:''},
+    {label:'Programs Active',  c1:'',c2:'',c3:''},
+    {label:'Partner Orgs',     c1:'',c2:'',c3:''},
+  ];
+  renderAllTables();
+}
+
+function buildAlerts(){
+  if(!alerts.length) alerts=[
+    {type:'action',text:''},
+    {type:'info',  text:''},
+  ];
+  renderAlerts();
+}
+
+// ==================== NAVIGATION ====================
+function goTab(tab){
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('on'));
+  if(tab==='home'){
+    showPage('home');
+    document.querySelectorAll('.nav-tab')[0].classList.add('on');
+    return;
+  }
+  showPage('editor');
+  ['setup','data','preview'].forEach(t=>{
+    const el=document.getElementById('epanel-'+t);
+    if(el) el.classList.toggle('active',t===tab);
+    const tb=document.getElementById('tab-'+t);
+    if(tb) tb.classList.toggle('on',t===tab);
+  });
+  if(tab==='preview') buildPreview();
+}
+
+function showPage(p){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  const inEditor = p==='editor';
+  ['tab-setup','tab-data','tab-preview'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.style.display=inEditor?'':'none';
+  });
+  document.getElementById('btn-save').style.display=inEditor?'':'none';
+  document.getElementById('btn-pdf').style.display=inEditor?'':'none';
+  document.getElementById('btn-new').style.display=inEditor?'none':'';
+}
+
+function openDashboard(id){
+  if(id!==currentId){
+    const d=dashboards.find(x=>x.id===id);
+    if(!d) return;
+    loadDashboardData(d);
+  }
+  showPage('editor');
+  goTab('setup');
+}
+
+// ==================== SECTION TOGGLES ====================
+function buildSectionToggles(){
+  const el=document.getElementById('section-toggles');
+  el.innerHTML=SECTION_CONFIG.map(s=>`
+    <div class="section-toggle-row">
+      <label class="toggle-switch">
+        <input type="checkbox" ${sectionEnabled[s.key]?'checked':''} onchange="toggleSection('${s.key}',this.checked)">
+        <div class="toggle-track"></div>
+        <div class="toggle-knob"></div>
+      </label>
+      <div class="toggle-info">
+        <div class="toggle-name">${s.label}</div>
+        <div class="toggle-desc">${s.desc}</div>
+      </div>
+      ${['financial','fundraising','program'].includes(s.key)?`
+      <div class="section-controls">
+        <select class="chart-select" onchange="sectionCharts['${s.key}']=this.value">
+          ${CHART_TYPES.map(t=>`<option ${(sectionCharts[s.key]||'Bar')===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>`:''}
+    </div>`).join('');
+}
+
+function toggleSection(key,on){
+  sectionEnabled[key]=on;
+  const ds=document.getElementById('ds-'+key);
+  if(ds) ds.style.display=on?'':'none';
+}
+
+// ==================== KPI PICKER ====================
+function buildKPIPicker(){
+  const el=document.getElementById('kpi-picker');
+  el.innerHTML=KPI_OPTIONS.map(k=>`
+    <label class="kpi-pick${kpiSelected[k.key]?' selected':''}">
+      <input type="checkbox" ${kpiSelected[k.key]?'checked':''} onchange="toggleKPI('${k.key}',this.checked,this.closest('.kpi-pick'))">
+      <div class="kpi-pick-name">${k.label}</div>
+    </label>`).join('');
+}
+
+function toggleKPI(key,on,el){
+  kpiSelected[key]=on;
+  el.classList.toggle('selected',on);
+}
+
+// ==================== TABLES ====================
+function renderAllTables(){
+  ['financial','fundraising','program'].forEach(renderTable);
+}
+
+function renderTable(sec){
+  const tb=document.getElementById('tb-'+sec);
+  if(!tb) return;
+  const h1=document.getElementById('ch-'+sec.slice(0,3)+'-1')?.value||'Current';
+  const h2=document.getElementById('ch-'+sec.slice(0,3)+'-2')?.value||'Prior Year';
+  const h3=document.getElementById('ch-'+sec.slice(0,3)+'-3')?.value||'Goal';
+  tb.innerHTML=rows[sec].map((r,i)=>{
+    const v1=parseFloat(r.c1)||0, v3=parseFloat(r.c3)||0;
+    const varVal=v3?((v1/v3-1)*100).toFixed(1):'—';
+    const varClass=v3?(v1>=v3?'var-pos':'var-neg'):'';
+    return `<tr class="dt-row">
+      <td><input type="text" class="row-label-input" value="${esc(r.label)}" onchange="rows['${sec}'][${i}].label=this.value"></td>
+      <td><input type="text" class="num-input" value="${r.c1}" onchange="rows['${sec}'][${i}].c1=this.value;rerenderRow('${sec}',${i})" placeholder="0"></td>
+      <td><input type="text" class="num-input" value="${r.c2}" onchange="rows['${sec}'][${i}].c2=this.value" placeholder="0"></td>
+      <td><input type="text" class="num-input" value="${r.c3}" onchange="rows['${sec}'][${i}].c3=this.value;rerenderRow('${sec}',${i})" placeholder="0"></td>
+      <td class="var-cell ${varClass}" id="var-${sec}-${i}">${varVal!=='—'?varVal+'%':varVal}</td>
+      <td><button class="del-row-btn" onclick="delRow('${sec}',${i})">×</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function rerenderRow(sec,i){
+  const v1=parseFloat(rows[sec][i].c1)||0, v3=parseFloat(rows[sec][i].c3)||0;
+  const varVal=v3?((v1/v3-1)*100).toFixed(1):null;
+  const cell=document.getElementById(`var-${sec}-${i}`);
+  if(cell){
+    cell.textContent=varVal!==null?varVal+'%':'—';
+    cell.className=`var-cell ${varVal!==null?(v1>=v3?'var-pos':'var-neg'):''}`;
+  }
+}
+
+function addRow(sec){
+  rows[sec].push({label:'New Metric',c1:'',c2:'',c3:''});
+  renderTable(sec);
+}
+
+function delRow(sec,i){
+  rows[sec].splice(i,1);
+  renderTable(sec);
+}
+
+// ==================== ALERTS ====================
+function renderAlerts(){
+  const el=document.getElementById('alert-list');
+  if(!el) return;
+  el.innerHTML=alerts.map((a,i)=>`
+    <div class="alert-item">
+      <select class="alert-type-select" onchange="alerts[${i}].type=this.value">
+        <option ${a.type==='action'?'selected':''} value="action">Action</option>
+        <option ${a.type==='info'?'selected':''} value="info">Info</option>
+        <option ${a.type==='success'?'selected':''} value="success">Success</option>
+      </select>
+      <input type="text" class="alert-text-input" value="${esc(a.text)}" placeholder="Add item..." onchange="alerts[${i}].text=this.value">
+      <button class="del-row-btn" onclick="alerts.splice(${i},1);renderAlerts()">×</button>
+    </div>`).join('');
+}
+
+function addAlert(){
+  alerts.push({type:'action',text:''});
+  renderAlerts();
+}
+
+// ==================== LUNA ====================
+function calcLUNA(){
+  const assets=parseFloat(document.getElementById('luna-assets').value)||0;
+  const expenses=parseFloat(document.getElementById('luna-expenses').value)||0;
+  const reserves=parseFloat(document.getElementById('luna-reserves').value)||0;
+  if(!expenses){
+    document.getElementById('luna-months').textContent='—';
+    document.getElementById('luna-status-lbl').textContent='Enter monthly expenses';
+    document.getElementById('luna-ratio').textContent='—';
+    document.getElementById('luna-runway').textContent='—';
+    return;
+  }
+  const lunaMonths=(assets/expenses).toFixed(1);
+  const ratio=assets?(reserves/assets*100).toFixed(0)+'%':'—';
+  const runway=((assets+reserves)/expenses).toFixed(1);
+  document.getElementById('luna-months').textContent=lunaMonths;
+  document.getElementById('luna-ratio').textContent=ratio;
+  document.getElementById('luna-runway').textContent=runway;
+  const m=parseFloat(lunaMonths);
+  const lbl=document.getElementById('luna-status-lbl');
+  if(m>=6){lbl.textContent='Excellent (6+ months)';lbl.className='luna-status luna-good';}
+  else if(m>=3){lbl.textContent='Healthy (3–6 months)';lbl.className='luna-status luna-good';}
+  else if(m>=1){lbl.textContent='Below target (<3 mo)';lbl.className='luna-status luna-warn';}
+  else{lbl.textContent='Critical (<1 month)';lbl.className='luna-status luna-bad';}
+}
+
+// ==================== PREVIEW ====================
+function buildPreview(){
+  const org=document.getElementById('d-org').value||'Organization Name';
+  const fy=document.getElementById('d-fy').value||'';
+  const period=document.getElementById('d-period').value||'';
+  const meeting=document.getElementById('d-meeting').value||'';
+  const lunaMonths=document.getElementById('luna-months').textContent;
+  const presMsg=document.getElementById('president-msg').value;
+
+  const col1=headerColor||'#0D2C54';
+  const col2=shadeColor(col1,20);
+  const logoHtml=headerLogoDataUrl
+    ?`<img src="${headerLogoDataUrl}" style="width:100%;height:100%;object-fit:contain;">`
+    :`<span style="font-family:'DM Serif Display',serif;font-size:15px;font-weight:700;color:#fff;opacity:.8">${(org||'?').slice(0,2).toUpperCase()}</span>`;
+
+  let html=`
+  <div class="prev-header" id="prev-header-el" style="background:linear-gradient(135deg,${col1} 0%,${col2} 100%);">
+    <div style="display:flex;align-items:center;gap:14px;flex:1;min-width:0;">
+      <div style="width:52px;height:52px;border-radius:11px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;cursor:pointer;" onclick="openHdrModal()" title="Click to change logo or color">${logoHtml}</div>
+      <div>
+        <div class="prev-org">${org}</div>
+        <div class="prev-sub">${document.getElementById('d-name').value||'Board Dashboard'}</div>
+        <div class="prev-period">${[fy,period,meeting?'Board Meeting: '+meeting:''].filter(Boolean).join(' · ')}</div>
+      </div>
+    </div>
+    <button onclick="openHdrModal()" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:9px;padding:8px 14px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,.22)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">🎨 Customize</button>
+  </div>`;
+
+  // KPI cards
+  const activeKPIs=KPI_OPTIONS.filter(k=>kpiSelected[k.key]);
+  if(activeKPIs.length){
+    html+=`<div class="kpi-row">`;
+    activeKPIs.slice(0,4).forEach(k=>{
+      let val='—', pct=null, cls='';
+      if(k.key==='luna-months'){val=lunaMonths+(lunaMonths!=='—'?' mo':''); const m=parseFloat(lunaMonths); if(!isNaN(m)){cls=m>=3?'kpi-green':m>=1?'kpi-gold':'kpi-red';}}
+      else if(k.key==='total-revenue'&&rows.financial.length){const r=rows.financial.find(x=>x.label.toLowerCase().includes('revenue')||x.label.toLowerCase().includes('total'));if(r&&r.c1){val='$'+fmtNum(r.c1);if(r.c3){pct=Math.round(parseFloat(r.c1)/parseFloat(r.c3)*100);cls=pct>=100?'kpi-green':pct>=80?'kpi-gold':'kpi-red';}}}
+      else if(k.key==='fundraising-pct'&&rows.fundraising.length){const r=rows.fundraising.find(x=>x.label.toLowerCase().includes('total'));if(r&&r.c1&&r.c3){pct=Math.round(parseFloat(r.c1)/parseFloat(r.c3)*100);val=pct+'%';cls=pct>=100?'kpi-green':pct>=80?'kpi-gold':'kpi-red';}}
+      else if(k.key==='people-served'&&rows.program.length){const r=rows.program.find(x=>x.label.toLowerCase().includes('people')||x.label.toLowerCase().includes('served'));if(r&&r.c1){val=fmtNum(r.c1);if(r.c3){pct=Math.round(parseFloat(r.c1)/parseFloat(r.c3)*100);cls=pct>=100?'kpi-green':pct>=80?'kpi-gold':'kpi-red';}}}
+      html+=`<div class="kpi-card"><div class="kpi-lbl">${k.label}</div><div class="kpi-val">${val}</div>${pct!==null?`<div class="kpi-pct ${cls}">${pct}% of ${k.suffix||'target'}</div>`:''}</div>`;
+    });
+    html+=`</div>`;
+  }
+
+  // Charts row
+  const chartSecs=['financial','fundraising','program'].filter(s=>sectionEnabled[s]&&rows[s].some(r=>r.c1));
+  if(chartSecs.length){
+    html+=`<div class="prev-grid-2">`;
+    chartSecs.slice(0,2).forEach(sec=>{
+      const sTitle=document.getElementById('st-'+sec)?.value||sec;
+      const chartId='prev-chart-'+sec;
+      html+=`<div class="prev-chart-card"><div class="prev-chart-title">${sTitle}</div><canvas id="${chartId}" height="180"></canvas></div>`;
+    });
+    html+=`</div>`;
+  }
+
+  // Financial table
+  if(sectionEnabled.financial){
+    const h0=document.getElementById('ch-fin-0')?.value||'Metric';
+    const h1=document.getElementById('ch-fin-1')?.value||'Current';
+    const h2=document.getElementById('ch-fin-2')?.value||'Prior Year';
+    const h3=document.getElementById('ch-fin-3')?.value||'Goal';
+    html+=`<div class="prev-table-card"><div class="prev-chart-title">${document.getElementById('st-financial')?.value||'Financial Performance'}</div>
+    <table class="prev-table"><thead><tr><th>${h0}</th><th>${h1}</th><th>${h2}</th><th>${h3}</th><th>Variance</th></tr></thead><tbody>
+    ${rows.financial.map(r=>{
+      const v1=parseFloat(r.c1)||0,v3=parseFloat(r.c3)||0;
+      const vPct=v3?((v1/v3-1)*100).toFixed(1):null;
+      const cls=vPct!==null?(parseFloat(vPct)>=0?'var-pos':'var-neg'):'';
+      return `<tr><td>${r.label}</td><td>${r.c1?'$'+fmtNum(r.c1):'—'}</td><td>${r.c2?'$'+fmtNum(r.c2):'—'}</td><td>${r.c3?'$'+fmtNum(r.c3):'—'}</td><td class="${cls}">${vPct!==null?vPct+'%':'—'}</td></tr>`;
+    }).join('')}
+    </tbody></table></div>`;
+  }
+
+  // Alerts
+  const activeAlerts=alerts.filter(a=>a.text.trim());
+  if(sectionEnabled.alerts&&activeAlerts.length){
+    const alertTitle=document.getElementById('st-alerts')?.value||'Notable Items';
+    html+=`<div class="alert-preview"><div class="alert-preview-title">${alertTitle}</div>`;
+    activeAlerts.forEach(a=>{
+      html+=`<div class="alert-badge alert-${a.type}"><span>${a.type==='action'?'⚡':a.type==='success'?'✓':'ℹ'}</span>${a.text}</div>`;
+    });
+    html+=`</div>`;
+  }
+
+  // LUNA footnote
+  if(sectionEnabled.luna&&lunaMonths!=='—'){
+    html+=`<p class="luna-footnote">* LUNA (Liquid Unrestricted Net Assets): ${lunaMonths} months — measures available operating cash without restricted or designated funds. Best practice: 3–6 months.</p>`;
+  }
+
+  // President's message
+  if(sectionEnabled.president&&presMsg){
+    const presTitle=document.getElementById('st-president')?.value||'Executive Message';
+    html+=`<div class="president-card"><div class="president-title">${presTitle}</div><div class="president-text">${presMsg}</div></div>`;
+  }
+
+  // Custom tables
+  if(customTables.length){
+    customTables.forEach(t=>{
+      const hasData = t.rows.some(r=>r.cells.some(c=>c.trim()));
+      html+=`<div class="prev-table-card">
+        <div class="prev-chart-title">${esc(t.title)}</div>
+        <table class="prev-table">
+          <thead><tr>
+            <th>Metric</th>
+            ${t.cols.map(c=>`<th>${esc(c)}</th>`).join('')}
+          </tr></thead>
+          <tbody>
+            ${t.rows.map(r=>`<tr>
+              ${r.cells.map((cell,ci)=>`<td${ci>0?' style="text-align:right;"':''}>${esc(cell)||'—'}</td>`).join('')}
+            </tr>`).join('')}
+          </tbody>
+        </table>
+        ${!hasData?`<div style="padding:10px 0 4px;font-size:12px;color:#94a3b8;font-style:italic;">No data entered yet</div>`:''}
+      </div>`;
+    });
+  }
+
+  // Footer
+  html+=`<div style="margin-top:28px;padding:16px 20px;border-top:1px solid var(--border);text-align:center;">
+    <span style="font-size:11px;color:#94a3b8;font-style:italic;">Created by The Nonprofit Edge Dashboard Generator &nbsp;·&nbsp; thenonprofitedge.org &nbsp;·&nbsp; Generated ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span>
+  </div>`;
+
+  document.getElementById('preview-output').innerHTML=html;
+
+  // Render charts
+  setTimeout(()=>{
+    chartSecs.slice(0,2).forEach(sec=>{
+      const canvas=document.getElementById('prev-chart-'+sec);
+      if(!canvas) return;
+      const h1=document.getElementById('ch-'+sec.slice(0,3)+'-1')?.value||'Current';
+      const h3=document.getElementById('ch-'+sec.slice(0,3)+'-3')?.value||'Goal';
+      if(charts['prev-'+sec]) charts['prev-'+sec].destroy();
+      charts['prev-'+sec]=new Chart(canvas.getContext('2d'),{
+        type: sectionCharts[sec]==='Line'?'line':sectionCharts[sec]==='Pie'?'pie':'bar',
+        data:{
+          labels:rows[sec].filter(r=>r.c1).map(r=>r.label),
+          datasets:[
+            {label:h1,data:rows[sec].filter(r=>r.c1).map(r=>parseFloat(r.c1)||0),backgroundColor:headerColor||'#0097A9',borderRadius:4},
+            ...(sectionCharts[sec]!=='Pie'?[{label:h3,data:rows[sec].filter(r=>r.c1).map(r=>parseFloat(r.c3)||0),backgroundColor:'#e2e8f0',borderRadius:4}]:[])
+          ]
+        },
+        options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{family:'DM Sans',size:11}}}},scales:sectionCharts[sec]==='Pie'?{}:{y:{grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}}
+      });
+    });
+  },50);
+}
+
+// ==================== CUSTOM TABLES ====================
+// customTables: [{id, title, cols:['Col1',...], rows:[{cells:['','',...]}]}]
+let customTables = [];
+let ntCols = [];
+
+function openNewTableModal(){
+  ntCols = [];
+  document.getElementById('nt-name').value = '';
+  renderNTChips();
+  document.getElementById('nt-col-input').value = '';
+  document.getElementById('nt-rows').value = '3';
+  document.getElementById('nt-create-btn').disabled = true;
+  document.getElementById('nt-overlay').classList.add('show');
+  setTimeout(()=>document.getElementById('nt-name').focus(), 100);
+}
+function closeNewTableModal(){ document.getElementById('nt-overlay').classList.remove('show'); }
+
+function addNTCol(){
+  const inp = document.getElementById('nt-col-input');
+  const val = inp.value.trim(); if(!val) return;
+  ntCols.push(val); inp.value = ''; inp.focus();
+  renderNTChips(); checkNTReady();
+}
+function removeNTCol(i){ ntCols.splice(i,1); renderNTChips(); checkNTReady(); }
+function renderNTChips(){
+  const el = document.getElementById('nt-col-chips');
+  el.innerHTML = `<span class="nt-col-chip" style="background:#f8fafc;color:var(--slate);font-style:italic;border-style:dashed;">Row Label</span>`
+    + ntCols.map((c,i)=>`<span class="nt-col-chip">${esc(c)}<button class="nt-col-chip-del" onclick="removeNTCol(${i})">×</button></span>`).join('');
+}
+function checkNTReady(){
+  const name = document.getElementById('nt-name').value.trim();
+  document.getElementById('nt-create-btn').disabled = !(name && ntCols.length > 0);
+}
+
+function createCustomTable(){
+  const name = document.getElementById('nt-name').value.trim();
+  const numRows = parseInt(document.getElementById('nt-rows').value)||3;
+  const id = 'ct-' + Date.now();
+  customTables.push({
+    id, title: name, cols: [...ntCols],
+    rows: Array.from({length:numRows}, ()=>({cells: Array(ntCols.length).fill('')}))
+  });
+  closeNewTableModal();
+  renderCustomTables();
+  showToast('✓ Table added','green');
+}
+
+function renderCustomTables(){
+  const container = document.getElementById('custom-tables-container');
+  if(!container) return;
+  container.innerHTML = customTables.map(t => buildCustomTableHTML(t)).join('');
+}
+
+function buildCustomTableHTML(t){
+  const headerCells = t.cols.map((c,ci)=>`<th><input type="text" class="col-header" value="${esc(c)}" onchange="updateCustomColHeader('${t.id}',${ci},this.value)"></th>`).join('');
+  const dataRows = t.rows.map((r,ri)=>`<tr class="dt-row">
+    ${r.cells.map((cell,ci)=>`<td><input type="text" class="${ci===0?'row-label-input':'num-input'}" value="${esc(cell)}" placeholder="${ci===0?'Row label':'—'}" onchange="updateCustomCell('${t.id}',${ri},${ci},this.value)"${ci!==0?' style="text-align:right;"':''}></td>`).join('')}
+    <td><button class="del-row-btn" onclick="deleteCustomRow('${t.id}',${ri})">×</button></td>
+  </tr>`).join('');
+
+  return `<div class="ds" id="ds-${t.id}">
+    <div class="ds-head">
+      <div class="ds-title-wrap">
+        <input type="text" class="ds-title-input" value="${esc(t.title)}" onchange="updateCustomTableTitle('${t.id}',this.value)">
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="add-col-btn" onclick="addCustomCol('${t.id}')">+ Col</button>
+        <button class="ds-add-btn" onclick="addCustomRow('${t.id}')">+ Add Row</button>
+        <button class="ds-add-btn" style="background:#fff0f0;color:var(--red);border-color:#fecaca;" onmouseover="this.style.background='var(--red)';this.style.color='#fff'" onmouseout="this.style.background='#fff0f0';this.style.color='var(--red)'" onclick="deleteCustomTable('${t.id}')">Remove</button>
+      </div>
+    </div>
+    <table class="dt">
+      <thead class="dt-hrow"><tr>
+        <th><input type="text" class="col-header-first" value="Metric" onchange="/* label col */"></th>
+        ${headerCells}<th></th>
+      </tr></thead>
+      <tbody>${dataRows}</tbody>
+    </table>
+  </div>`;
+}
+
+function updateCustomTableTitle(id,val){ const t=customTables.find(x=>x.id===id); if(t) t.title=val; }
+function updateCustomColHeader(id,ci,val){ const t=customTables.find(x=>x.id===id); if(t) t.cols[ci]=val; }
+function updateCustomCell(id,ri,ci,val){ const t=customTables.find(x=>x.id===id); if(t) t.rows[ri].cells[ci]=val; }
+function addCustomRow(id){
+  const t=customTables.find(x=>x.id===id); if(!t) return;
+  t.rows.push({cells:Array(t.cols.length).fill('')}); renderCustomTables();
+}
+function deleteCustomRow(id,ri){
+  const t=customTables.find(x=>x.id===id); if(!t||t.rows.length<=1) return;
+  t.rows.splice(ri,1); renderCustomTables();
+}
+function addCustomCol(id){
+  const name=prompt('New column name:',''); if(!name) return;
+  const t=customTables.find(x=>x.id===id); if(!t) return;
+  t.cols.push(name); t.rows.forEach(r=>r.cells.push('')); renderCustomTables();
+}
+function deleteCustomTable(id){
+  if(!confirm('Remove this table?')) return;
+  customTables=customTables.filter(x=>x.id!==id); renderCustomTables();
+}
+
+// ==================== REPORT TYPES ====================
+const REPORT_TYPES = [
+  {
+    key:'board', icon:'🏛', name:'Board Report',
+    desc:'Full financial & program overview for the board of directors',
+    dashName:'Board Financial Dashboard', meetingLabel:'Board Meeting Date',
+    meetingPlaceholder:'March 15, 2026',
+    sections:{financial:true,fundraising:true,program:true,luna:true,alerts:true,president:true},
+    presidentLabel:'President / ED Message',
+    sectionLabels:{financial:'Financial Performance',fundraising:'Fundraising',program:'Program Impact',alerts:'Notable Items'},
+    colHeaders:{financial:['Metric','Current','Prior Year','Annual Budget'],fundraising:['Source','Raised','Prior Year','Goal'],program:['Metric','Current','Prior Year','Target']},
+  },
+  {
+    key:'finance', icon:'💰', name:'Finance Committee',
+    desc:'Detailed financial analysis for the finance committee',
+    dashName:'Finance Committee Report', meetingLabel:'Finance Meeting Date',
+    meetingPlaceholder:'March 10, 2026',
+    sections:{financial:true,fundraising:false,program:false,luna:true,alerts:true,president:false},
+    presidentLabel:'CFO / Treasurer Notes',
+    sectionLabels:{financial:'Financial Performance',fundraising:'Fundraising',program:'Program Impact',alerts:'Action Items'},
+    colHeaders:{financial:['Line Item','Actual MTD','Budget MTD','Variance $'],fundraising:['Source','Raised','Prior Year','Goal'],program:['Metric','Current','Prior Year','Target']},
+  },
+  {
+    key:'program', icon:'🌱', name:'Program Report',
+    desc:'Outcomes, impact metrics, and service delivery data',
+    dashName:'Program Impact Report', meetingLabel:'Report Date',
+    meetingPlaceholder:'February 2026',
+    sections:{financial:false,fundraising:false,program:true,luna:false,alerts:true,president:true},
+    presidentLabel:'Program Director Message',
+    sectionLabels:{financial:'Financial Performance',fundraising:'Fundraising',program:'Program Outcomes',alerts:'Highlights & Challenges'},
+    colHeaders:{financial:['Metric','Current','Prior Year','Budget'],fundraising:['Source','Raised','Prior Year','Goal'],program:['Outcome Metric','This Period','Last Period','Annual Goal']},
+  },
+  {
+    key:'donor', icon:'🤝', name:'Donor Report',
+    desc:'Fundraising results and donor engagement update',
+    dashName:'Donor & Fundraising Report', meetingLabel:'Report Period',
+    meetingPlaceholder:'Q2 FY2026',
+    sections:{financial:false,fundraising:true,program:true,luna:false,alerts:true,president:true},
+    presidentLabel:'Development Director Message',
+    sectionLabels:{financial:'Financial Performance',fundraising:'Fundraising Results',program:'Your Impact',alerts:'Campaign Updates'},
+    colHeaders:{financial:['Metric','Current','Prior Year','Budget'],fundraising:['Campaign / Source','Raised','Prior Year','Goal'],program:['Impact Metric','Current','Prior Year','Target']},
+  },
+  {
+    key:'staff', icon:'👥', name:'Staff Dashboard',
+    desc:'Internal operations, capacity, and HR metrics',
+    dashName:'Staff Operations Dashboard', meetingLabel:'Meeting / Review Date',
+    meetingPlaceholder:'February 2026',
+    sections:{financial:true,fundraising:false,program:true,luna:false,alerts:true,president:false},
+    presidentLabel:'ED / Director Notes',
+    sectionLabels:{financial:'Budget & Expenses',fundraising:'Fundraising',program:'Program Metrics',alerts:'Staff Updates & Priorities'},
+    colHeaders:{financial:['Category','Actual','Budget','Variance'],fundraising:['Source','Raised','Prior Year','Goal'],program:['Metric','This Month','Last Month','Target']},
+  },
+  {
+    key:'funder', icon:'📋', name:'Funder / Grant Report',
+    desc:'Grant deliverables, outcomes, and expenditure report',
+    dashName:'Grant Progress Report', meetingLabel:'Report Due Date',
+    meetingPlaceholder:'March 31, 2026',
+    sections:{financial:true,fundraising:false,program:true,luna:false,alerts:true,president:true},
+    presidentLabel:'Project Director Narrative',
+    sectionLabels:{financial:'Grant Expenditure',fundraising:'Fundraising',program:'Grant Deliverables',alerts:'Variances & Explanations'},
+    colHeaders:{financial:['Budget Category','Expended','Approved Budget','% Used'],fundraising:['Source','Raised','Prior Year','Goal'],program:['Deliverable','Achieved','Prior Period','Target']},
+  },
+];
+
+let currentReportType = 'board';
+
+function buildReportTypeGrid(){
+  const el = document.getElementById('report-type-grid');
+  if(!el) return;
+  el.innerHTML = REPORT_TYPES.map(t=>`
+    <div class="rt-card${currentReportType===t.key?' selected':''}" onclick="selectReportType('${t.key}')">
+      <div class="rt-icon">${t.icon}</div>
+      <div class="rt-name">${t.name}</div>
+      <div class="rt-desc">${t.desc}</div>
+    </div>`).join('');
+}
+
+function selectReportType(key){
+  currentReportType = key;
+  buildReportTypeGrid();
+  applyReportType(key);
+}
+
+function applyReportType(key){
+  const rt = REPORT_TYPES.find(t=>t.key===key);
+  if(!rt) return;
+
+  // Dashboard name placeholder
+  const dname = document.getElementById('d-name');
+  if(dname && !dname.value) dname.placeholder = rt.dashName;
+
+  // Meeting field label
+  const mlabel = document.getElementById('meeting-label');
+  const mfield = document.getElementById('d-meeting');
+  if(mlabel) mlabel.textContent = rt.meetingLabel;
+  if(mfield) mfield.placeholder = rt.meetingPlaceholder;
+
+  // Section toggles
+  Object.entries(rt.sections).forEach(([k,on])=>{
+    sectionEnabled[k] = on;
+    const ds = document.getElementById('ds-'+k);
+    if(ds) ds.style.display = on ? '' : 'none';
+  });
+  buildSectionToggles();
+
+  // Section title defaults
+  Object.entries(rt.sectionLabels).forEach(([k,label])=>{
+    const el = document.getElementById('st-'+k);
+    if(el && !el._userEdited) el.value = label;
+  });
+
+  // Column headers
+  const colMap = {financial:'fin', fundraising:'fun', program:'prg'};
+  Object.entries(rt.colHeaders).forEach(([sec, headers])=>{
+    const pfx = colMap[sec];
+    headers.forEach((h,i)=>{
+      const el = document.getElementById('ch-'+pfx+'-'+(i+1));
+      if(el && !el._userEdited) el.value = h;
+    });
+  });
+
+  // President label
+  const pl = document.getElementById('st-president');
+  if(pl && !pl._userEdited) pl.value = rt.presidentLabel;
+}
+
+// ==================== WELCOME MODAL ====================
+function openWelcome(){
+  document.getElementById('welcome-overlay').style.display='flex';
+}
+function closeWelcome(){
+  document.getElementById('welcome-overlay').style.display='none';
+}
+function closeWelcomeDontShow(){
+  localStorage.setItem('npe_dash_welcome_seen','1');
+  closeWelcome();
+}
+function closeWelcomeOpenSample(){
+  closeWelcome();
+  openSample();
+}
+function showWelcomeIfNew(){
+  if(!localStorage.getItem('npe_dash_welcome_seen') && !dashboards.length){
+    setTimeout(()=>openWelcome(), 400);
+  }
+}
+
+// ==================== SAMPLE REPORT MODAL ====================
+function openSample(){
+  document.getElementById('sample-overlay').classList.add('show');
+  const body = document.getElementById('sample-body');
+  if(!body._built){ body.innerHTML = buildSampleHTML(); body._built=true; renderSampleCharts(); }
+}
+function closeSample(){
+  document.getElementById('sample-overlay').classList.remove('show');
+}
+
+function buildSampleHTML(){
+  return `
+  <style>
+  .sp-header{background:linear-gradient(135deg,#1a4a2e 0%,#2d6b47 100%);border-radius:14px;padding:24px 26px;display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;box-shadow:0 4px 16px rgba(26,74,46,.25);}
+  .sp-logo{width:52px;height:52px;border-radius:11px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:17px;font-weight:700;color:#fff;flex-shrink:0;}
+  .sp-org{font-family:'DM Serif Display',serif;font-size:22px;color:#fff;margin-bottom:3px;}
+  .sp-sub{font-size:12px;color:rgba(255,255,255,.6);}
+  .sp-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
+  .sp-kpi{background:#fff;border-radius:12px;border:1px solid #e2e8f0;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .sp-kpi-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin-bottom:5px;}
+  .sp-kpi-val{font-family:'DM Serif Display',serif;font-size:24px;color:#0D2C54;margin-bottom:3px;}
+  .sp-kpi-pct{font-size:11px;font-weight:700;}
+  .sp-grid2{display:grid;grid-template-columns:3fr 2fr;gap:14px;margin-bottom:16px;}
+  .sp-card{background:#fff;border-radius:12px;border:1px solid #e2e8f0;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .sp-card-title{font-size:13px;font-weight:700;color:#0D2C54;margin-bottom:14px;}
+  .sp-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .sp-table th{padding:7px 10px;text-align:left;border-bottom:2px solid #e2e8f0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#64748b;}
+  .sp-table th:not(:first-child){text-align:right;}
+  .sp-table td{padding:7px 10px;border-bottom:1px solid #f8fafc;}
+  .sp-table td:not(:first-child){text-align:right;}
+  .sp-pos{color:#10b981;font-weight:700;} .sp-neg{color:#ef4444;font-weight:700;}
+  .sp-alert{display:flex;align-items:flex-start;gap:8px;padding:8px 12px;border-radius:9px;margin-bottom:7px;font-size:12px;}
+  .sp-alert-action{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.18);}
+  .sp-alert-info{background:rgba(0,151,169,.07);border:1px solid rgba(0,151,169,.18);}
+  .sp-alert-success{background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.18);}
+  .sp-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+  .sp-alert-action .sp-dot{background:#ef4444;} .sp-alert-info .sp-dot{background:#0097A9;} .sp-alert-success .sp-dot{background:#10b981;}
+  .sp-tag{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-right:3px;}
+  .sp-alert-action .sp-tag{color:#ef4444;} .sp-alert-info .sp-tag{color:#0097A9;} .sp-alert-success .sp-tag{color:#10b981;}
+  .sp-msg{background:rgba(13,44,84,.03);border:1px solid rgba(0,151,169,.12);border-radius:12px;padding:18px 20px;margin-bottom:16px;}
+  .sp-msg-by{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:#0097A9;margin-bottom:8px;}
+  .sp-msg-text{font-size:13px;color:#475569;line-height:1.8;}
+  .sp-footer{border-top:1px solid #e2e8f0;padding-top:14px;text-align:center;font-size:11px;color:#94a3b8;font-style:italic;}
+  .sp-luna{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;}
+  .sp-luna-card{background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;padding:12px;text-align:center;}
+  .sp-luna-num{font-family:'DM Serif Display',serif;font-size:24px;color:#0D2C54;}
+  .sp-luna-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#64748b;margin-top:2px;}
+  .sp-luna-st{font-size:11px;font-weight:700;margin-top:4px;color:#10b981;}
+  </style>
+
+  <div style="background:linear-gradient(135deg,rgba(245,158,11,.1) 0%,rgba(245,158,11,.05) 100%);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:10px 14px;margin-bottom:18px;font-size:12px;color:#92400e;">
+    <strong>Sample Report — Hope Forward (fictional nonprofit)</strong> &nbsp;·&nbsp; This is what your completed dashboard can look like. Your organization, your data, your colors.
+  </div>
+
+  <div class="sp-header">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div class="sp-logo">HF</div>
+      <div>
+        <div class="sp-org">Hope Forward</div>
+        <div class="sp-sub">Board of Directors — Financial Dashboard &nbsp;·&nbsp; FY 2025–2026</div>
+      </div>
+    </div>
+    <div style="text-align:right;color:rgba(255,255,255,.5);font-size:11px;">Board Meeting: Feb 18, 2026<br>Prepared by: Maria Gonzalez, CFO</div>
+  </div>
+
+  <div class="sp-kpis">
+    <div class="sp-kpi"><div class="sp-kpi-lbl">Total Revenue</div><div class="sp-kpi-val">$1.24M</div><div class="sp-kpi-pct" style="color:#10b981;">↑ 103% of budget</div></div>
+    <div class="sp-kpi"><div class="sp-kpi-lbl">Net Income</div><div class="sp-kpi-val">$87K</div><div class="sp-kpi-pct" style="color:#10b981;">Surplus ✓</div></div>
+    <div class="sp-kpi"><div class="sp-kpi-lbl">Months of LUNA*</div><div class="sp-kpi-val">4.2</div><div class="sp-kpi-pct" style="color:#10b981;">Healthy (3–6 mo)</div></div>
+    <div class="sp-kpi"><div class="sp-kpi-lbl">% of Fundraising Goal</div><div class="sp-kpi-val">79%</div><div class="sp-kpi-pct" style="color:#f59e0b;">↑ On pace</div></div>
+  </div>
+
+  <div class="sp-grid2">
+    <div class="sp-card"><div class="sp-card-title">Revenue vs. Budget — Monthly</div><canvas id="sp-chart-revenue" height="160"></canvas></div>
+    <div class="sp-card"><div class="sp-card-title">Expense Breakdown</div><canvas id="sp-chart-pie" height="160"></canvas></div>
+  </div>
+
+  <div class="sp-card" style="margin-bottom:14px;">
+    <div class="sp-card-title">Financial Performance — YTD</div>
+    <table class="sp-table">
+      <thead><tr><th>Metric</th><th>Current</th><th>Prior Year</th><th>Annual Budget</th><th>Variance</th></tr></thead>
+      <tbody>
+        <tr><td>Government Grants</td><td>$485,000</td><td>$420,000</td><td>$460,000</td><td class="sp-pos">+5.4%</td></tr>
+        <tr><td>Foundation Grants</td><td>$310,000</td><td>$285,000</td><td>$300,000</td><td class="sp-pos">+3.3%</td></tr>
+        <tr><td>Individual Donations</td><td>$218,000</td><td>$195,000</td><td>$210,000</td><td class="sp-pos">+3.8%</td></tr>
+        <tr><td>Program Service Fees</td><td>$148,000</td><td>$160,000</td><td>$170,000</td><td class="sp-neg">−12.9%</td></tr>
+        <tr><td>Special Events</td><td>$82,000</td><td>$71,000</td><td>$60,000</td><td class="sp-pos">+36.7%</td></tr>
+        <tr><td style="font-weight:700;">Total Revenue</td><td style="font-weight:700;">$1,243,000</td><td>$1,131,000</td><td>$1,200,000</td><td class="sp-pos">+3.6%</td></tr>
+        <tr><td colspan="5" style="padding:4px 10px;background:#f8fafc;font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.06em;">Expenses</td></tr>
+        <tr><td>Program Services</td><td>$784,000</td><td>$712,000</td><td>$800,000</td><td class="sp-pos">−2.0%</td></tr>
+        <tr><td>Management & General</td><td>$241,000</td><td>$228,000</td><td>$250,000</td><td class="sp-pos">−3.6%</td></tr>
+        <tr><td>Fundraising</td><td>$131,000</td><td>$125,000</td><td>$140,000</td><td class="sp-pos">−6.4%</td></tr>
+        <tr><td style="font-weight:700;">Total Expenses</td><td style="font-weight:700;">$1,156,000</td><td>$1,065,000</td><td>$1,190,000</td><td class="sp-pos">−2.9%</td></tr>
+        <tr><td style="font-weight:700;color:#10b981;">Net Income (Surplus)</td><td style="font-weight:700;color:#10b981;">$87,000</td><td>$66,000</td><td>$10,000</td><td class="sp-pos">+770%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sp-card" style="margin-bottom:14px;">
+    <div class="sp-card-title">LUNA — Liquid Unrestricted Net Assets</div>
+    <p style="font-size:12px;color:#64748b;line-height:1.6;margin-bottom:4px;">Measures months of operating reserves available. Best practice: 3–6 months.</p>
+    <div class="sp-luna">
+      <div class="sp-luna-card"><div class="sp-luna-num" style="color:#10b981;">4.2</div><div class="sp-luna-lbl">Months of LUNA</div><div class="sp-luna-st">✓ Healthy</div></div>
+      <div class="sp-luna-card"><div class="sp-luna-num">28%</div><div class="sp-luna-lbl">Reserve Ratio</div><div style="font-size:10px;color:#64748b;margin-top:4px;">Reserves ÷ Assets</div></div>
+      <div class="sp-luna-card"><div class="sp-luna-num" style="color:#10b981;">5.8</div><div class="sp-luna-lbl">Full Runway (months)</div><div style="font-size:10px;color:#64748b;margin-top:4px;">Incl. reserves</div></div>
+    </div>
+  </div>
+
+  <div class="sp-card" style="margin-bottom:14px;">
+    <div class="sp-card-title">Notable Items</div>
+    <div class="sp-alert sp-alert-action"><div class="sp-dot"></div><div><span class="sp-tag">Action</span>Board approval needed for FY2027 budget framework — vote scheduled for March meeting.</div></div>
+    <div class="sp-alert sp-alert-action"><div class="sp-dot"></div><div><span class="sp-tag">Action</span>Corporate sponsorship at 50% of goal. Development committee recommends targeted outreach to 6 prospects by March 1.</div></div>
+    <div class="sp-alert sp-alert-info"><div class="sp-dot"></div><div><span class="sp-tag">Info</span>Program service fee revenue 12.9% below budget due to reduced Q1 contract hours. Recovery expected Q3.</div></div>
+    <div class="sp-alert sp-alert-success"><div class="sp-dot"></div><div><span class="sp-tag">Highlight</span>Spring Gala exceeded budget by 3% — strongest performance in 5 years.</div></div>
+  </div>
+
+  <div class="sp-msg">
+    <div class="sp-msg-by">Message from the Executive Director — Dr. Carmen Reyes</div>
+    <div class="sp-msg-text">The first quarter of FY2026 has positioned Hope Forward for one of our strongest years on record. Revenue is ahead of budget, LUNA is healthy, and our program outcomes are exceeding targets. The area requiring our collective attention is corporate sponsorship. I remain confident we will close this gap by Q3.</div>
+    <div style="margin-top:12px;font-size:12px;font-weight:700;color:#0D2C54;">Dr. Carmen Reyes &nbsp;<span style="font-weight:400;color:#64748b;">Executive Director · January 28, 2026</span></div>
+  </div>
+
+  <p style="font-size:11px;color:#94a3b8;font-style:italic;margin-bottom:16px;">* LUNA: unrestricted liquid assets ($497,000) ÷ avg monthly expenses ($118,333). Does not include board-designated reserves ($142,000).</p>
+  <div class="sp-footer">Created by The Nonprofit Edge Dashboard Generator · thenonprofitedge.org · This is a sample report</div>`;
+}
+
+function renderSampleCharts(){
+  setTimeout(()=>{
+    const r = document.getElementById('sp-chart-revenue');
+    const p = document.getElementById('sp-chart-pie');
+    if(r) new Chart(r.getContext('2d'),{type:'bar',data:{labels:['Aug','Sep','Oct','Nov','Dec','Jan'],datasets:[{label:'Actual',data:[178000,192000,215000,224000,198000,236000],backgroundColor:'#0097A9',borderRadius:4},{label:'Budget',data:[185000,185000,200000,210000,210000,210000],backgroundColor:'#e2e8f0',borderRadius:4}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{family:'DM Sans',size:10},padding:10}}},scales:{y:{grid:{color:'#f1f5f9'},ticks:{callback:v=>'$'+(v/1000)+'K',font:{size:10}}},x:{grid:{display:false},ticks:{font:{size:10}}}}}});
+    if(p) new Chart(p.getContext('2d'),{type:'doughnut',data:{labels:['Programs','Mgmt','Fundraising'],datasets:[{data:[784000,241000,131000],backgroundColor:['#0097A9','#1a4175','#f59e0b'],borderWidth:0}]},options:{responsive:true,cutout:'60%',plugins:{legend:{position:'bottom',labels:{font:{family:'DM Sans',size:10},padding:10}}}}});
+  },100);
+}
+let headerColor = '#0D2C54';
+let headerLogoDataUrl = null;
+
+const COLOR_PALETTE = [
+  '#0D2C54','#1a4175','#0097A9','#10b981','#f59e0b',
+  '#ef4444','#6366f1','#f97316','#8b5cf6','#0f172a',
+  '#1e40af','#065f46','#92400e','#7c3aed','#be123c',
+];
+
+function shadeColor(hex, pct){
+  try{
+    const n=parseInt(hex.replace('#',''),16);
+    const r=Math.min(255,((n>>16)&0xff)+pct);
+    const g=Math.min(255,((n>>8)&0xff)+pct);
+    const b=Math.min(255,(n&0xff)+pct);
+    return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
+  }catch(e){return hex;}
+}
+
+function openHdrModal(){
+  // Sync preview text
+  const org=document.getElementById('d-org').value||'Organization Name';
+  const fy=document.getElementById('d-fy').value||'';
+  const name=document.getElementById('d-name').value||'Board Dashboard';
+  document.getElementById('hdr-preview-org').textContent=org;
+  document.getElementById('hdr-preview-sub').textContent=[name,fy].filter(Boolean).join(' · ');
+  updateHdrPreview(headerColor);
+  // Restore logo preview if set
+  const pLogo=document.getElementById('hdr-preview-logo');
+  if(headerLogoDataUrl){
+    pLogo.innerHTML=`<img src="${headerLogoDataUrl}" style="width:100%;height:100%;object-fit:contain;">`;
+  } else {
+    pLogo.innerHTML=org.slice(0,2).toUpperCase();
+  }
+  // Restore logo zone
+  const zone=document.getElementById('logo-zone-inner');
+  if(headerLogoDataUrl){
+    zone.innerHTML=`<img src="${headerLogoDataUrl}" style="max-height:60px;max-width:180px;object-fit:contain;display:block;margin:0 auto;"><button class="logo-clear-btn" onclick="clearLogo(event)">Remove logo</button>`;
+  } else {
+    zone.innerHTML=`<div class="logo-upload-icon">🖼</div><div style="font-size:13px;font-weight:600;color:var(--text2);">Click to upload logo</div><div class="logo-upload-hint">PNG, JPG, SVG — displays in dashboard header</div>`;
+  }
+  // Build swatches
+  buildSwatches(headerColor);
+  document.getElementById('custom-color').value=headerColor;
+  document.getElementById('hdr-overlay').classList.add('show');
+}
+
+function closeHdrModal(){document.getElementById('hdr-overlay').classList.remove('show');}
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('hdr-overlay').addEventListener('click',function(e){if(e.target===this)closeHdrModal();});
+  document.getElementById('nt-overlay').addEventListener('click',function(e){if(e.target===this)closeNewTableModal();});
+});
+
+function buildSwatches(current){
+  const el=document.getElementById('color-swatches');
+  el.innerHTML=COLOR_PALETTE.map(c=>`
+    <div class="color-swatch${c===current?' selected':''}" style="background:${c}" onclick="pickSwatch('${c}')" title="${c}"></div>
+  `).join('');
+}
+
+function pickSwatch(c){
+  COLOR_PALETTE.forEach((col,i)=>{
+    const sw=document.getElementById('color-swatches').children[i];
+    if(sw) sw.classList.toggle('selected',col===c);
+  });
+  document.getElementById('custom-color').value=c;
+  updateHdrPreview(c);
+}
+
+function pickCustomColor(c){
+  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
+  updateHdrPreview(c);
+}
+
+function updateHdrPreview(c){
+  const c2=shadeColor(c,24);
+  document.getElementById('hdr-live-preview').style.background=`linear-gradient(135deg,${c} 0%,${c2} 100%)`;
+}
+
+function triggerLogoUpload(){document.getElementById('logo-file-input').click();}
+
+function handleLogoUpload(inp){
+  const f=inp.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    headerLogoDataUrl=ev.target.result;
+    const zone=document.getElementById('logo-zone-inner');
+    zone.innerHTML=`<img src="${headerLogoDataUrl}" style="max-height:60px;max-width:180px;object-fit:contain;display:block;margin:0 auto;"><button class="logo-clear-btn" onclick="clearLogo(event)">Remove logo</button>`;
+    document.getElementById('hdr-preview-logo').innerHTML=`<img src="${headerLogoDataUrl}" style="width:100%;height:100%;object-fit:contain;">`;
+    // Also update nav logo
+    const navLogo=document.getElementById('nav-tne-logo-box');
+    if(navLogo) navLogo.innerHTML=`<img src="${headerLogoDataUrl}" style="width:100%;height:100%;object-fit:contain;">`;
+  };
+  r.readAsDataURL(f);
+}
+
+function clearLogo(e){
+  e.stopPropagation();
+  headerLogoDataUrl=null;
+  const zone=document.getElementById('logo-zone-inner');
+  zone.innerHTML=`<div class="logo-upload-icon">🖼</div><div style="font-size:13px;font-weight:600;color:var(--text2);">Click to upload logo</div><div class="logo-upload-hint">PNG, JPG, SVG — displays in dashboard header</div>`;
+  const org=document.getElementById('d-org').value||'?';
+  document.getElementById('hdr-preview-logo').innerHTML=org.slice(0,2).toUpperCase();
+  document.getElementById('nav-tne-logo-box').innerHTML='TNE';
+}
+
+function applyHeaderCustomization(){
+  headerColor=document.getElementById('custom-color').value;
+  closeHdrModal();
+  // Rebuild preview if open
+  if(document.getElementById('epanel-preview').classList.contains('active')) buildPreview();
+  showToast('✓ Header updated','green');
+}
+
+function goResources(){
+  // In production this routes to /resources. In standalone mode confirm.
+  if(window.location.pathname==='/'){
+    showToast('↩ Returning to Member Resources…');
+    setTimeout(()=>{ window.location.href='https://thenonprofitedge.org/resources'; },800);
+    return false;
+  }
+  return true; // let native href work if on platform
+}
+function getState(){
+  return {
+    id:currentId||Date.now().toString(),
+    name:document.getElementById('d-name').value||'Untitled Dashboard',
+    org:document.getElementById('d-org').value,
+    fy:document.getElementById('d-fy').value,
+    period:document.getElementById('d-period').value,
+    meeting:document.getElementById('d-meeting').value,
+    sectionEnabled:{...sectionEnabled},
+    sectionCharts:{...sectionCharts},
+    kpiSelected:{...kpiSelected},
+    rows:JSON.parse(JSON.stringify(rows)),
+    alerts:JSON.parse(JSON.stringify(alerts)),
+    sectionTitles:{
+      financial:document.getElementById('st-financial')?.value,
+      fundraising:document.getElementById('st-fundraising')?.value,
+      program:document.getElementById('st-program')?.value,
+      luna:document.getElementById('st-luna')?.value,
+      alerts:document.getElementById('st-alerts')?.value,
+      president:document.getElementById('st-president')?.value,
+    },
+    colHeaders:{
+      fin:[0,1,2,3].map(i=>document.getElementById('ch-fin-'+i)?.value),
+      fun:[0,1,2,3].map(i=>document.getElementById('ch-fun-'+i)?.value),
+      prg:[0,1,2,3].map(i=>document.getElementById('ch-prg-'+i)?.value),
+    },
+    luna:{
+      assets:document.getElementById('luna-assets')?.value,
+      expenses:document.getElementById('luna-expenses')?.value,
+      reserves:document.getElementById('luna-reserves')?.value,
+    },
+    presMsg:document.getElementById('president-msg')?.value,
+    headerColor:headerColor,
+    headerLogoDataUrl:headerLogoDataUrl,
+    customTables:JSON.parse(JSON.stringify(customTables)),
+    reportType:currentReportType,
+    saved:new Date().toLocaleString(),
+  };
+}
+
+function saveDashboard(){
+  const d=getState();
+  currentId=d.id;
+  const idx=dashboards.findIndex(x=>x.id===d.id);
+  if(idx>=0) dashboards[idx]=d; else dashboards.unshift(d);
+  localStorage.setItem('npe_dash_v6',JSON.stringify(dashboards));
+  refreshSidebar();
+  renderHomeGrid();
+  showToast('✓ Dashboard saved','green');
+}
+
+function loadDashboardData(d){
+  currentId=d.id;
+  document.getElementById('d-name').value=d.name||'';
+  document.getElementById('d-org').value=d.org||'';
+  document.getElementById('d-fy').value=d.fy||'';
+  document.getElementById('d-period').value=d.period||'';
+  document.getElementById('d-meeting').value=d.meeting||'';
+  if(d.sectionEnabled) Object.assign(sectionEnabled,d.sectionEnabled);
+  if(d.sectionCharts) Object.assign(sectionCharts,d.sectionCharts);
+  if(d.kpiSelected) Object.assign(kpiSelected,d.kpiSelected);
+  if(d.rows) rows=JSON.parse(JSON.stringify(d.rows));
+  if(d.alerts) alerts=JSON.parse(JSON.stringify(d.alerts));
+  buildSectionToggles(); buildKPIPicker(); renderAllTables(); renderAlerts();
+  setTimeout(()=>{
+    if(d.sectionTitles){Object.entries(d.sectionTitles).forEach(([k,v])=>{const el=document.getElementById('st-'+k);if(el&&v)el.value=v;});}
+    if(d.colHeaders){
+      ['fin','fun','prg'].forEach((pfx,si)=>{
+        const key=['financial','fundraising','program'][si];
+        const src=d.colHeaders[pfx];
+        if(src) src.forEach((v,i)=>{const el=document.getElementById('ch-'+pfx+'-'+i);if(el&&v)el.value=v;});
+      });
+    }
+    if(d.luna){
+      ['assets','expenses','reserves'].forEach(k=>{const el=document.getElementById('luna-'+k);if(el)el.value=d.luna[k]||'';});
+      calcLUNA();
+    }
+    if(d.presMsg){const el=document.getElementById('president-msg');if(el)el.value=d.presMsg;}
+    if(d.headerColor){headerColor=d.headerColor;}
+    if(d.headerLogoDataUrl){
+      headerLogoDataUrl=d.headerLogoDataUrl;
+      const navLogo=document.getElementById('nav-tne-logo-box');
+      if(navLogo) navLogo.innerHTML=`<img src="${headerLogoDataUrl}" style="width:100%;height:100%;object-fit:contain;">`;
+    } else {
+      headerLogoDataUrl=null;
+      const navLogo=document.getElementById('nav-tne-logo-box');
+      if(navLogo) navLogo.innerHTML='TNE';
+    }
+    customTables = d.customTables ? JSON.parse(JSON.stringify(d.customTables)) : [];
+    renderCustomTables();
+    if(d.reportType){ currentReportType = d.reportType; buildReportTypeGrid(); }
+    SECTION_CONFIG.forEach(s=>{const ds=document.getElementById('ds-'+s.key);if(ds)ds.style.display=sectionEnabled[s.key]?'':'none';});
+  },50);
+}
+
+function newDashboard(){
+  currentId=null;
+  ['d-name','d-org','d-fy','d-period','d-meeting'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  sectionEnabled={financial:true,fundraising:true,program:true,luna:true,alerts:true,president:true};
+  sectionCharts={financial:'Bar',fundraising:'Bar',program:'Bar'};
+  kpiSelected={'total-revenue':true,'luna-months':true,'people-served':true,'fundraising-pct':true};
+  rows={financial:[],fundraising:[],program:[]};
+  alerts=[];
+  customTables=[];
+  currentReportType='board';
+  buildSectionToggles(); buildKPIPicker(); buildDefaultRows(); buildAlerts(); renderCustomTables(); buildReportTypeGrid();
+  SECTION_CONFIG.forEach(s=>{const ds=document.getElementById('ds-'+s.key);if(ds)ds.style.display='';});
+  document.getElementById('luna-assets').value='';
+  document.getElementById('luna-expenses').value='';
+  document.getElementById('luna-reserves').value='';
+  document.getElementById('luna-months').textContent='—';
+  document.getElementById('president-msg').value='';
+  headerColor='#0D2C54';
+  headerLogoDataUrl=null;
+  document.getElementById('nav-tne-logo-box').innerHTML='TNE';
+  showPage('editor');
+  goTab('setup');
+}
+
+function deleteDashboard(id,e){
+  e.stopPropagation();
+  if(!confirm('Delete this dashboard?')) return;
+  dashboards=dashboards.filter(x=>x.id!==id);
+  if(currentId===id){currentId=null;}
+  localStorage.setItem('npe_dash_v6',JSON.stringify(dashboards));
+  renderHomeGrid(); refreshSidebar();
+}
+
+// ==================== UI RENDERING ====================
+function renderHomeGrid(){
+  const el=document.getElementById('home-grid');
+  if(!dashboards.length){
+    el.innerHTML=`<div class="empty-home">
+      <div class="empty-icon">📊</div>
+      <div class="empty-title">No dashboards yet</div>
+      <div class="empty-sub">Create your first dashboard to build professional board reports your organization will love.</div>
+      <button class="home-new-btn" onclick="newDashboard()">+ Create Your First Dashboard</button>
+    </div>`;
+    return;
+  }
+  const COLORS=[['#0D2C54','#1a4175','B'],['#0097A9','#00b8cc','F'],['#d97706','#f59e0b','G'],['#6366f1','#818cf8','P']];
+  el.innerHTML=dashboards.map((d,i)=>{
+    const [bg1,bg2,ltr]=COLORS[i%COLORS.length];
+    return `<div class="dash-card" onclick="openDashboard('${d.id}')">
+      <div class="dash-card-banner" style="background:linear-gradient(135deg,${bg1} 0%,${bg2} 100%)">
+        <div class="dash-card-badge" style="background:rgba(255,255,255,.15)">${ltr}</div>
+      </div>
+      <div class="dash-card-body">
+        <div class="dash-card-name">${d.name}</div>
+        <div class="dash-card-meta">${[d.org,d.fy,d.period].filter(Boolean).join(' · ')}</div>
+        <div class="dash-card-meta" style="margin-top:3px;">Saved ${d.saved||''}</div>
+        <div class="dash-card-actions">
+          <button class="dc-btn dc-open">Open</button>
+          <button class="dc-btn dc-del" onclick="deleteDashboard('${d.id}',event)">Delete</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function refreshSidebar(){
+  const el=document.getElementById('sidebar-list');
+  if(!el) return;
+  el.innerHTML=dashboards.map(d=>`
+    <div class="sidebar-item${d.id===currentId?' active':''}" onclick="openDashboard('${d.id}')">
+      <div class="si-name">${d.name}</div>
+      <div class="si-meta">${d.org||'No org'}</div>
+    </div>`).join('');
+}
+
+// ==================== NSD ====================
+function buildNSDOpts(){
+  document.getElementById('nsd-opts').innerHTML=NSD_OPTS.map(o=>`
+    <div class="radio-opt" onclick="pickNSD(this,'${o.replace(/'/g,"\\'")}')">
+      <div class="rdot"><div class="rdot-inner"></div></div>
+      <div class="rtext">${o}</div>
+    </div>`).join('');
+}
+function pickNSD(el,val){
+  document.querySelectorAll('.radio-opt').forEach(r=>r.classList.remove('sel'));
+  el.classList.add('sel'); nsdSel=val; checkNSDBtn();
+}
+function checkNSDBtn(){
+  document.getElementById('nsd-btn').disabled=!(nsdSel&&document.getElementById('nsd-desc').value.trim());
+}
+document.getElementById('nsd-desc').addEventListener('input',checkNSDBtn);
+function openNSD(){
+  nsdSel='';
+  document.getElementById('nsd-desc').value='';
+  document.getElementById('nsd-email').value='';
+  document.querySelectorAll('.radio-opt').forEach(r=>r.classList.remove('sel'));
+  document.getElementById('nsd-btn').disabled=true;
+  document.getElementById('nsd-form').style.display='block';
+  document.getElementById('nsd-success').style.display='none';
+  document.getElementById('nsd-overlay').classList.add('show');
+}
+function submitNSD(){const b=document.getElementById('nsd-btn');b.textContent='Sending...';b.disabled=true;setTimeout(()=>{document.getElementById('nsd-form').style.display='none';document.getElementById('nsd-success').style.display='block';},1000);}
+function closeNSD(){document.getElementById('nsd-overlay').classList.remove('show');}
+document.getElementById('nsd-overlay').addEventListener('click',function(e){if(e.target===this)closeNSD();});
+
+// ==================== UTILS ====================
+function fmtNum(v){const n=parseFloat(v)||0;if(n>=1000000)return (n/1000000).toFixed(1)+'M';if(n>=1000)return (n/1000).toFixed(0)+'K';return n.toLocaleString();}
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(type?' '+type:'');setTimeout(()=>t.className='toast',2600);}
+
+init();
+</script>
+</body>
+</html>

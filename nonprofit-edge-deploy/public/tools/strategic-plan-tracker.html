@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strategic Plan Tracker — The Nonprofit Edge</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#0D2C54; --navy2:#1a4175; --navy3:#122443;
+  --teal:#0097A9; --teal2:#00b8cc; --teal-faint:rgba(0,151,169,.08);
+  --gold:#f59e0b; --gold2:#d97706; --gold-faint:rgba(245,158,11,.08);
+  --green:#10b981; --green-faint:rgba(16,185,129,.08);
+  --red:#ef4444; --red-faint:rgba(239,68,68,.08);
+  --purple:#6366f1; --purple-faint:rgba(99,102,241,.08);
+  --orange:#f97316;
+  --slate:#64748b; --slate2:#94a3b8;
+  --border:#e2e8f0; --border2:#f1f5f9;
+  --bg:#f0f4f8; --white:#fff;
+  --text:#1e293b; --text2:#475569;
+  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
+
+/* ===== NAV ===== */
+nav{
+  background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);
+  height:60px;display:flex;align-items:center;padding:0 24px;gap:0;
+  position:sticky;top:0;z-index:300;
+  box-shadow:0 2px 24px rgba(13,44,84,.45);
+}
+.nav-logo{display:flex;align-items:center;gap:10px;padding-right:20px;border-right:1px solid rgba(255,255,255,.15);margin-right:18px;flex-shrink:0;}
+.nav-logo-mark{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:13px;font-weight:700;color:#fff;overflow:hidden;}
+.nav-logo-mark img{width:100%;height:100%;object-fit:contain;}
+.nav-wordmark{font-family:'Fraunces',serif;font-size:14px;color:#fff;white-space:nowrap;line-height:1.2;}
+.nav-wordmark small{display:block;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:400;color:rgba(255,255,255,.5);font-style:normal;}
+.nav-tabs{display:flex;gap:2px;flex:1;}
+.nav-tab{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:9px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;transition:all .18s;white-space:nowrap;}
+.nav-tab.on{background:var(--teal);color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2);}
+.nav-tab:not(.on){background:rgba(255,255,255,.07);color:rgba(255,255,255,.55);}
+.nav-tab:not(.on):hover{background:rgba(255,255,255,.14);color:rgba(255,255,255,.85);}
+.nav-tab-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4);}
+.nav-tab.on .nav-tab-dot{background:rgba(255,255,255,.8);}
+.nav-actions{display:flex;gap:8px;align-items:center;padding-left:16px;border-left:1px solid rgba(255,255,255,.15);}
+.nav-link{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);color:rgba(255,255,255,.65);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;transition:all .15s;white-space:nowrap;}
+.nav-link:hover{background:rgba(255,255,255,.16);color:#fff;}
+.nav-btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:9px;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn-save{background:var(--teal);color:#fff;}
+.btn-save:hover{background:var(--teal2);}
+.btn-report{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25);}
+.btn-report:hover{background:rgba(255,255,255,.22);}
+
+/* ===== PANELS ===== */
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* ===== PAGE STRUCTURE ===== */
+.page-wrap{max-width:980px;margin:0 auto;padding:28px 24px;}
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:26px;gap:16px;}
+.page-title{font-family:'Fraunces',serif;font-size:24px;color:var(--navy);line-height:1.2;}
+.page-sub{font-size:13px;color:var(--slate);margin-top:4px;}
+
+/* ===== CARDS ===== */
+.card{background:var(--white);border-radius:14px;border:1px solid var(--border);padding:22px;margin-bottom:16px;box-shadow:var(--shadow);}
+.card-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.card-bar{width:3px;height:16px;border-radius:2px;flex-shrink:0;}
+.card-sub{font-size:12px;color:var(--slate);margin-top:-8px;margin-bottom:14px;}
+
+/* ===== FORMS ===== */
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.fgrid3{grid-template-columns:1fr 1fr 1fr;}
+.fgrid1{grid-template-columns:1fr;}
+.fitem{display:flex;flex-direction:column;gap:5px;}
+.fitem.span2{grid-column:1/-1;}
+.flabel{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--slate2);}
+input[type=text],input[type=email],input[type=url],textarea,select{
+  padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;
+  font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);
+  outline:none;background:#fafbfc;width:100%;transition:all .15s;
+}
+input:focus,textarea:focus,select:focus{border-color:var(--teal);background:#fff;box-shadow:0 0 0 3px rgba(0,151,169,.08);}
+textarea{resize:vertical;line-height:1.6;}
+
+/* ===== TAGS ===== */
+.tags{display:flex;flex-wrap:wrap;gap:7px;min-height:28px;}
+.tag{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;font-size:12px;font-weight:600;}
+.tag-del{background:none;border:none;cursor:pointer;color:rgba(0,0,0,.25);font-size:14px;line-height:1;padding:0;transition:color .12s;}
+.tag-del:hover{color:var(--red);}
+.add-tag-row{display:flex;gap:8px;margin-top:9px;}
+.add-tag-input{flex:1;padding:7px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;background:#fafbfc;transition:all .15s;}
+.add-tag-input:focus{border-color:var(--teal);background:#fff;}
+.add-tag-btn{padding:7px 14px;border-radius:10px;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .12s;white-space:nowrap;}
+
+/* ===== MVV (Mission/Vision/Values) ===== */
+.mvv-hero{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 60%,var(--teal) 100%);border-radius:16px;padding:28px 32px;margin-bottom:20px;position:relative;overflow:hidden;}
+.mvv-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.04);}
+.mvv-hero::after{content:'';position:absolute;bottom:-60px;left:30%;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,.03);}
+.mvv-hero-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:rgba(255,255,255,.45);margin-bottom:10px;}
+.mvv-hero-input{background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.2);border-radius:0;padding:6px 0;font-family:'Fraunces',serif;font-size:20px;color:#fff;width:100%;outline:none;transition:border .15s;}
+.mvv-hero-input:focus{border-bottom-color:rgba(255,255,255,.6);box-shadow:none;background:transparent;}
+.mvv-hero-input::placeholder{color:rgba(255,255,255,.3);}
+.mvv-vision-input{font-family:'DM Sans',sans-serif;font-size:14px;font-style:italic;}
+.mvv-meta{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;position:relative;z-index:1;}
+.mvv-meta-field label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.4);display:block;margin-bottom:4px;}
+.mvv-meta-input{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:7px 11px;font-family:'DM Sans',sans-serif;font-size:12px;color:#fff;width:100%;outline:none;transition:all .15s;}
+.mvv-meta-input:focus{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);box-shadow:none;}
+.mvv-meta-input::placeholder{color:rgba(255,255,255,.25);}
+
+/* Values display */
+.values-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;}
+.value-card{background:var(--teal-faint);border:1px solid rgba(0,151,169,.18);border-radius:11px;padding:12px 14px;position:relative;}
+.value-card-name{font-size:13px;font-weight:700;color:var(--teal);margin-bottom:3px;}
+.value-card-desc{font-size:11px;color:var(--slate);line-height:1.5;}
+.value-card-del{position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;color:#cbd5e1;font-size:14px;transition:color .12s;}
+.value-card-del:hover{color:var(--red);}
+.add-value-row{display:flex;gap:8px;margin-top:10px;}
+
+/* SWOT */
+.swot-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.sq{border-radius:12px;padding:14px 16px;}
+.sq-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;}
+.sq-item{display:flex;align-items:flex-start;gap:6px;padding:4px 0;font-size:12px;color:var(--text2);}
+.sq-bullet{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.sq-del{background:none;border:none;cursor:pointer;color:#e2e8f0;font-size:13px;margin-left:auto;transition:color .12s;flex-shrink:0;}
+.sq-del:hover{color:var(--red);}
+
+/* ===== FOCUS AREA TOGGLES ===== */
+.fa-toggle-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;}
+.fa-card{border:2px solid var(--border);border-radius:12px;padding:12px 14px;cursor:pointer;transition:all .15s;background:#fafbfc;display:flex;align-items:center;gap:10px;}
+.fa-card:hover{border-color:var(--teal);background:var(--teal-faint);}
+.fa-card.on{border-color:var(--teal);background:var(--teal-faint);}
+.fa-icon{font-size:20px;flex-shrink:0;}
+.fa-label{font-size:12px;font-weight:700;color:var(--text);flex:1;}
+.fa-card.on .fa-label{color:var(--teal);}
+.fa-chk{width:20px;height:20px;border-radius:6px;border:2px solid #cbd5e1;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.fa-card.on .fa-chk{background:var(--teal);border-color:var(--teal);}
+.fa-chk svg{display:none;}
+.fa-card.on .fa-chk svg{display:block;}
+
+/* ===== CUSTOM SECTIONS ===== */
+.custom-section-card{background:var(--white);border-radius:14px;border:2px dashed var(--border);padding:20px;margin-bottom:14px;transition:border .15s;}
+.custom-section-card:hover{border-color:var(--teal);}
+.csc-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.csc-icon-pick{width:36px;height:36px;border-radius:9px;background:var(--teal-faint);border:1px solid rgba(0,151,169,.2);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;flex-shrink:0;}
+.csc-title-input{flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Fraunces',serif;font-size:15px;font-weight:600;color:var(--navy);outline:none;background:transparent;}
+.csc-title-input:focus{border-color:var(--teal);background:#fff;}
+.csc-del{background:none;border:none;cursor:pointer;color:#cbd5e1;font-size:18px;transition:color .12s;flex-shrink:0;}
+.csc-del:hover{color:var(--red);}
+.csc-desc-input{width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text2);outline:none;background:transparent;margin-bottom:12px;transition:border .15s;}
+.csc-desc-input:focus{border-color:var(--teal);background:#fff;}
+.csc-rows{margin-bottom:10px;}
+.csc-row{display:grid;grid-template-columns:1fr 120px 36px;gap:8px;align-items:center;margin-bottom:7px;}
+.csc-row input{padding:7px 11px;border:1.5px solid var(--border);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;transition:all .15s;}
+.csc-row input:focus{border-color:var(--teal);}
+.csc-row-del{background:none;border:none;cursor:pointer;color:#e2e8f0;font-size:16px;transition:color .12s;display:flex;align-items:center;justify-content:center;}
+.csc-row-del:hover{color:var(--red);}
+.csc-link-row{display:flex;align-items:center;gap:8px;margin-top:8px;}
+.csc-link-label{font-size:11px;font-weight:600;color:var(--slate);white-space:nowrap;}
+.add-cs-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border:2px dashed var(--border);border-radius:14px;background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;color:var(--slate);cursor:pointer;transition:all .15s;margin-top:4px;}
+.add-cs-btn:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-faint);}
+
+/* ===== TRACK TAB ===== */
+.mode-strip{
+  background:var(--white);border-bottom:1px solid var(--border);
+  padding:10px 24px;display:flex;align-items:center;gap:14px;
+  position:sticky;top:60px;z-index:200;
+}
+.mode-toggle{display:flex;background:#f1f5f9;border-radius:10px;padding:3px;gap:2px;}
+.mbtn{padding:7px 16px;border-radius:8px;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s;color:var(--slate);}
+.mbtn.on{background:#fff;color:var(--navy);box-shadow:0 1px 4px rgba(0,0,0,.1);}
+.mbtn:not(.on):hover{background:rgba(255,255,255,.6);}
+.progress-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;border-radius:20px;font-size:12px;font-weight:700;}
+.pp-good{background:var(--green-faint);color:var(--green);}
+.pp-warn{background:var(--gold-faint);color:var(--gold2);}
+.pp-low{background:var(--red-faint);color:var(--red);}
+
+/* Focus area accordion */
+.fa-accordion{background:var(--white);border-radius:14px;border:1px solid var(--border);margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow);}
+.fa-acc-head{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background .12s;user-select:none;}
+.fa-acc-head:hover{background:#fafbfc;}
+.fa-acc-left{display:flex;align-items:center;gap:10px;}
+.fa-acc-icon{font-size:20px;}
+.fa-acc-name{font-size:14px;font-weight:700;color:var(--navy);}
+.fa-acc-right{display:flex;align-items:center;gap:10px;}
+.fa-acc-chevron{color:var(--slate);font-size:12px;transition:transform .2s;}
+.fa-accordion.collapsed .fa-acc-chevron{transform:rotate(-90deg);}
+.fa-acc-body{border-top:1px solid var(--border2);padding:0 20px 18px;}
+.fa-accordion.collapsed .fa-acc-body{display:none;}
+
+/* Objective cards inside accordion */
+.obj-card{background:#fafbfc;border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:14px;}
+.obj-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;}
+.obj-num{width:26px;height:26px;border-radius:8px;background:var(--navy);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.obj-title-input{flex:1;padding:7px 11px;border:1.5px solid var(--border);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--text);outline:none;background:#fff;transition:all .15s;}
+.obj-title-input:focus{border-color:var(--teal);}
+.obj-title-input[readonly]{background:transparent;border-color:transparent;font-size:14px;color:var(--navy);padding-left:0;}
+.obj-del{background:none;border:none;cursor:pointer;color:#e2e8f0;font-size:16px;transition:color .12s;flex-shrink:0;}
+.obj-del:hover{color:var(--red);}
+
+/* Initiative rows */
+.init-row{display:grid;gap:8px;margin-bottom:8px;align-items:center;}
+.init-row.edit{grid-template-columns:1fr 120px 140px 80px 36px;}
+.init-row.track{grid-template-columns:1fr 100px 100px;}
+.init-input{padding:7px 11px;border:1.5px solid var(--border);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;transition:all .15s;background:#fff;}
+.init-input:focus{border-color:var(--teal);}
+.init-input[readonly]{background:transparent;border-color:transparent;font-size:12px;padding:6px 0;color:var(--text2);}
+.init-row select{padding:6px 9px;border:1.5px solid var(--border);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;outline:none;cursor:pointer;transition:all .15s;}
+.s-complete{background:var(--green-faint);border-color:rgba(16,185,129,.3);color:var(--green);}
+.s-on-track{background:var(--teal-faint);border-color:rgba(0,151,169,.3);color:var(--teal);}
+.s-at-risk{background:var(--gold-faint);border-color:rgba(245,158,11,.3);color:var(--gold2);}
+.s-not-met{background:var(--red-faint);border-color:rgba(239,68,68,.3);color:var(--red);}
+.s-not-started{background:var(--border2);border-color:var(--border);color:var(--slate);}
+.pct-input{padding:6px 8px;border:1.5px solid var(--border);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:11px;text-align:center;outline:none;width:70px;transition:all .15s;}
+.pct-input:focus{border-color:var(--teal);}
+.init-del{background:none;border:none;cursor:pointer;color:#e2e8f0;font-size:16px;transition:color .12s;display:flex;align-items:center;justify-content:center;}
+.init-del:hover{color:var(--red);}
+.add-init-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;background:none;border:1px dashed var(--border);border-radius:8px;color:var(--teal);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .12s;margin-top:6px;}
+.add-init-btn:hover{border-color:var(--teal);background:var(--teal-faint);}
+.add-obj-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:none;border:1.5px dashed var(--border);border-radius:10px;color:var(--navy);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .12s;margin-top:12px;}
+.add-obj-btn:hover{border-color:var(--navy);background:rgba(13,44,84,.04);}
+
+/* initiative link */
+.init-link-row{display:flex;align-items:center;gap:7px;margin-top:5px;}
+.link-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--slate2);white-space:nowrap;}
+.link-input{flex:1;padding:5px 9px;border:1px solid var(--border);border-radius:7px;font-size:11px;font-family:'DM Sans',sans-serif;color:var(--text2);outline:none;transition:all .12s;background:#fff;}
+.link-input:focus{border-color:var(--teal);}
+.link-input[readonly]{background:transparent;border-color:transparent;}
+.link-go{display:inline-flex;align-items:center;gap:3px;padding:4px 9px;background:var(--teal-faint);border:1px solid rgba(0,151,169,.2);border-radius:6px;color:var(--teal);font-size:11px;font-weight:600;cursor:pointer;text-decoration:none;transition:all .12s;white-space:nowrap;}
+.link-go:hover{background:var(--teal);color:#fff;}
+
+/* init col headers */
+.init-col-heads{display:grid;gap:8px;padding:0 0 5px;border-bottom:1px solid var(--border2);margin-bottom:4px;}
+.init-col-heads.edit{grid-template-columns:1fr 120px 140px 80px 36px;}
+.init-col-heads.track{grid-template-columns:1fr 100px 100px;}
+.col-head{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--slate2);}
+
+/* ===== STATUS BADGE (report) ===== */
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;}
+.badge-complete{background:var(--green-faint);color:var(--green);}
+.badge-on-track{background:var(--teal-faint);color:var(--teal);}
+.badge-at-risk{background:var(--gold-faint);color:var(--gold2);}
+.badge-not-met{background:var(--red-faint);color:var(--red);}
+.badge-not-started{background:var(--border2);color:var(--slate);}
+
+/* Progress bar mini */
+.pbar{height:6px;border-radius:3px;background:#f1f5f9;overflow:hidden;}
+.pbar-fill{height:100%;border-radius:3px;transition:width .3s;}
+
+/* ===== REPORT ===== */
+.report-view-toggle{display:flex;gap:8px;margin-bottom:20px;}
+.rvt-btn{padding:8px 18px;border-radius:10px;border:2px solid var(--border);background:#fff;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;color:var(--slate);cursor:pointer;transition:all .15s;}
+.rvt-btn.on{border-color:var(--teal);background:var(--teal);color:#fff;}
+.rvt-btn:not(.on):hover{border-color:var(--teal);color:var(--teal);}
+
+.report-header{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 60%,var(--teal) 100%);border-radius:16px;padding:28px 32px;margin-bottom:20px;box-shadow:0 6px 24px rgba(13,44,84,.35);position:relative;overflow:hidden;}
+.report-header::before{content:'';position:absolute;top:-60px;right:-60px;width:260px;height:260px;border-radius:50%;background:rgba(255,255,255,.04);}
+.rh-top{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;position:relative;z-index:1;}
+.rh-org{font-family:'Fraunces',serif;font-size:26px;color:#fff;margin-bottom:4px;}
+.rh-sub{font-size:13px;color:rgba(255,255,255,.6);}
+.rh-meta{font-size:11px;color:rgba(255,255,255,.4);margin-top:3px;}
+.rh-score{text-align:right;}
+.rh-pct{font-family:'Fraunces',serif;font-size:48px;color:#fff;line-height:1;}
+.rh-pct-lbl{font-size:11px;color:rgba(255,255,255,.45);}
+.rh-mission{font-size:13px;color:rgba(255,255,255,.5);font-style:italic;margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.12);line-height:1.8;position:relative;z-index:1;}
+.rh-mvv-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px;position:relative;z-index:1;}
+.rh-mvv-item{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 13px;}
+.rh-mvv-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.4);margin-bottom:4px;}
+.rh-mvv-val{font-size:12px;color:rgba(255,255,255,.7);line-height:1.5;}
+
+.kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px;}
+.kpi-card{background:var(--white);border-radius:13px;border:1px solid var(--border);padding:16px;text-align:center;box-shadow:var(--shadow);}
+.kpi-num{font-family:'Fraunces',serif;font-size:32px;color:var(--navy);margin-bottom:2px;}
+.kpi-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--slate2);}
+
+.rcard{background:var(--white);border-radius:14px;border:1px solid var(--border);padding:22px;margin-bottom:16px;box-shadow:var(--shadow);}
+.rcard-title{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:9px;}
+.rcard-bar{width:3px;height:16px;border-radius:2px;flex-shrink:0;}
+
+.rtable{width:100%;border-collapse:collapse;font-size:12px;}
+.rtable thead th{padding:8px 11px;text-align:left;border-bottom:2px solid var(--border);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--slate2);}
+.rtable tbody td{padding:9px 11px;border-bottom:1px solid var(--border2);}
+.rtable tbody tr:hover{background:#fafbfc;}
+
+.obj-block{margin-bottom:16px;}
+.obj-block-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.obj-block-num{width:22px;height:22px;border-radius:7px;background:var(--navy);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+.highlight{display:flex;align-items:flex-start;gap:9px;padding:9px 13px;border-radius:10px;margin-bottom:7px;font-size:12px;line-height:1.6;}
+.h-complete{background:var(--green-faint);border:1px solid rgba(16,185,129,.2);}
+.h-risk{background:var(--gold-faint);border:1px solid rgba(245,158,11,.2);}
+.h-notmet{background:var(--red-faint);border:1px solid rgba(239,68,68,.2);}
+.h-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.h-complete .h-dot{background:var(--green);}
+.h-risk .h-dot{background:var(--gold);}
+.h-notmet .h-dot{background:var(--red);}
+.h-tag{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-right:4px;}
+.h-complete .h-tag{color:var(--green);}
+.h-risk .h-tag{color:var(--gold2);}
+.h-notmet .h-tag{color:var(--red);}
+
+.custom-section-report{background:var(--white);border-radius:14px;border:1px solid var(--border);padding:20px;margin-bottom:14px;}
+.csr-icon{font-size:20px;margin-right:7px;}
+.csr-table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px;}
+.csr-table th{padding:7px 10px;border-bottom:2px solid var(--border);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--slate2);text-align:left;}
+.csr-table td{padding:7px 10px;border-bottom:1px solid var(--border2);}
+.csr-link{color:var(--teal);font-weight:600;font-size:11px;text-decoration:none;}
+.csr-link:hover{text-decoration:underline;}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+
+.ltg-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border2);}
+.ltg-item:last-child{border-bottom:none;}
+.ltg-num{width:26px;height:26px;border-radius:8px;background:var(--navy);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ltg-text{font-size:13px;color:var(--text2);line-height:1.6;}
+
+.swot-report-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.swot-rq{border-radius:11px;padding:14px 16px;}
+.swot-rq-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px;}
+.swot-ritem{font-size:12px;color:var(--text2);padding:3px 0;display:flex;align-items:flex-start;gap:6px;line-height:1.5;}
+.swot-rbullet{width:4px;height:4px;border-radius:50%;flex-shrink:0;margin-top:6px;}
+
+.report-footer{margin-top:24px;padding:16px;border-top:1px solid var(--border);text-align:center;}
+.rf-text{font-size:11px;color:var(--slate2);font-style:italic;}
+.rf-brand{font-family:'Fraunces',serif;font-size:12px;color:#cbd5e1;margin-top:5px;}
+
+/* ===== MODALS ===== */
+.overlay{display:none;position:fixed;inset:0;background:rgba(13,44,84,.6);backdrop-filter:blur(5px);z-index:500;align-items:flex-start;justify-content:center;padding:24px 20px;overflow-y:auto;}
+.overlay.show{display:flex;}
+.modal{background:#fff;border-radius:20px;width:100%;max-width:460px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.22);margin:auto;flex-shrink:0;}
+.modal-head{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 60%,var(--teal) 100%);padding:22px 26px;position:relative;}
+.modal-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.12);border:none;border-radius:8px;width:30px;height:30px;cursor:pointer;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .12s;}
+.modal-close:hover{background:rgba(255,255,255,.22);}
+.modal-title{font-family:'Fraunces',serif;font-size:18px;color:#fff;margin-bottom:3px;}
+.modal-sub{font-size:12px;color:rgba(255,255,255,.55);}
+.modal-body{padding:22px 26px;}
+
+/* welcome */
+.wm-logo{width:44px;height:44px;border-radius:11px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:14px;font-weight:700;color:#fff;margin:0 auto 12px;}
+.wm-steps{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px;}
+.wm-step{background:#f8fafc;border-radius:11px;padding:12px 13px;border:1px solid var(--border);}
+.wm-step-num{width:22px;height:22px;border-radius:7px;background:var(--teal);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:6px;}
+.wm-step-title{font-size:12px;font-weight:700;color:var(--navy);margin-bottom:2px;}
+.wm-step-desc{font-size:11px;color:var(--slate);line-height:1.45;}
+.wm-go{width:100%;padding:12px;border-radius:11px;border:none;background:var(--teal);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;color:#fff;cursor:pointer;transition:all .15s;}
+.wm-go:hover{background:var(--teal2);}
+.wm-skip{text-align:center;margin-top:10px;font-size:11px;color:#94a3b8;cursor:pointer;}
+.wm-skip:hover{color:var(--slate);}
+
+/* NSD modal */
+.radio-opt{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:9px;border:1px solid var(--border);cursor:pointer;margin-bottom:6px;transition:all .12s;}
+.radio-opt:hover{border-color:var(--teal);}
+.radio-opt.sel{border-color:var(--teal);background:var(--teal-faint);}
+.rdot{width:16px;height:16px;border-radius:50%;border:2px solid #cbd5e1;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .12s;}
+.radio-opt.sel .rdot{border-color:var(--teal);background:var(--teal);}
+.rdot-inner{width:6px;height:6px;border-radius:50%;background:#fff;display:none;}
+.radio-opt.sel .rdot-inner{display:block;}
+.rtext{font-size:13px;color:var(--text2);}
+.radio-opt.sel .rtext{color:var(--text);font-weight:600;}
+.m-submit{width:100%;padding:12px;background:var(--teal);border:none;border-radius:11px;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:13px;transition:background .12s;}
+.m-submit:hover{background:var(--teal2);}
+.m-submit:disabled{background:#cbd5e1;cursor:not-allowed;}
+.success-wrap{text-align:center;padding:36px 28px;}
+
+/* nsd-btn shared */
+.nsd-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 15px;border:1.5px dashed #cbd5e1;border-radius:10px;background:transparent;color:var(--slate);font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .12s;}
+.nsd-btn:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-faint);}
+
+/* toast */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--navy);color:#fff;padding:11px 18px;border-radius:12px;font-size:12px;font-weight:600;box-shadow:var(--shadow-md);transform:translateY(70px);opacity:0;transition:all .28s;z-index:700;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.green{background:var(--green);}
+
+@media print{
+  nav,.mode-strip,.nsd-btn,.nav-btn,.report-view-toggle,.add-cs-btn{display:none!important;}
+  .page-wrap{padding:4px!important;}
+  body{background:#fff!important;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">
+    <div id="nav-logo" style="height:32px;display:flex;align-items:center;">
+      <svg height="32" viewBox="220 260 560 240" xmlns="http://www.w3.org/2000/svg" style="width:auto;">
+        <!-- C mark: all white -->
+        <path fill="#ffffff" d="M438.46,469.14c-18.16,14.03-40.93,22.38-65.64,22.38c-30.79,0-58.55-12.94-78.16-33.69c2.85,0.46,5.7,0.81,8.57,1.06c9.13,0.79,17.9,0.49,26.26-0.63c12.72,7.44,27.53,11.71,43.33,11.71c17.17,0,33.17-5.03,46.59-13.71C422.94,460.11,428.93,465.14,438.46,469.14z"/>
+        <path fill="#ffffff" d="M294.86,420.29c-8.64,2.53-16.05,3.61-21.74,4.02c-5.05-12.44-7.82-26.05-7.82-40.31c0-59.37,48.14-107.52,107.52-107.52c25.62,0,49.15,8.96,67.62,23.94c-9.33,2.92-16.19,7.85-20.47,11.69c-13.54-8.9-29.74-14.08-47.15-14.08c-47.48,0-85.97,38.49-85.97,85.97C286.85,396.97,289.72,409.27,294.86,420.29z"/>
+        <!-- Teal arrow: stays teal -->
+        <path fill="#0097A9" d="M258.67,434.74c0,0,61.28,14.58,121.38-60.61l-18.3-13.11l72.86-22.42l0.39,71.06l-18.78-13.01C416.22,396.64,340.29,479.82,258.67,434.74z"/>
+        <!-- THE + EDGE: white -->
+        <path fill="#ffffff" d="M476.97,418.87v13.1h19.27v12.18h-19.27v14.21h21.8v12.64h-36.19v-64.78h36.19v12.64H476.97z"/>
+        <path fill="#ffffff" d="M546.58,410.29c4.66,2.71,8.26,6.51,10.82,11.4c2.55,4.89,3.83,10.54,3.83,16.93c0,6.34-1.28,11.97-3.83,16.89c-2.55,4.92-6.17,8.74-10.86,11.44c-4.69,2.71-10.11,4.06-16.29,4.06h-22.14v-64.78h22.14C536.48,406.23,541.92,407.58,546.58,410.29z M542.03,452.46c3.03-3.26,4.55-7.87,4.55-13.84c0-5.97-1.51-10.61-4.55-13.93c-3.03-3.32-7.27-4.98-12.71-4.98h-6.82v37.65h6.82C534.77,457.35,539,455.72,542.03,452.46z"/>
+        <path fill="#ffffff" d="M608.53,426.71c-1.07-2.15-2.6-3.8-4.59-4.94c-1.99-1.14-4.33-1.71-7.03-1.71c-4.66,0-8.39,1.68-11.19,5.03c-2.81,3.35-4.21,7.83-4.21,13.43c0,5.97,1.47,10.63,4.42,13.98c2.95,3.35,7,5.03,12.16,5.03c3.54,0,6.52-0.98,8.96-2.95c2.44-1.97,4.22-4.8,5.34-8.49h-18.26v-11.63h31.31v14.67c-1.07,3.94-2.88,7.6-5.43,10.98c-2.55,3.38-5.79,6.12-9.72,8.21c-3.93,2.09-8.36,3.14-13.3,3.14c-5.84,0-11.04-1.4-15.61-4.2c-4.57-2.8-8.14-6.69-10.69-11.67c-2.55-4.98-3.83-10.67-3.83-17.07c0-6.4,1.28-12.1,3.83-17.12c2.55-5.01,6.1-8.92,10.65-11.72c4.55-2.8,9.73-4.2,15.57-4.2c7.07,0,13.03,1.88,17.89,5.63c4.85,3.75,8.07,8.95,9.64,15.6H608.53z"/>
+        <path fill="#ffffff" d="M647.83,418.87v13.1h19.27v12.18h-19.27v14.21h21.8v12.64h-36.19v-64.78h36.19v12.64H647.83z"/>
+        <!-- NONPROFIT: teal -->
+        <path fill="#0097A9" d="M476.77,351.79l22.79,27.51v-27.51h9.08v40.89h-9.08l-22.79-27.51v27.51h-9.08v-40.89H476.77z"/>
+        <path fill="#0097A9" d="M516.22,392.68v-40.89h9.08v40.89H516.22z"/>
+        <path fill="#0097A9" d="M563.28,365.1c-0.84-2.17-2.08-3.86-3.72-5.06c-1.64-1.21-3.64-1.81-5.98-1.81c-3.73,0-6.65,1.35-8.77,4.05c-2.12,2.7-3.18,6.44-3.18,11.21c0,4.82,1.06,8.56,3.18,11.21c2.12,2.65,5.04,3.98,8.77,3.98c2.84,0,5.14-0.83,6.9-2.48c1.76-1.65,2.91-3.97,3.44-6.96h-12.88v-7.63h21.53v9.12c-0.56,3.04-1.76,5.87-3.6,8.48c-1.84,2.62-4.22,4.72-7.14,6.31c-2.92,1.59-6.23,2.38-9.92,2.38c-4.53,0-8.54-1.06-12.03-3.17c-3.49-2.11-6.2-5.05-8.13-8.82c-1.93-3.77-2.9-8.09-2.9-12.97c0-4.88,0.97-9.2,2.9-12.97c1.93-3.77,4.64-6.71,8.13-8.82c3.49-2.11,7.5-3.17,12.03-3.17c5.23,0,9.69,1.41,13.39,4.24c3.7,2.83,6.1,6.73,7.2,11.71H563.28z"/>
+        <path fill="#0097A9" d="M609.45,351.79v7.98h-14.37v32.91h-9.08v-32.91h-14.37v-7.98H609.45z"/>
+        <path fill="#0097A9" d="M644.1,351.79v7.98h-19.64v8.68h14.37v7.75h-14.37v8.49h20.07v7.98H615.4v-40.89H644.1z"/>
+        <path fill="#0097A9" d="M673.65,392.68l-8.01-16.54h-5.18v16.54h-9.08v-40.89h17.07c3.35,0,6.28,0.63,8.8,1.88c2.52,1.25,4.45,2.98,5.8,5.17c1.35,2.19,2.02,4.71,2.02,7.55c0,3.14-0.87,5.88-2.61,8.24c-1.74,2.36-4.22,3.97-7.44,4.82l8.88,17.23H673.65z M660.46,369.16h7.57c2.2,0,3.9-0.58,5.1-1.75c1.2-1.17,1.81-2.73,1.81-4.68c0-1.91-0.6-3.44-1.81-4.6c-1.2-1.16-2.9-1.74-5.1-1.74h-7.57V369.16z"/>
+        <path fill="#0097A9" d="M706.81,374.62l-16.48-22.83h10.98l10.38,14.74l10.38-14.74h10.44l-16.61,22.83v18.06h-9.08V374.62z"/>
+      </svg>
+    </div>
+    <div style="width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 14px;flex-shrink:0;"></div>
+    <div style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:rgba(255,255,255,.45);white-space:nowrap;letter-spacing:.02em;">Strategic Plan Tracker</div>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab on" id="tab-mvv" onclick="goTab('mvv')">
+      <div class="nav-tab-dot"></div>Foundation
+    </button>
+    <button class="nav-tab" id="tab-build" onclick="goTab('build')">
+      <div class="nav-tab-dot"></div>Build Plan
+    </button>
+    <button class="nav-tab" id="tab-track" onclick="goTab('track')">
+      <div class="nav-tab-dot"></div>Track Progress
+    </button>
+    <button class="nav-tab" id="tab-report" onclick="goTab('report')">
+      <div class="nav-tab-dot"></div>Board Report
+    </button>
+  </div>
+  <div class="nav-actions">
+    <a class="nav-link" href="/resources">← Resources</a>
+    <button class="nav-link" onclick="openWelcome()">? How it works</button>
+    <button class="nav-btn btn-save" onclick="savePlan()">💾 Save</button>
+    <button class="nav-btn btn-report" onclick="goTab('report')">📄 Generate Report</button>
+  </div>
+</nav>
+
+<!-- =============================== FOUNDATION TAB =============================== -->
+<div class="panel active" id="panel-mvv">
+  <div class="page-wrap">
+    <div class="page-head">
+      <div>
+        <div class="page-title">Foundation</div>
+        <div class="page-sub">Mission, vision, values, long-term goals, and SWOT — the bedrock of your strategic plan</div>
+      </div>
+      <button class="nsd-btn" onclick="openNSD()">💬 Need something different?</button>
+    </div>
+
+    <!-- Mission/Vision/Blue Sky -->
+    <div class="mvv-hero">
+      <div style="position:relative;z-index:1;">
+        <div class="mvv-hero-label">Organization Name</div>
+        <input class="mvv-hero-input" id="org-name" type="text" placeholder="Hope Forward">
+        <div style="height:16px;"></div>
+        <div class="mvv-hero-label">Mission Statement — Why you exist</div>
+        <input class="mvv-hero-input" id="mission" type="text" placeholder="We exist to...">
+        <div style="height:12px;"></div>
+        <div class="mvv-hero-label">Vision Statement — The future you're creating</div>
+        <input class="mvv-hero-input mvv-vision-input" id="vision" type="text" placeholder="A world where...">
+      </div>
+      <div class="mvv-meta">
+        <div class="mvv-meta-field">
+          <label>Plan Period</label>
+          <input class="mvv-meta-input" id="plan-period" type="text" placeholder="FY 2024–2026 Strategic Plan">
+        </div>
+        <div class="mvv-meta-field">
+          <label>Blue Sky Metric (3–5 year north star)</label>
+          <input class="mvv-meta-input" id="blue-sky" type="text" placeholder="e.g. Serve 10,000 people annually by 2028">
+        </div>
+        <div class="mvv-meta-field">
+          <label>Prepared By</label>
+          <input class="mvv-meta-input" id="prepared-by" type="text" placeholder="Dr. Carmen Reyes, ED">
+        </div>
+        <div class="mvv-meta-field">
+          <label>Report Period / Quarter</label>
+          <input class="mvv-meta-input" id="report-quarter" type="text" placeholder="Q1 2026">
+        </div>
+      </div>
+    </div>
+
+    <!-- Core Values -->
+    <div class="card">
+      <div class="card-title"><div class="card-bar" style="background:var(--teal)"></div>Core Values</div>
+      <div class="card-sub">Add each value with an optional one-line description</div>
+      <div class="values-grid" id="values-grid"></div>
+      <div class="add-value-row" style="margin-top:12px;">
+        <input type="text" id="val-name" placeholder="Value name (e.g. Integrity)" style="flex:1;">
+        <input type="text" id="val-desc" placeholder="Brief description (optional)" style="flex:2;">
+        <button class="add-tag-btn" style="background:var(--teal);color:#fff;border:none;padding:9px 16px;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;" onclick="addValue()">+ Add</button>
+      </div>
+    </div>
+
+    <!-- Long-term goals -->
+    <div class="card">
+      <div class="card-title"><div class="card-bar" style="background:var(--gold)"></div>Long-Term Goals <span style="font-size:11px;font-weight:400;color:var(--slate);margin-left:5px;">3–5 year strategic priorities</span></div>
+      <div id="ltg-list"></div>
+      <button class="add-obj-btn" style="margin-top:8px;" onclick="addLTG()">+ Add Long-Term Goal</button>
+    </div>
+
+    <!-- Competitive advantages -->
+    <div class="card">
+      <div class="card-title"><div class="card-bar" style="background:var(--purple)"></div>Competitive Advantages <span style="font-size:11px;font-weight:400;color:var(--slate);margin-left:5px;">What you do better than others</span></div>
+      <div class="tags" id="adv-tags"></div>
+      <div class="add-tag-row">
+        <input type="text" class="add-tag-input" id="adv-input" placeholder="e.g. 25 years of community trust" onkeydown="if(event.key==='Enter')addSimpleTag('adv','adv-input')">
+        <button class="add-tag-btn" style="background:rgba(99,102,241,.1);color:var(--purple);border:1px solid rgba(99,102,241,.3);" onclick="addSimpleTag('adv','adv-input')">+ Add</button>
+      </div>
+    </div>
+
+    <!-- SWOT -->
+    <div class="card">
+      <div class="card-title"><div class="card-bar" style="background:var(--orange)"></div>SWOT Analysis</div>
+      <div class="swot-grid">
+        <div class="sq" style="background:var(--green-faint);border:1px solid rgba(16,185,129,.2);">
+          <div class="sq-label" style="color:var(--green);">Strengths</div>
+          <div id="swot-s-list"></div>
+          <div class="add-tag-row"><input class="add-tag-input" id="swot-s-inp" placeholder="Add strength..." onkeydown="if(event.key==='Enter')addSwot('s')"><button class="add-tag-btn" style="background:var(--green-faint);color:var(--green);border:1px solid rgba(16,185,129,.3);" onclick="addSwot('s')">+</button></div>
+        </div>
+        <div class="sq" style="background:var(--red-faint);border:1px solid rgba(239,68,68,.2);">
+          <div class="sq-label" style="color:var(--red);">Weaknesses</div>
+          <div id="swot-w-list"></div>
+          <div class="add-tag-row"><input class="add-tag-input" id="swot-w-inp" placeholder="Add weakness..." onkeydown="if(event.key==='Enter')addSwot('w')"><button class="add-tag-btn" style="background:var(--red-faint);color:var(--red);border:1px solid rgba(239,68,68,.3);" onclick="addSwot('w')">+</button></div>
+        </div>
+        <div class="sq" style="background:var(--purple-faint);border:1px solid rgba(99,102,241,.2);">
+          <div class="sq-label" style="color:var(--purple);">Opportunities</div>
+          <div id="swot-o-list"></div>
+          <div class="add-tag-row"><input class="add-tag-input" id="swot-o-inp" placeholder="Add opportunity..." onkeydown="if(event.key==='Enter')addSwot('o')"><button class="add-tag-btn" style="background:var(--purple-faint);color:var(--purple);border:1px solid rgba(99,102,241,.3);" onclick="addSwot('o')">+</button></div>
+        </div>
+        <div class="sq" style="background:var(--gold-faint);border:1px solid rgba(245,158,11,.2);">
+          <div class="sq-label" style="color:var(--gold2);">Threats</div>
+          <div id="swot-t-list"></div>
+          <div class="add-tag-row"><input class="add-tag-input" id="swot-t-inp" placeholder="Add threat..." onkeydown="if(event.key==='Enter')addSwot('t')"><button class="add-tag-btn" style="background:var(--gold-faint);color:var(--gold2);border:1px solid rgba(245,158,11,.3);" onclick="addSwot('t')">+</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =============================== BUILD PLAN TAB =============================== -->
+<div class="panel" id="panel-build">
+  <div class="page-wrap">
+    <div class="page-head">
+      <div>
+        <div class="page-title">Build Plan</div>
+        <div class="page-sub">Select focus areas, add objectives and initiatives, link to external resources, and create custom sections</div>
+      </div>
+      <button class="nsd-btn" onclick="openNSD()">💬 Need something different?</button>
+    </div>
+
+    <!-- Focus areas -->
+    <div class="card">
+      <div class="card-title"><div class="card-bar" style="background:var(--navy)"></div>Focus Areas <span style="font-size:11px;font-weight:400;color:var(--slate);margin-left:5px;">Select which apply — each becomes an accordion in Track Progress</span></div>
+      <div class="fa-toggle-grid" id="fa-toggle-grid"></div>
+    </div>
+
+    <!-- Custom sections -->
+    <div class="card">
+      <div class="card-title"><div class="card-bar" style="background:var(--teal)"></div>Custom Sections <span style="font-size:11px;font-weight:400;color:var(--slate);margin-left:5px;">Add any category, data table, or tracking section specific to your plan</span></div>
+      <div class="card-sub">Examples: IT Initiatives, Capital Projects, DEI Action Items, Grant Deliverables, Partnerships, Board Committees</div>
+      <div id="custom-sections-list"></div>
+      <button class="add-cs-btn" onclick="addCustomSection()">
+        <span style="font-size:18px;">⊞</span> Add Custom Section
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- =============================== TRACK PROGRESS TAB =============================== -->
+<div class="panel" id="panel-track">
+  <div class="mode-strip">
+    <div class="mode-toggle">
+      <button class="mbtn on" id="mbtn-edit" onclick="setMode('edit')">✏ Edit Mode</button>
+      <button class="mbtn" id="mbtn-track" onclick="setMode('track')">📊 Track Mode</button>
+    </div>
+    <div id="mode-desc" style="font-size:12px;color:var(--slate);">Edit mode — add/rename objectives and initiatives</div>
+    <div style="flex:1;"></div>
+    <div class="progress-pill pp-warn" id="prog-pill">Loading…</div>
+  </div>
+  <div class="page-wrap">
+    <div class="page-head">
+      <div>
+        <div class="page-title">Track Progress</div>
+        <div class="page-sub">Update initiative status and percent complete each quarter</div>
+      </div>
+      <button class="nsd-btn" onclick="openNSD()">💬 Need something different?</button>
+    </div>
+    <div id="track-accordions"></div>
+  </div>
+</div>
+
+<!-- =============================== BOARD REPORT TAB =============================== -->
+<div class="panel" id="panel-report">
+  <div class="page-wrap">
+    <div class="page-head">
+      <div>
+        <div class="page-title">Board Report</div>
+        <div class="page-sub">Auto-generated from your plan data — toggle between Board Summary and Department Detail</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="nsd-btn" onclick="openNSD()">💬 Need something different?</button>
+        <button class="nav-btn" style="background:var(--navy);color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;padding:8px 16px;border-radius:9px;" onclick="window.print()">↓ Export PDF</button>
+      </div>
+    </div>
+    <div class="report-view-toggle">
+      <button class="rvt-btn on" id="rvt-board" onclick="setReportView('board')">🏛 Board Summary</button>
+      <button class="rvt-btn" id="rvt-detail" onclick="setReportView('detail')">📋 Full Detail</button>
+    </div>
+    <div id="report-output"></div>
+  </div>
+</div>
+
+<!-- =============================== WELCOME MODAL =============================== -->
+<div class="overlay" id="welcome-overlay">
+  <div class="modal">
+    <div class="modal-head" style="text-align:center;padding-bottom:20px;">
+      <div style="display:flex;justify-content:center;margin:0 auto 14px;">
+        <svg height="48" viewBox="220 260 560 240" xmlns="http://www.w3.org/2000/svg" style="width:auto;">
+          <path fill="#0D2C54" d="M438.46,469.14c-18.16,14.03-40.93,22.38-65.64,22.38c-30.79,0-58.55-12.94-78.16-33.69c2.85,0.46,5.7,0.81,8.57,1.06c9.13,0.79,17.9,0.49,26.26-0.63c12.72,7.44,27.53,11.71,43.33,11.71c17.17,0,33.17-5.03,46.59-13.71C422.94,460.11,428.93,465.14,438.46,469.14z"/>
+          <path fill="#0D2C54" d="M294.86,420.29c-8.64,2.53-16.05,3.61-21.74,4.02c-5.05-12.44-7.82-26.05-7.82-40.31c0-59.37,48.14-107.52,107.52-107.52c25.62,0,49.15,8.96,67.62,23.94c-9.33,2.92-16.19,7.85-20.47,11.69c-13.54-8.9-29.74-14.08-47.15-14.08c-47.48,0-85.97,38.49-85.97,85.97C286.85,396.97,289.72,409.27,294.86,420.29z"/>
+          <path fill="#0097A9" d="M258.67,434.74c0,0,61.28,14.58,121.38-60.61l-18.3-13.11l72.86-22.42l0.39,71.06l-18.78-13.01C416.22,396.64,340.29,479.82,258.67,434.74z"/>
+          <path fill="#0D2C54" d="M476.97,418.87v13.1h19.27v12.18h-19.27v14.21h21.8v12.64h-36.19v-64.78h36.19v12.64H476.97z"/>
+          <path fill="#0D2C54" d="M546.58,410.29c4.66,2.71,8.26,6.51,10.82,11.4c2.55,4.89,3.83,10.54,3.83,16.93c0,6.34-1.28,11.97-3.83,16.89c-2.55,4.92-6.17,8.74-10.86,11.44c-4.69,2.71-10.11,4.06-16.29,4.06h-22.14v-64.78h22.14C536.48,406.23,541.92,407.58,546.58,410.29z M542.03,452.46c3.03-3.26,4.55-7.87,4.55-13.84c0-5.97-1.51-10.61-4.55-13.93c-3.03-3.32-7.27-4.98-12.71-4.98h-6.82v37.65h6.82C534.77,457.35,539,455.72,542.03,452.46z"/>
+          <path fill="#0D2C54" d="M608.53,426.71c-1.07-2.15-2.6-3.8-4.59-4.94c-1.99-1.14-4.33-1.71-7.03-1.71c-4.66,0-8.39,1.68-11.19,5.03c-2.81,3.35-4.21,7.83-4.21,13.43c0,5.97,1.47,10.63,4.42,13.98c2.95,3.35,7,5.03,12.16,5.03c3.54,0,6.52-0.98,8.96-2.95c2.44-1.97,4.22-4.8,5.34-8.49h-18.26v-11.63h31.31v14.67c-1.07,3.94-2.88,7.6-5.43,10.98c-2.55,3.38-5.79,6.12-9.72,8.21c-3.93,2.09-8.36,3.14-13.3,3.14c-5.84,0-11.04-1.4-15.61-4.2c-4.57-2.8-8.14-6.69-10.69-11.67c-2.55-4.98-3.83-10.67-3.83-17.07c0-6.4,1.28-12.1,3.83-17.12c2.55-5.01,6.1-8.92,10.65-11.72c4.55-2.8,9.73-4.2,15.57-4.2c7.07,0,13.03,1.88,17.89,5.63c4.85,3.75,8.07,8.95,9.64,15.6H608.53z"/>
+          <path fill="#0D2C54" d="M647.83,418.87v13.1h19.27v12.18h-19.27v14.21h21.8v12.64h-36.19v-64.78h36.19v12.64H647.83z"/>
+          <path fill="#0097A9" d="M476.77,351.79l22.79,27.51v-27.51h9.08v40.89h-9.08l-22.79-27.51v27.51h-9.08v-40.89H476.77z"/>
+          <path fill="#0097A9" d="M516.22,392.68v-40.89h9.08v40.89H516.22z"/>
+          <path fill="#0097A9" d="M563.28,365.1c-0.84-2.17-2.08-3.86-3.72-5.06c-1.64-1.21-3.64-1.81-5.98-1.81c-3.73,0-6.65,1.35-8.77,4.05c-2.12,2.7-3.18,6.44-3.18,11.21c0,4.82,1.06,8.56,3.18,11.21c2.12,2.65,5.04,3.98,8.77,3.98c2.84,0,5.14-0.83,6.9-2.48c1.76-1.65,2.91-3.97,3.44-6.96h-12.88v-7.63h21.53v9.12c-0.56,3.04-1.76,5.87-3.6,8.48c-1.84,2.62-4.22,4.72-7.14,6.31c-2.92,1.59-6.23,2.38-9.92,2.38c-4.53,0-8.54-1.06-12.03-3.17c-3.49-2.11-6.2-5.05-8.13-8.82c-1.93-3.77-2.9-8.09-2.9-12.97c0-4.88,0.97-9.2,2.9-12.97c1.93-3.77,4.64-6.71,8.13-8.82c3.49-2.11,7.5-3.17,12.03-3.17c5.23,0,9.69,1.41,13.39,4.24c3.7,2.83,6.1,6.73,7.2,11.71H563.28z"/>
+          <path fill="#0097A9" d="M609.45,351.79v7.98h-14.37v32.91h-9.08v-32.91h-14.37v-7.98H609.45z"/>
+          <path fill="#0097A9" d="M644.1,351.79v7.98h-19.64v8.68h14.37v7.75h-14.37v8.49h20.07v7.98H615.4v-40.89H644.1z"/>
+          <path fill="#0097A9" d="M673.65,392.68l-8.01-16.54h-5.18v16.54h-9.08v-40.89h17.07c3.35,0,6.28,0.63,8.8,1.88c2.52,1.25,4.45,2.98,5.8,5.17c1.35,2.19,2.02,4.71,2.02,7.55c0,3.14-0.87,5.88-2.61,8.24c-1.74,2.36-4.22,3.97-7.44,4.82l8.88,17.23H673.65z M660.46,369.16h7.57c2.2,0,3.9-0.58,5.1-1.75c1.2-1.17,1.81-2.73,1.81-4.68c0-1.91-0.6-3.44-1.81-4.6c-1.2-1.16-2.9-1.74-5.1-1.74h-7.57V369.16z"/>
+          <path fill="#0097A9" d="M706.81,374.62l-16.48-22.83h10.98l10.38,14.74l10.38-14.74h10.44l-16.61,22.83v18.06h-9.08V374.62z"/>
+        </svg>
+      </div>
+      <div class="modal-title" style="font-size:20px;">Strategic Plan Tracker</div>
+      <div class="modal-sub">Turn your static plan into a living document.</div>
+    </div>
+    <div class="modal-body">
+      <div class="wm-steps">
+        <div class="wm-step"><div class="wm-step-num">1</div><div class="wm-step-title">Foundation</div><div class="wm-step-desc">Mission, vision, values, long-term goals, and SWOT.</div></div>
+        <div class="wm-step"><div class="wm-step-num">2</div><div class="wm-step-title">Build Plan</div><div class="wm-step-desc">Choose focus areas, add objectives & initiatives, create custom sections.</div></div>
+        <div class="wm-step"><div class="wm-step-num">3</div><div class="wm-step-title">Track Progress</div><div class="wm-step-desc">Update status and % complete each quarter. Link to outside data.</div></div>
+        <div class="wm-step"><div class="wm-step-num">4</div><div class="wm-step-title">Board Report</div><div class="wm-step-desc">One click generates a board-ready report. Toggle board vs. detail view.</div></div>
+      </div>
+      <button class="wm-go" onclick="closeWelcome()">Get Started →</button>
+      <div class="wm-skip" onclick="closeWelcomePerm()">Don't show this again</div>
+    </div>
+  </div>
+</div>
+
+<!-- =============================== NSD MODAL =============================== -->
+<div class="overlay" id="nsd-overlay">
+  <div class="modal">
+    <div id="nsd-form">
+      <div class="modal-head">
+        <button class="modal-close" onclick="closeNSD()">✕</button>
+        <div class="modal-title">💬 Need something different?</div>
+        <div class="modal-sub">Tell us what would make this more useful for you.</div>
+      </div>
+      <div class="modal-body">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--slate2);margin-bottom:9px;">What kind of change?</div>
+        <div id="nsd-opts"></div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--slate2);margin-top:12px;margin-bottom:3px;">Describe what you need</div>
+        <textarea id="nsd-desc" rows="3" placeholder="The more detail the better…" style="margin-top:0;"></textarea>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--slate2);margin-top:10px;margin-bottom:2px;">Email <span style="font-weight:400;text-transform:none">(optional)</span></div>
+        <input type="email" id="nsd-email" placeholder="you@org.org">
+        <button class="m-submit" id="nsd-btn" onclick="submitNSD()" disabled>Send Request</button>
+      </div>
+    </div>
+    <div id="nsd-success" style="display:none;">
+      <div class="success-wrap">
+        <div style="font-size:52px;margin-bottom:14px;">✅</div>
+        <div style="font-size:19px;font-weight:700;color:var(--navy);margin-bottom:8px;">Got it — thank you!</div>
+        <div style="font-size:13px;color:var(--slate);line-height:1.7;margin-bottom:22px;">Your request goes directly to the team. Most-requested features are built first.</div>
+        <button onclick="closeNSD()" style="padding:10px 28px;background:var(--navy);border:none;border-radius:11px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// CONFIGURATION
+// ============================================================
+const FA_CONFIG = [
+  {key:'programs',   icon:'🌱', name:'Programs & Services',   color:'#0097A9'},
+  {key:'fundraising',icon:'💛', name:'Fundraising & Revenue', color:'#f59e0b'},
+  {key:'finance',    icon:'💰', name:'Finance & Operations',  color:'#10b981'},
+  {key:'governance', icon:'🏛', name:'Board Governance',      color:'#0D2C54'},
+  {key:'people',     icon:'👥', name:'People & Culture',      color:'#6366f1'},
+  {key:'marketing',  icon:'📣', name:'Marketing & Brand',     color:'#f97316'},
+];
+const STATUS_LABELS = {complete:'Complete','on-track':'On Track','at-risk':'At Risk','not-met':'Not Met','not-started':'Not Started'};
+const STATUS_CLASS  = {complete:'s-complete','on-track':'s-on-track','at-risk':'s-at-risk','not-met':'s-not-met','not-started':'s-not-started'};
+const BADGE_CLASS   = {complete:'badge-complete','on-track':'badge-on-track','at-risk':'badge-at-risk','not-met':'badge-not-met','not-started':'badge-not-started'};
+const NSD_OPTS = ['New section or field','Different layout or report format','Link to external tool or data source','Additional focus area','Export format','Something else'];
+
+// ============================================================
+// STATE
+// ============================================================
+let faEnabled = {programs:true, fundraising:true, finance:true, governance:true, people:false, marketing:false};
+let values = [];        // [{name, desc}]
+let ltGoals = [];       // [{text}]
+let adv = [];           // [string]
+let swot = {s:[], w:[], o:[], t:[]};
+// faObjectives: {faKey: [{title, initiatives:[{text,owner,status,pct,link}]}]}
+let faObjectives = {};
+let customSections = []; // [{id,icon,title,desc,rows:[{label,value,link}]}]
+let editMode = true;
+let reportView = 'board';
+let nsdSel = '';
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  FA_CONFIG.forEach(fa => {
+    if (!faObjectives[fa.key]) faObjectives[fa.key] = [
+      {title:'', initiatives:[{text:'',owner:'',status:'not-started',pct:'0',link:''}]},
+      {title:'', initiatives:[{text:'',owner:'',status:'not-started',pct:'0',link:''}]},
+    ];
+  });
+  buildFAToggles();
+  renderValues(); renderLTGs(); renderAdv();
+  ['s','w','o','t'].forEach(k => renderSwot(k));
+  renderCustomSections();
+  buildNSDOpts();
+  autoLoad();
+  if (!localStorage.getItem('npe_tracker3_welcome')) setTimeout(openWelcome, 350);
+}
+
+// ============================================================
+// TABS
+// ============================================================
+function goTab(tab) {
+  ['mvv','build','track','report'].forEach(t => {
+    document.getElementById('panel-'+t).classList.toggle('active', t===tab);
+    document.getElementById('tab-'+t).classList.toggle('on', t===tab);
+  });
+  if (tab === 'track') buildTrackAccordions();
+  if (tab === 'report') buildReport();
+}
+
+// ============================================================
+// FOUNDATION — VALUES
+// ============================================================
+function renderValues() {
+  const el = document.getElementById('values-grid');
+  if (!el) return;
+  el.innerHTML = values.map((v,i) => `
+    <div class="value-card">
+      <button class="value-card-del" onclick="removeValue(${i})">×</button>
+      <div class="value-card-name">${esc(v.name)}</div>
+      ${v.desc ? `<div class="value-card-desc">${esc(v.desc)}</div>` : ''}
+    </div>`).join('') || `<div style="font-size:12px;color:var(--slate2);padding:8px 0;">No values added yet.</div>`;
+}
+function addValue() {
+  const n = document.getElementById('val-name').value.trim();
+  const d = document.getElementById('val-desc').value.trim();
+  if (!n) return;
+  values.push({name:n, desc:d});
+  document.getElementById('val-name').value = '';
+  document.getElementById('val-desc').value = '';
+  renderValues();
+}
+function removeValue(i) { values.splice(i,1); renderValues(); }
+
+// ============================================================
+// FOUNDATION — LONG TERM GOALS
+// ============================================================
+function renderLTGs() {
+  const el = document.getElementById('ltg-list');
+  el.innerHTML = ltGoals.map((g,i) => `
+    <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:9px;">
+      <div style="width:26px;height:26px;border-radius:8px;background:var(--navy);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:10px;">${i+1}</div>
+      <textarea rows="2" style="flex:1;" placeholder="Long-term goal ${i+1}…" onchange="ltGoals[${i}].text=this.value">${esc(g.text)}</textarea>
+      <button onclick="removeLTG(${i})" style="background:none;border:none;cursor:pointer;color:#e2e8f0;font-size:18px;margin-top:8px;transition:color .12s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#e2e8f0'">×</button>
+    </div>`).join('');
+}
+function addLTG() { ltGoals.push({text:''}); renderLTGs(); }
+function removeLTG(i) { ltGoals.splice(i,1); renderLTGs(); }
+
+// ============================================================
+// FOUNDATION — SIMPLE TAGS (adv)
+// ============================================================
+function renderAdv() {
+  document.getElementById('adv-tags').innerHTML = adv.map((t,i) =>
+    `<span class="tag" style="background:var(--purple-faint);border:1px solid rgba(99,102,241,.2);color:var(--purple);">${esc(t)}<button class="tag-del" onclick="adv.splice(${i},1);renderAdv()">×</button></span>`).join('');
+}
+function addSimpleTag(arr, inputId) {
+  const inp = document.getElementById(inputId);
+  const v = inp.value.trim(); if (!v) return;
+  if (arr === 'adv') adv.push(v);
+  inp.value = '';
+  renderAdv();
+}
+
+// ============================================================
+// FOUNDATION — SWOT
+// ============================================================
+function renderSwot(k) {
+  document.getElementById('swot-'+k+'-list').innerHTML = swot[k].map((item,i) => `
+    <div class="sq-item">
+      <div class="sq-bullet" style="background:${{s:'var(--green)',w:'var(--red)',o:'var(--purple)',t:'var(--gold)'}[k]};"></div>
+      <span>${esc(item)}</span>
+      <button class="sq-del" onclick="swot['${k}'].splice(${i},1);renderSwot('${k}')">×</button>
+    </div>`).join('');
+}
+function addSwot(k) {
+  const inp = document.getElementById('swot-'+k+'-inp');
+  const v = inp.value.trim(); if (!v) return;
+  swot[k].push(v); inp.value = '';
+  renderSwot(k);
+}
+
+// ============================================================
+// BUILD — FOCUS AREA TOGGLES
+// ============================================================
+function buildFAToggles() {
+  document.getElementById('fa-toggle-grid').innerHTML = FA_CONFIG.map(fa => `
+    <div class="fa-card${faEnabled[fa.key]?' on':''}" id="fat-${fa.key}" onclick="toggleFA('${fa.key}')">
+      <div class="fa-icon">${fa.icon}</div>
+      <div class="fa-label">${fa.name}</div>
+      <div class="fa-chk">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5L8.5 2" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>`).join('');
+}
+function toggleFA(key) {
+  faEnabled[key] = !faEnabled[key];
+  document.getElementById('fat-'+key).classList.toggle('on', faEnabled[key]);
+}
+
+// ============================================================
+// BUILD — CUSTOM SECTIONS
+// ============================================================
+function renderCustomSections() {
+  const el = document.getElementById('custom-sections-list');
+  el.innerHTML = customSections.map((cs, si) => `
+    <div class="custom-section-card" id="cs-${cs.id}">
+      <div class="csc-head">
+        <div class="csc-icon-pick" onclick="pickIcon(${si})">${esc(cs.icon)}</div>
+        <input type="text" class="csc-title-input" placeholder="Section name…" value="${esc(cs.title)}" onchange="customSections[${si}].title=this.value">
+        <button class="csc-del" onclick="removeCustomSection(${si})">×</button>
+      </div>
+      <input type="text" class="csc-desc-input" placeholder="Brief description of what this section tracks…" value="${esc(cs.desc)}" onchange="customSections[${si}].desc=this.value">
+      <div class="csc-rows" id="cs-rows-${si}">
+        ${cs.rows.map((r,ri) => `
+          <div class="csc-row">
+            <input type="text" placeholder="Item / initiative name" value="${esc(r.label)}" onchange="customSections[${si}].rows[${ri}].label=this.value">
+            <input type="text" placeholder="Status / value" value="${esc(r.value)}" onchange="customSections[${si}].rows[${ri}].value=this.value">
+            <button class="csc-row-del" onclick="removeCSRow(${si},${ri})">×</button>
+          </div>
+          <div class="init-link-row" style="margin-bottom:6px;">
+            <span class="link-lbl">🔗 Link:</span>
+            <input type="url" class="link-input" placeholder="https://… (optional external link)" value="${esc(r.link||'')}" onchange="customSections[${si}].rows[${ri}].link=this.value">
+          </div>`).join('')}
+      </div>
+      <button class="add-init-btn" onclick="addCSRow(${si})">+ Add Row</button>
+    </div>`).join('');
+}
+function addCustomSection() {
+  customSections.push({id:Date.now().toString(),icon:'📋',title:'',desc:'',rows:[{label:'',value:'',link:''}]});
+  renderCustomSections();
+}
+function removeCustomSection(i) { customSections.splice(i,1); renderCustomSections(); }
+function addCSRow(si) { customSections[si].rows.push({label:'',value:'',link:''}); renderCustomSections(); }
+function removeCSRow(si, ri) { customSections[si].rows.splice(ri,1); renderCustomSections(); }
+function pickIcon(si) {
+  const icons = ['📋','🏗','💡','🤝','📊','🌐','🏆','⚙️','🎯','📢','🔬','🏛','👥','💼','🌱','🔗','📱','🏥'];
+  const current = icons.indexOf(customSections[si].icon);
+  customSections[si].icon = icons[(current+1) % icons.length];
+  renderCustomSections();
+}
+
+// ============================================================
+// TRACK — BUILD ACCORDIONS
+// ============================================================
+function buildTrackAccordions() {
+  updatePill();
+  const activeFAs = FA_CONFIG.filter(fa => faEnabled[fa.key]);
+  const el = document.getElementById('track-accordions');
+  if (!activeFAs.length) {
+    el.innerHTML = `<div style="text-align:center;padding:60px;color:var(--slate);">Go to <strong>Build Plan</strong> and select focus areas first.</div>`;
+    return;
+  }
+  el.innerHTML = activeFAs.map(fa => buildAccordion(fa)).join('');
+}
+
+function buildAccordion(fa) {
+  const objs = faObjectives[fa.key] || [];
+  const allInits = objs.flatMap(o => o.initiatives);
+  const onCount = allInits.filter(i => ['complete','on-track'].includes(i.status)).length;
+  const total = allInits.length;
+  const pct = total ? Math.round(onCount/total*100) : 0;
+  const pillColor = pct>=75?'var(--green)':pct>=40?'var(--gold2)':'var(--red)';
+  const headersClass = editMode ? 'edit' : 'track';
+
+  let objectivesHtml = objs.map((obj, oi) => {
+    const colHeaders = editMode
+      ? `<div class="init-col-heads edit" style="margin-top:10px;"><div class="col-head">Initiative</div><div class="col-head">Owner</div><div class="col-head">Status</div><div class="col-head">% Done</div><div></div></div>`
+      : `<div class="init-col-heads track" style="margin-top:10px;"><div class="col-head">Initiative</div><div class="col-head">Status</div><div class="col-head">% Done</div></div>`;
+
+    const initiativesHtml = obj.initiatives.map((init, ii) => buildInitRow(fa.key, oi, ii, init)).join('');
+    const addInitBtn = editMode ? `<button class="add-init-btn" onclick="addInitiative('${fa.key}',${oi})">+ Add Initiative</button>` : '';
+    const delObjBtn = editMode ? `<button class="obj-del" onclick="removeObjective('${fa.key}',${oi})" title="Remove objective">×</button>` : '';
+
+    return `
+    <div class="obj-card">
+      <div class="obj-head">
+        <div class="obj-num">${oi+1}</div>
+        <input type="text" class="obj-title-input" ${editMode?'':'readonly'} placeholder="Objective ${oi+1}…" value="${esc(obj.title)}" onchange="faObjectives['${fa.key}'][${oi}].title=this.value">
+        ${delObjBtn}
+      </div>
+      ${colHeaders}
+      ${initiativesHtml}
+      ${addInitBtn}
+    </div>`;
+  }).join('');
+
+  const addObjBtn = editMode ? `<button class="add-obj-btn" onclick="addObjective('${fa.key}')">+ Add Objective</button>` : '';
+
+  return `
+  <div class="fa-accordion" id="faa-${fa.key}">
+    <div class="fa-acc-head" onclick="toggleAccordion('faa-${fa.key}')">
+      <div class="fa-acc-left">
+        <span class="fa-acc-icon">${fa.icon}</span>
+        <span class="fa-acc-name">${fa.name}</span>
+      </div>
+      <div class="fa-acc-right">
+        <span style="font-size:11px;font-weight:700;color:${pillColor};">${onCount}/${total} on track</span>
+        <div class="pbar" style="width:80px;"><div class="pbar-fill" style="width:${pct}%;background:${pillColor};"></div></div>
+        <span class="fa-acc-chevron">▼</span>
+      </div>
+    </div>
+    <div class="fa-acc-body">
+      ${objectivesHtml}
+      ${addObjBtn}
+    </div>
+  </div>`;
+}
+
+function buildInitRow(faKey, oi, ii, init) {
+  const ro = !editMode ? 'readonly' : '';
+  const statusClass = STATUS_CLASS[init.status] || 's-not-started';
+
+  if (editMode) {
+    return `
+    <div class="init-row edit">
+      <div>
+        <input type="text" class="init-input" placeholder="Initiative…" value="${esc(init.text)}" onchange="faObjectives['${faKey}'][${oi}].initiatives[${ii}].text=this.value">
+        <div class="init-link-row" style="margin-top:4px;">
+          <span class="link-lbl">🔗</span>
+          <input type="url" class="link-input" placeholder="Link to doc, sheet, or partner site…" value="${esc(init.link||'')}" onchange="faObjectives['${faKey}'][${oi}].initiatives[${ii}].link=this.value">
+          ${init.link ? `<a href="${esc(init.link)}" target="_blank" class="link-go">↗ Open</a>` : ''}
+        </div>
+      </div>
+      <input type="text" class="init-input" placeholder="Owner" value="${esc(init.owner)}" onchange="faObjectives['${faKey}'][${oi}].initiatives[${ii}].owner=this.value">
+      <select class="${statusClass}" onchange="updateInitStatus('${faKey}',${oi},${ii},this.value,this)">
+        ${Object.entries(STATUS_LABELS).map(([k,v]) => `<option value="${k}" ${init.status===k?'selected':''}>${v}</option>`).join('')}
+      </select>
+      <input type="number" class="pct-input" min="0" max="100" value="${init.pct||0}" placeholder="%" onchange="faObjectives['${faKey}'][${oi}].initiatives[${ii}].pct=this.value">
+      <button class="init-del" onclick="removeInitiative('${faKey}',${oi},${ii})">×</button>
+    </div>`;
+  } else {
+    return `
+    <div class="init-row track">
+      <div>
+        <div style="font-size:12px;color:var(--text2);">${esc(init.text)||'<em style="color:var(--slate2)">Untitled initiative</em>'}
+          ${init.owner ? `<span style="font-size:10px;color:var(--slate2);margin-left:6px;">— ${esc(init.owner)}</span>` : ''}
+          ${init.link ? `<a href="${esc(init.link)}" target="_blank" class="link-go" style="margin-left:8px;">↗ View</a>` : ''}
+        </div>
+      </div>
+      <select class="${statusClass}" onchange="updateInitStatus('${faKey}',${oi},${ii},this.value,this)">
+        ${Object.entries(STATUS_LABELS).map(([k,v]) => `<option value="${k}" ${init.status===k?'selected':''}>${v}</option>`).join('')}
+      </select>
+      <input type="number" class="pct-input" min="0" max="100" value="${init.pct||0}" placeholder="%" onchange="faObjectives['${faKey}'][${oi}].initiatives[${ii}].pct=this.value;updatePill()">
+    </div>`;
+  }
+}
+
+function updateInitStatus(faKey, oi, ii, val, sel) {
+  faObjectives[faKey][oi].initiatives[ii].status = val;
+  sel.className = STATUS_CLASS[val] || 's-not-started';
+  updatePill();
+}
+function addObjective(key) {
+  faObjectives[key].push({title:'', initiatives:[{text:'',owner:'',status:'not-started',pct:'0',link:''}]});
+  buildTrackAccordions();
+}
+function removeObjective(key, oi) { faObjectives[key].splice(oi,1); buildTrackAccordions(); }
+function addInitiative(key, oi) { faObjectives[key][oi].initiatives.push({text:'',owner:'',status:'not-started',pct:'0',link:''}); buildTrackAccordions(); }
+function removeInitiative(key, oi, ii) { if(faObjectives[key][oi].initiatives.length<=1) return; faObjectives[key][oi].initiatives.splice(ii,1); buildTrackAccordions(); }
+function toggleAccordion(id) { document.getElementById(id).classList.toggle('collapsed'); }
+
+function setMode(m) {
+  editMode = m === 'edit';
+  document.getElementById('mbtn-edit').classList.toggle('on', editMode);
+  document.getElementById('mbtn-track').classList.toggle('on', !editMode);
+  document.getElementById('mode-desc').textContent = editMode
+    ? 'Edit mode — add/rename objectives and initiatives'
+    : 'Track mode — text locked, update status and % complete only';
+  buildTrackAccordions();
+}
+
+function updatePill() {
+  const activeFAs = FA_CONFIG.filter(fa => faEnabled[fa.key]);
+  let total=0, onTrack=0;
+  activeFAs.forEach(fa => (faObjectives[fa.key]||[]).forEach(obj => obj.initiatives.forEach(i => {
+    total++;
+    if (['complete','on-track'].includes(i.status)) onTrack++;
+  })));
+  const pct = total ? Math.round(onTrack/total*100) : 0;
+  const el = document.getElementById('prog-pill');
+  if (!el) return;
+  el.textContent = `${onTrack}/${total} on track (${pct}%)`;
+  el.className = `progress-pill ${pct>=75?'pp-good':pct>=40?'pp-warn':'pp-low'}`;
+}
+
+// ============================================================
+// REPORT
+// ============================================================
+function setReportView(v) {
+  reportView = v;
+  document.getElementById('rvt-board').classList.toggle('on', v==='board');
+  document.getElementById('rvt-detail').classList.toggle('on', v==='detail');
+  buildReport();
+}
+
+function buildReport() {
+  const org = v('org-name') || 'Organization Name';
+  const mission = v('mission');
+  const vision = v('vision');
+  const period = v('plan-period') || 'Strategic Plan';
+  const quarter = v('report-quarter') || 'Q1';
+  const preparedBy = v('prepared-by');
+  const activeFAs = FA_CONFIG.filter(fa => faEnabled[fa.key]);
+
+  let total=0, complete=0, onTrack=0, atRisk=0, notMet=0;
+  activeFAs.forEach(fa => (faObjectives[fa.key]||[]).forEach(obj => obj.initiatives.forEach(i => {
+    total++;
+    if (i.status==='complete') complete++;
+    else if (i.status==='on-track') onTrack++;
+    else if (i.status==='at-risk') atRisk++;
+    else if (i.status==='not-met') notMet++;
+  })));
+  const healthPct = total ? Math.round((complete+onTrack)/total*100) : 0;
+
+  let html = buildReportHeader(org, period, quarter, preparedBy, mission, vision, healthPct);
+  html += buildKPIs(total, complete, onTrack, atRisk, notMet);
+  html += buildProgressBar(healthPct, activeFAs);
+  html += buildAreaSummaryTable(activeFAs);
+  html += buildHighlights(activeFAs);
+
+  if (reportView === 'detail') {
+    html += buildDetailSection(activeFAs);
+    html += buildCustomSectionsReport();
+    html += buildLTGReport();
+    html += buildFoundationReport();
+  } else {
+    html += buildCustomSectionsReport();
+  }
+
+  html += `<div class="report-footer"><div class="rf-text">Created by The Nonprofit Edge Strategic Plan Tracker &nbsp;·&nbsp; thenonprofitedge.org &nbsp;·&nbsp; Generated ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</div><div style="display:flex;justify-content:center;margin-top:10px;"><svg height="32" viewBox="220 260 560 240" xmlns="http://www.w3.org/2000/svg" style="width:auto;opacity:.4;"><path fill="#0D2C54" d="M438.46,469.14c-18.16,14.03-40.93,22.38-65.64,22.38c-30.79,0-58.55-12.94-78.16-33.69c2.85,0.46,5.7,0.81,8.57,1.06c9.13,0.79,17.9,0.49,26.26-0.63c12.72,7.44,27.53,11.71,43.33,11.71c17.17,0,33.17-5.03,46.59-13.71C422.94,460.11,428.93,465.14,438.46,469.14z"/><path fill="#0D2C54" d="M294.86,420.29c-8.64,2.53-16.05,3.61-21.74,4.02c-5.05-12.44-7.82-26.05-7.82-40.31c0-59.37,48.14-107.52,107.52-107.52c25.62,0,49.15,8.96,67.62,23.94c-9.33,2.92-16.19,7.85-20.47,11.69c-13.54-8.9-29.74-14.08-47.15-14.08c-47.48,0-85.97,38.49-85.97,85.97C286.85,396.97,289.72,409.27,294.86,420.29z"/><path fill="#0097A9" d="M258.67,434.74c0,0,61.28,14.58,121.38-60.61l-18.3-13.11l72.86-22.42l0.39,71.06l-18.78-13.01C416.22,396.64,340.29,479.82,258.67,434.74z"/><path fill="#0D2C54" d="M476.97,418.87v13.1h19.27v12.18h-19.27v14.21h21.8v12.64h-36.19v-64.78h36.19v12.64H476.97z"/><path fill="#0D2C54" d="M546.58,410.29c4.66,2.71,8.26,6.51,10.82,11.4c2.55,4.89,3.83,10.54,3.83,16.93c0,6.34-1.28,11.97-3.83,16.89c-2.55,4.92-6.17,8.74-10.86,11.44c-4.69,2.71-10.11,4.06-16.29,4.06h-22.14v-64.78h22.14C536.48,406.23,541.92,407.58,546.58,410.29z M542.03,452.46c3.03-3.26,4.55-7.87,4.55-13.84c0-5.97-1.51-10.61-4.55-13.93c-3.03-3.32-7.27-4.98-12.71-4.98h-6.82v37.65h6.82C534.77,457.35,539,455.72,542.03,452.46z"/><path fill="#0D2C54" d="M647.83,418.87v13.1h19.27v12.18h-19.27v14.21h21.8v12.64h-36.19v-64.78h36.19v12.64H647.83z"/><path fill="#0097A9" d="M476.77,351.79l22.79,27.51v-27.51h9.08v40.89h-9.08l-22.79-27.51v27.51h-9.08v-40.89H476.77z"/><path fill="#0097A9" d="M516.22,392.68v-40.89h9.08v40.89H516.22z"/><path fill="#0097A9" d="M609.45,351.79v7.98h-14.37v32.91h-9.08v-32.91h-14.37v-7.98H609.45z"/><path fill="#0097A9" d="M644.1,351.79v7.98h-19.64v8.68h14.37v7.75h-14.37v8.49h20.07v7.98H615.4v-40.89H644.1z"/></svg></div></div>`;
+  document.getElementById('report-output').innerHTML = html;
+}
+
+function buildReportHeader(org, period, quarter, preparedBy, mission, vision, healthPct) {
+  const mvvRow = (mission || vision) ? `
+    <div class="rh-mvv-row">
+      ${mission ? `<div class="rh-mvv-item" style="grid-column:1/3;"><div class="rh-mvv-lbl">Mission</div><div class="rh-mvv-val">"${esc(mission)}"</div></div>` : ''}
+      ${vision ? `<div class="rh-mvv-item"><div class="rh-mvv-lbl">Vision</div><div class="rh-mvv-val">${esc(vision)}</div></div>` : ''}
+    </div>` : '';
+  return `
+  <div class="report-header">
+    <div class="rh-top">
+      <div>
+        <div class="rh-org">${esc(org)}</div>
+        <div class="rh-sub">${esc(period)} — Board Progress Report</div>
+        <div class="rh-meta">${esc(quarter)}${preparedBy?' &nbsp;·&nbsp; Prepared by: '+esc(preparedBy):''}</div>
+      </div>
+      <div class="rh-score">
+        <div class="rh-pct">${healthPct}%</div>
+        <div class="rh-pct-lbl">on track or complete</div>
+      </div>
+    </div>
+    ${mvvRow}
+  </div>`;
+}
+
+function buildKPIs(total, complete, onTrack, atRisk, notMet) {
+  return `<div class="kpi-strip">
+    <div class="kpi-card"><div class="kpi-num">${total}</div><div class="kpi-lbl">Total</div></div>
+    <div class="kpi-card"><div class="kpi-num" style="color:var(--green);">${complete}</div><div class="kpi-lbl">Complete</div></div>
+    <div class="kpi-card"><div class="kpi-num" style="color:var(--teal);">${onTrack}</div><div class="kpi-lbl">On Track</div></div>
+    <div class="kpi-card"><div class="kpi-num" style="color:var(--gold2);">${atRisk}</div><div class="kpi-lbl">At Risk</div></div>
+    <div class="kpi-card"><div class="kpi-num" style="color:var(--red);">${notMet}</div><div class="kpi-lbl">Not Met</div></div>
+  </div>`;
+}
+
+function buildProgressBar(pct, activeFAs) {
+  const color = pct>=75?'var(--green)':pct>=50?'var(--gold)':'var(--red)';
+  const label = pct>=75?'Healthy — on track for plan completion':'Needs attention — review at-risk initiatives';
+  return `<div class="rcard">
+    <div class="rcard-title"><div class="rcard-bar" style="background:var(--navy)"></div>Overall Progress</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <div style="font-size:13px;color:var(--text2);">${label}</div>
+      <div style="font-size:22px;font-family:'Fraunces',serif;font-weight:700;color:${color};">${pct}%</div>
+    </div>
+    <div class="pbar" style="height:12px;border-radius:6px;"><div class="pbar-fill" style="width:${pct}%;background:${color};"></div></div>
+  </div>`;
+}
+
+function buildAreaSummaryTable(activeFAs) {
+  let rows = activeFAs.map(fa => {
+    const objs = faObjectives[fa.key]||[];
+    const inits = objs.flatMap(o => o.initiatives);
+    const c=inits.filter(i=>i.status==='complete').length;
+    const o=inits.filter(i=>i.status==='on-track').length;
+    const a=inits.filter(i=>i.status==='at-risk').length;
+    const n=inits.filter(i=>i.status==='not-met').length;
+    const pct = inits.length ? Math.round((c+o)/inits.length*100) : 0;
+    const col = pct>=75?'var(--green)':pct>=40?'var(--gold2)':'var(--red)';
+    const avgPct = inits.length ? Math.round(inits.reduce((sum,i)=>sum+(parseFloat(i.pct)||0),0)/inits.length) : 0;
+    return `<tr><td><strong>${fa.icon} ${fa.name}</strong></td><td style="text-align:center;">${inits.length}</td><td style="text-align:center;color:var(--green);font-weight:700;">${c}</td><td style="text-align:center;color:var(--teal);font-weight:700;">${o}</td><td style="text-align:center;color:var(--gold2);font-weight:700;">${a}</td><td style="text-align:center;color:var(--red);font-weight:700;">${n}</td><td style="text-align:center;"><span style="color:${col};font-weight:700;">${pct}%</span></td><td style="text-align:center;"><div class="pbar" style="width:70px;display:inline-block;"><div class="pbar-fill" style="width:${avgPct}%;background:var(--teal);"></div></div><span style="font-size:10px;color:var(--slate2);margin-left:5px;">${avgPct}%</span></td></tr>`;
+  }).join('');
+  return `<div class="rcard">
+    <div class="rcard-title"><div class="rcard-bar" style="background:var(--teal)"></div>Progress by Focus Area</div>
+    <table class="rtable"><thead><tr><th>Area</th><th>Initiatives</th><th>Complete</th><th>On Track</th><th>At Risk</th><th>Not Met</th><th>% Health</th><th>Avg Complete</th></tr></thead><tbody>${rows}</tbody></table>
+  </div>`;
+}
+
+function buildHighlights(activeFAs) {
+  const wins=[], risks=[];
+  activeFAs.forEach(fa => (faObjectives[fa.key]||[]).forEach(obj => obj.initiatives.filter(i=>i.text).forEach(i => {
+    if (i.status==='complete') wins.push({fa:fa.name, i});
+    else if (i.status==='at-risk') risks.push({fa:fa.name, i, type:'risk'});
+    else if (i.status==='not-met') risks.push({fa:fa.name, i, type:'notmet'});
+  })));
+  if (!wins.length && !risks.length) return '';
+  return `<div class="two-col">
+    ${wins.length ? `<div class="rcard" style="margin-bottom:0;"><div class="rcard-title"><div class="rcard-bar" style="background:var(--green)"></div>Highlights</div>${wins.map(w=>`<div class="highlight h-complete"><div class="h-dot"></div><div><span class="h-tag">${esc(w.fa)}</span>${esc(w.i.text)}${w.i.link?`<a href="${esc(w.i.link)}" target="_blank" class="link-go" style="margin-left:8px;">↗</a>`:''}</div></div>`).join('')}</div>` : ''}
+    ${risks.length ? `<div class="rcard" style="margin-bottom:0;"><div class="rcard-title"><div class="rcard-bar" style="background:var(--gold)"></div>Needs Attention</div>${risks.map(r=>`<div class="highlight ${r.type==='risk'?'h-risk':'h-notmet'}"><div class="h-dot"></div><div><span class="h-tag">${esc(r.fa)}</span>${esc(r.i.text)}</div></div>`).join('')}</div>` : ''}
+  </div>`;
+}
+
+function buildDetailSection(activeFAs) {
+  return activeFAs.map(fa => {
+    const objs = faObjectives[fa.key]||[];
+    const objBlocks = objs.map((obj, oi) => {
+      if (!obj.title && !obj.initiatives.some(i=>i.text)) return '';
+      const rows = obj.initiatives.filter(i=>i.text).map(i => {
+        const bClass = BADGE_CLASS[i.status]||'badge-not-started';
+        const pct = parseFloat(i.pct)||0;
+        return `<tr>
+          <td>${esc(i.text)}</td>
+          <td>${i.owner?esc(i.owner):'—'}</td>
+          <td><span class="badge ${bClass}">${STATUS_LABELS[i.status]||'—'}</span></td>
+          <td><div style="display:flex;align-items:center;gap:6px;"><div class="pbar" style="width:60px;"><div class="pbar-fill" style="width:${pct}%;background:var(--teal);"></div></div><span style="font-size:11px;color:var(--slate);">${pct}%</span></div></td>
+          <td>${i.link?`<a href="${esc(i.link)}" target="_blank" class="csr-link">↗ View</a>`:'—'}</td>
+        </tr>`;
+      }).join('');
+      if (!rows) return '';
+      return `<div class="obj-block">
+        <div class="obj-block-title"><div class="obj-block-num">${oi+1}</div>${esc(obj.title)||`Objective ${oi+1}`}</div>
+        <table class="rtable"><thead><tr><th>Initiative</th><th>Owner</th><th>Status</th><th>% Complete</th><th>Link</th></tr></thead><tbody>${rows}</tbody></table>
+      </div>`;
+    }).join('');
+    if (!objBlocks.trim()) return '';
+    const faObj = FA_CONFIG.find(f=>f.key===fa.key);
+    return `<div class="rcard"><div class="rcard-title"><div class="rcard-bar" style="background:${faObj.color}"></div>${fa.icon} ${fa.name}</div>${objBlocks}</div>`;
+  }).join('');
+}
+
+function buildCustomSectionsReport() {
+  if (!customSections.length) return '';
+  return customSections.filter(cs => cs.title || cs.rows.some(r=>r.label)).map(cs => {
+    const rows = cs.rows.filter(r=>r.label).map(r =>
+      `<tr><td>${esc(r.label)}</td><td>${esc(r.value)||'—'}</td><td>${r.link?`<a href="${esc(r.link)}" target="_blank" class="csr-link">↗ Open link</a>`:'—'}</td></tr>`).join('');
+    return `<div class="custom-section-report">
+      <div class="rcard-title"><div class="rcard-bar" style="background:var(--teal)"></div><span class="csr-icon">${esc(cs.icon)}</span>${esc(cs.title)||'Custom Section'}</div>
+      ${cs.desc ? `<div style="font-size:12px;color:var(--slate);margin-bottom:10px;">${esc(cs.desc)}</div>` : ''}
+      ${rows ? `<table class="csr-table"><thead><tr><th>Item</th><th>Status / Value</th><th>Link</th></tr></thead><tbody>${rows}</tbody></table>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function buildLTGReport() {
+  const ltgWithText = ltGoals.filter(g=>g.text);
+  if (!ltgWithText.length) return '';
+  return `<div class="rcard"><div class="rcard-title"><div class="rcard-bar" style="background:var(--navy)"></div>Long-Term Strategic Goals</div>${ltgWithText.map((g,i)=>`<div class="ltg-item"><div class="ltg-num">${i+1}</div><div class="ltg-text">${esc(g.text)}</div></div>`).join('')}</div>`;
+}
+
+function buildFoundationReport() {
+  const hasValues = values.length;
+  const hasAdv = adv.length;
+  const hasSwot = Object.values(swot).some(a=>a.length);
+  if (!hasValues && !hasAdv && !hasSwot) return '';
+
+  let html = '';
+  if (hasValues || hasAdv) {
+    html += `<div class="two-col">`;
+    if (hasValues) html += `<div class="rcard" style="margin-bottom:0;"><div class="rcard-title"><div class="rcard-bar" style="background:var(--teal)"></div>Core Values</div><div style="display:flex;flex-wrap:wrap;gap:8px;">${values.map(v=>`<span class="tag" style="background:var(--teal-faint);border:1px solid rgba(0,151,169,.2);color:var(--teal);flex-direction:column;align-items:flex-start;border-radius:10px;padding:7px 12px;"><strong>${esc(v.name)}</strong>${v.desc?`<span style="font-size:11px;font-weight:400;color:var(--slate);margin-top:2px;">${esc(v.desc)}</span>`:''}</span>`).join('')}</div></div>`;
+    if (hasAdv) html += `<div class="rcard" style="margin-bottom:0;"><div class="rcard-title"><div class="rcard-bar" style="background:var(--purple)"></div>Competitive Advantages</div><div style="display:flex;flex-wrap:wrap;gap:7px;">${adv.map(a=>`<span class="tag" style="background:var(--purple-faint);border:1px solid rgba(99,102,241,.2);color:var(--purple);">${esc(a)}</span>`).join('')}</div></div>`;
+    html += `</div>`;
+  }
+  if (hasSwot) {
+    html += `<div class="rcard"><div class="rcard-title"><div class="rcard-bar" style="background:var(--orange)"></div>SWOT Summary</div><div class="swot-report-grid">
+      ${[['s','Strengths','var(--green)','var(--green-faint)','rgba(16,185,129,.2)'],['w','Weaknesses','var(--red)','var(--red-faint)','rgba(239,68,68,.2)'],['o','Opportunities','var(--purple)','var(--purple-faint)','rgba(99,102,241,.2)'],['t','Threats','var(--gold2)','var(--gold-faint)','rgba(245,158,11,.2)']].map(([k,lbl,col,bg,bc])=>
+        `<div class="swot-rq" style="background:${bg};border:1px solid ${bc};"><div class="swot-rq-lbl" style="color:${col};">${lbl}</div>${swot[k].map(item=>`<div class="swot-ritem"><div class="swot-rbullet" style="background:${col};"></div>${esc(item)}</div>`).join('')}</div>`).join('')}
+    </div></div>`;
+  }
+  return html;
+}
+
+// ============================================================
+// SAVE / LOAD
+// ============================================================
+function getState() {
+  return {
+    v:3, id:'plan_v3',
+    org: v('org-name'), mission: v('mission'), vision: v('vision'),
+    period: v('plan-period'), blueSky: v('blue-sky'), preparedBy: v('prepared-by'), quarter: v('report-quarter'),
+    values: JSON.parse(JSON.stringify(values)),
+    ltGoals: JSON.parse(JSON.stringify(ltGoals)),
+    adv: [...adv],
+    swot: JSON.parse(JSON.stringify(swot)),
+    faEnabled: {...faEnabled},
+    faObjectives: JSON.parse(JSON.stringify(faObjectives)),
+    customSections: JSON.parse(JSON.stringify(customSections)),
+    saved: new Date().toLocaleString(),
+  };
+}
+function savePlan() {
+  localStorage.setItem('npe_tracker_v3', JSON.stringify(getState()));
+  showToast('✓ Plan saved','green');
+}
+function autoLoad() {
+  const raw = localStorage.getItem('npe_tracker_v3');
+  if (!raw) return;
+  try {
+    const d = JSON.parse(raw);
+    if (d.org) sv('org-name', d.org);
+    if (d.mission) sv('mission', d.mission);
+    if (d.vision) sv('vision', d.vision);
+    if (d.period) sv('plan-period', d.period);
+    if (d.blueSky) sv('blue-sky', d.blueSky);
+    if (d.preparedBy) sv('prepared-by', d.preparedBy);
+    if (d.quarter) sv('report-quarter', d.quarter);
+    if (d.values) values.splice(0, values.length, ...d.values);
+    if (d.ltGoals) ltGoals.splice(0, ltGoals.length, ...d.ltGoals);
+    if (d.adv) adv.splice(0, adv.length, ...d.adv);
+    if (d.swot) Object.assign(swot, d.swot);
+    if (d.faEnabled) Object.assign(faEnabled, d.faEnabled);
+    if (d.faObjectives) Object.assign(faObjectives, d.faObjectives);
+    if (d.customSections) customSections.splice(0, customSections.length, ...d.customSections);
+    renderValues(); renderLTGs(); renderAdv();
+    ['s','w','o','t'].forEach(k => renderSwot(k));
+    buildFAToggles();
+    renderCustomSections();
+  } catch(e) {}
+}
+
+// ============================================================
+// WELCOME / NSD
+// ============================================================
+function openWelcome() { document.getElementById('welcome-overlay').classList.add('show'); }
+function closeWelcome() { document.getElementById('welcome-overlay').classList.remove('show'); }
+function closeWelcomePerm() { localStorage.setItem('npe_tracker3_welcome','1'); closeWelcome(); }
+
+function buildNSDOpts() {
+  document.getElementById('nsd-opts').innerHTML = NSD_OPTS.map(o =>
+    `<div class="radio-opt" onclick="pickNSD(this,'${o.replace(/'/g,"\\'")}')"><div class="rdot"><div class="rdot-inner"></div></div><div class="rtext">${o}</div></div>`).join('');
+}
+function pickNSD(el, val) {
+  document.querySelectorAll('.radio-opt').forEach(r => r.classList.remove('sel'));
+  el.classList.add('sel'); nsdSel = val; checkNSD();
+}
+function checkNSD() {
+  document.getElementById('nsd-btn').disabled = !(nsdSel && document.getElementById('nsd-desc').value.trim());
+}
+function openNSD() {
+  nsdSel='';
+  document.getElementById('nsd-desc').value=''; document.getElementById('nsd-email').value='';
+  document.querySelectorAll('.radio-opt').forEach(r=>r.classList.remove('sel'));
+  document.getElementById('nsd-btn').disabled=true;
+  document.getElementById('nsd-form').style.display='block';
+  document.getElementById('nsd-success').style.display='none';
+  document.getElementById('nsd-overlay').classList.add('show');
+}
+function closeNSD() { document.getElementById('nsd-overlay').classList.remove('show'); }
+function submitNSD() {
+  const btn = document.getElementById('nsd-btn');
+  btn.textContent='Sending…'; btn.disabled=true;
+  setTimeout(()=>{ document.getElementById('nsd-form').style.display='none'; document.getElementById('nsd-success').style.display='block'; }, 900);
+}
+
+// click backdrop to close modals
+document.addEventListener('DOMContentLoaded', () => {
+  ['welcome-overlay','nsd-overlay'].forEach(id => {
+    document.getElementById(id).addEventListener('click', function(e){ if(e.target===this) { if(id==='welcome-overlay') closeWelcome(); else closeNSD(); }});
+  });
+  document.getElementById('nsd-desc').addEventListener('input', checkNSD);
+});
+
+// ============================================================
+// UTILS
+// ============================================================
+function v(id) { const el=document.getElementById(id); return el ? el.value.trim() : ''; }
+function sv(id, val) { const el=document.getElementById(id); if(el) el.value=val; }
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function showToast(msg, type='') {
+  const t=document.getElementById('toast'); t.textContent=msg;
+  t.className='toast show'+(type?' '+type:'');
+  setTimeout(()=>t.className='toast', 2600);
+}
+
+// ============================================================
+// START
+// ============================================================
+init();
+</script>
+</body>
+</html>
