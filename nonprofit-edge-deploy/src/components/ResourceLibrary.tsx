@@ -127,14 +127,13 @@ const categoryConfig: Record<string, CategoryConfig> = {
 
 const resources: Resource[] = [
   // Tools
-  { name: 'Dashboard Creator', type: 'tools', url: '/tools/dashboard-creator.html', tags: ['dashboard', 'reports', 'board'], featured: true },
-  { name: 'Strategic Plan Tracker', type: 'tools', url: '/tools/strategic-plan-tracker.html', tags: ['strategy', 'planning', 'tracking'], featured: true },
-  { name: 'Ask the Professor', type: 'tools', url: '/ask-the-professor/use', tags: ['ai', 'coaching', 'advisor'], featured: true },
   { name: 'Edge Leadership Profile™', type: 'tools', url: '/tools/leadership-profile', tags: ['leadership', 'assessment'] },
   { name: 'Board Assessment', type: 'tools', url: '/tools/board-assessment', tags: ['board', 'governance', 'assessment'] },
   { name: 'Core Constraint Assessment', type: 'tools', url: '/tools/core-constraint', tags: ['strategy', 'assessment'] },
   { name: 'Grant/RFP Review', type: 'tools', url: '/tools/grant-review', tags: ['grants', 'fundraising'] },
   { name: 'Scenario Planner', type: 'tools', url: '/tools/scenario-planner', tags: ['strategy', 'planning'] },
+  { name: 'Strategic Planning Tracker', type: 'tools', url: '/tools/strategic-tracker', tags: ['strategy', 'planning'] },
+  { name: 'Dashboards', type: 'tools', url: '/tools/dashboards', tags: ['data', 'tracking'] },
   { name: 'CEO Evaluation', type: 'tools', url: '/tools/ceo-evaluation', tags: ['leadership', 'evaluation'] },
   { name: 'Strategic Plan Check-Up', type: 'tools', url: '/tools/strategic-checkup', tags: ['strategy', 'assessment'] },
   
@@ -326,7 +325,15 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
       <header className="bg-[#0D2C54] py-3 px-8 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <button onClick={() => navigate('dashboard')} className="hover:opacity-80 transition-opacity">
-            <img src="/images/nonprofit-edge-logo-white.png" alt="The Nonprofit Edge" className="h-9" />
+            <img 
+              src="/images/nonprofit-edge-logo-white.png" 
+              alt="The Nonprofit Edge" 
+              className="h-10"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.parentElement!.innerHTML = '<div style="font-weight:800;color:white;font-size:16px;">THE NONPROFIT EDGE</div>';
+              }}
+            />
           </button>
           <nav className="flex items-center gap-6">
             {[

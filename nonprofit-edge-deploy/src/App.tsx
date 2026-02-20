@@ -256,9 +256,12 @@ const App: React.FC = () => {
                 tier: orgData.tier || 'professional',
                 logo_url: orgData.logo_url || null,
               });
+            } else {
+              setOrganization({ id: '1', name: 'My Organization', tier: 'professional', logo_url: null });
             }
           } catch {
             // organizations table might not exist yet — use defaults
+            setOrganization({ id: '1', name: 'My Organization', tier: 'professional', logo_url: null });
           }
 
           // Load saved usage
@@ -626,11 +629,11 @@ const App: React.FC = () => {
 
       case '/resources':
       case '/member-resources':
-        if (!user || !organization) { navigate('/login'); return null; }
+        if (!user) { navigate('/login'); return null; }
         return (
           <ResourceLibrary 
             user={{ ...user, full_name: user.name }}
-            organization={organization}
+            organization={organization || { id: "1", name: "My Organization", tier: "professional" }}
             onNavigate={(page: string) => navigate(mapDashboardNavigation(page))}
             onLogout={handleLogout}
           />
