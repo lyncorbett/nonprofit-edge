@@ -510,6 +510,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
           <CategoryCard category="tools" config={categoryConfig.tools} onClick={() => openModal('tools')} />
           
           {/* Templates */}
+          <CategoryCard category="certs" config={categoryConfig.certs} onClick={() => openModal('certs')} />
           <CategoryCard category="templates" config={categoryConfig.templates} onClick={() => openModal('templates')} />
           
           {/* Leadership Guides */}
@@ -524,8 +525,6 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
           {/* Facilitation Kits */}
           <CategoryCard category="kits" config={categoryConfig.kits} onClick={() => openModal('kits')} />
           
-          {/* Certifications */}
-          <CategoryCard category="certs" config={categoryConfig.certs} onClick={() => openModal('certs')} />
         </div>
 
         {/* Top Downloads */}
