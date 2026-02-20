@@ -59,30 +59,6 @@ interface Tool {
 // TOOL DATA
 // ============================================
 
-// Featured standalone tools (open as direct HTML pages)
-const featuredTools = [
-  {
-    id: 'dashboard-creator',
-    name: 'Dashboard Creator',
-    description: 'Build board-ready dashboards in minutes. Customize metrics, visuals, and reports for any audience.',
-    href: '/tools/dashboard-creator.html',
-    external: true,
-    badge: 'New',
-    img: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop',
-    features: ['Board reports', 'Finance dashboards', 'Program dashboards', 'PDF export'],
-  },
-  {
-    id: 'strategic-plan-tracker',
-    name: 'Strategic Plan Tracker',
-    description: 'Turn your strategic plan into a living document. Track objectives, initiatives, and generate auto board reports.',
-    href: '/tools/strategic-plan-tracker.html',
-    external: true,
-    badge: 'New',
-    img: 'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=400&h=300&fit=crop',
-    features: ['Objective tracking', 'Board report generator', 'Custom sections', 'Progress by area'],
-  },
-];
-
 const tools: Tool[] = [
   { 
     id: 'leadership-profile',
@@ -536,42 +512,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <ChevronRight className="w-4 h-4" />
               </div>
             </div>
-          </div>
-
-          {/* Featured Tools — Dashboard Creator & Strategic Plan Tracker */}
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="text-lg font-bold text-[#0D2C54]">Featured Tools</h2>
-            <span className="text-xs font-semibold text-[#0097A9] bg-[#0097A9]/10 px-2.5 py-1 rounded-full">New</span>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-5 mb-6 lg:mb-8">
-            {featuredTools.map((tool) => (
-              <div
-                key={tool.id}
-                onClick={() => window.open(tool.href, '_blank')}
-                className="bg-white rounded-xl overflow-hidden border border-slate-200 hover:-translate-y-1 hover:shadow-lg transition-all cursor-pointer"
-              >
-                <div
-                  className="h-[100px] lg:h-[130px] bg-cover bg-center flex items-end p-3 lg:p-4 relative"
-                  style={{ backgroundImage: `url('${tool.img}')` }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0D2C54]/90" />
-                  <div className="relative w-full">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[10px] font-bold uppercase tracking-wider bg-[#0097A9] text-white px-2 py-0.5 rounded-full">{tool.badge}</span>
-                    </div>
-                    <span className="text-white font-bold text-sm lg:text-base">{tool.name}</span>
-                  </div>
-                </div>
-                <div className="p-3 lg:p-4">
-                  <p className="text-xs text-slate-500 leading-relaxed mb-3">{tool.description}</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {tool.features.map((f, i) => (
-                      <span key={i} className="text-[10px] font-semibold text-[#0D2C54] bg-slate-100 px-2 py-0.5 rounded-full">{f}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ))}
           </div>
 
           {/* Your Tools */}
