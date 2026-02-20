@@ -6,6 +6,20 @@ import {
   AlertCircle
 } from 'lucide-react';
 
+// Check if mobile
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
+  return isMobile;
+};
+
 // Tool configurations
 const TOOL_CONFIGS = {
   'board-assessment': {
@@ -157,6 +171,7 @@ const ToolIntroModal: React.FC<ToolIntroModalProps> = ({
 }) => {
   const [dontShowAgain, setDontShowAgain] = useState(false);
   const tool = TOOL_CONFIGS[toolId];
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     // Check if user has dismissed this modal before
@@ -203,417 +218,453 @@ const ToolIntroModal: React.FC<ToolIntroModalProps> = ({
   const Icon = tool.icon;
 
   return (
-    <div 
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(13, 44, 84, 0.6)',
-        backdropFilter: 'blur(4px)',
-        zIndex: 1000,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px',
-      }}
-      onClick={onClose}
-    >
-      <div 
-        style={{
-          background: 'white',
-          borderRadius: '20px',
-          width: '100%',
-          maxWidth: '580px',
-          maxHeight: '90vh',
-          overflow: 'hidden',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          animation: 'modalIn 0.3s ease',
-        }}
-        onClick={e => e.stopPropagation()}
-      >
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(13, 44, 84, 0.6)',
+      backdropFilter: 'blur(4px)',
+      display: 'flex',
+      alignItems: isMobile ? 'flex-end' : 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      padding: isMobile ? '0' : '20px',
+      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif"
+    }}>
+      <div style={{
+        background: 'white',
+        borderRadius: isMobile ? '20px 20px 0 0' : '20px',
+        width: '100%',
+        maxWidth: isMobile ? '100%' : '680px',
+        maxHeight: isMobile ? '90vh' : '90vh',
+        overflow: 'auto',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+        animation: isMobile ? 'modalSlideUp 0.3s ease-out' : 'modalSlideIn 0.3s ease-out'
+      }}>
         {/* Header */}
         <div style={{
-          padding: '24px 28px',
+          padding: isMobile ? '20px 20px 16px' : '28px 32px 24px',
+          borderBottom: '1px solid #e2e8f0',
           display: 'flex',
           alignItems: 'flex-start',
-          gap: '16px',
-          borderBottom: '1px solid #f1f5f9'
+          gap: isMobile ? '14px' : '20px'
         }}>
           <div style={{
-            width: '56px',
-            height: '56px',
-            borderRadius: '14px',
-            background: tool.color,
+            width: isMobile ? '48px' : '64px',
+            height: isMobile ? '48px' : '64px',
+            borderRadius: isMobile ? '12px' : '16px',
+            background: `${tool.color}15`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            flexShrink: 0,
-            color: 'white',
-            fontSize: tool.isEmoji ? '28px' : undefined
+            flexShrink: 0
           }}>
-            {tool.isEmoji ? tool.emoji : <Icon size={28} />}
+            {tool.isEmoji ? (
+              <span style={{ fontSize: isMobile ? '24px' : '32px' }}>{tool.emoji}</span>
+            ) : (
+              <Icon size={isMobile ? 24 : 32} style={{ color: tool.color }} />
+            )}
           </div>
           <div style={{ flex: 1 }}>
-            <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#0D2C54', marginBottom: '4px' }}>
+            <h2 style={{ 
+              fontSize: isMobile ? '20px' : '26px', 
+              fontWeight: 700, 
+              color: '#0D2C54', 
+              margin: 0,
+              lineHeight: 1.2
+            }}>
               {tool.title}
             </h2>
-            <p style={{ fontSize: '14px', color: '#64748b' }}>{tool.subtitle}</p>
+            <p style={{ 
+              fontSize: isMobile ? '13px' : '15px', 
+              color: '#64748b', 
+              margin: '4px 0 0 0' 
+            }}>
+              {tool.subtitle}
+            </p>
           </div>
           <button
             onClick={onClose}
             style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '10px',
-              border: 'none',
               background: '#f1f5f9',
+              border: 'none',
+              borderRadius: '10px',
+              padding: isMobile ? '8px' : '10px',
               cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#64748b'
+              color: '#64748b',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#e2e8f0';
+              e.currentTarget.style.color = '#334155';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = '#f1f5f9';
+              e.currentTarget.style.color = '#64748b';
             }}
           >
-            <X size={20} />
+            <X size={isMobile ? 20 : 22} />
           </button>
         </div>
 
-        {/* Body */}
-        <div style={{ padding: '24px 28px', overflowY: 'auto', maxHeight: 'calc(90vh - 200px)' }}>
-          <p style={{ fontSize: '15px', lineHeight: 1.7, color: '#475569', marginBottom: '24px' }}>
+        {/* Content */}
+        <div style={{ padding: isMobile ? '20px' : '28px 32px' }}>
+          {/* Description */}
+          <p style={{ 
+            fontSize: isMobile ? '14px' : '16px', 
+            lineHeight: 1.7, 
+            color: '#475569',
+            margin: '0 0 24px 0'
+          }}>
             {tool.description}
           </p>
 
-          {/* Assess Areas (for Strategic Plan) */}
-          {tool.assessAreas && (
-            <>
-              <div style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8', marginBottom: '12px' }}>
-                What You'll Assess
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginBottom: '24px' }}>
-                {tool.assessAreas.map((area, i) => (
-                  <div key={i} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '10px 12px',
-                    background: '#f8fafc',
-                    borderRadius: '8px',
-                    fontSize: '13px',
-                    color: '#334155'
-                  }}>
-                    <CheckCircle size={16} color="#0097A9" />
-                    {area}
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-
-          {/* Topics (for Ask Professor) */}
-          {tool.topics && (
-            <>
-              <div style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8', marginBottom: '12px' }}>
-                What You Can Ask About
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginBottom: '24px' }}>
-                {tool.topics.map((topic, i) => (
-                  <div key={i} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '10px 12px',
-                    background: '#f8fafc',
-                    borderRadius: '8px',
-                    fontSize: '13px',
-                    color: '#334155'
-                  }}>
-                    <CheckCircle size={16} color="#0097A9" />
-                    {topic}
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-
-          {/* Process Steps (for Grant Review) */}
-          {tool.processSteps && (
-            <>
-              <div style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8', marginBottom: '12px' }}>
-                How It Works
-              </div>
-              <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
-                {tool.processSteps.map((step) => (
-                  <div key={step.step} style={{
-                    flex: 1,
-                    textAlign: 'center',
-                    padding: '16px 12px',
-                    background: '#f8fafc',
-                    borderRadius: '12px'
-                  }}>
-                    <div style={{
-                      width: '28px',
-                      height: '28px',
-                      borderRadius: '50%',
-                      background: '#0097A9',
-                      color: 'white',
-                      fontSize: '13px',
-                      fontWeight: 700,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      margin: '0 auto 8px'
-                    }}>
-                      {step.step}
-                    </div>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#0D2C54', marginBottom: '4px' }}>
-                      {step.title}
-                    </div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>{step.desc}</div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-
-          {/* PIVOT Framework */}
-          {tool.isPivotFramework && (
-            <>
-              <div style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8', marginBottom: '12px' }}>
-                The PIVOT Framework
-              </div>
-              <ul style={{ listStyle: 'none', marginBottom: '24px' }}>
-                {(tool.benefits as any[]).map((item, i) => (
-                  <li key={i} style={{
+          {/* Benefits */}
+          <div style={{ marginBottom: '28px' }}>
+            <h3 style={{ 
+              fontSize: '13px', 
+              fontWeight: 700, 
+              color: '#94a3b8', 
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+              margin: '0 0 16px 0'
+            }}>
+              What You'll Get
+            </h3>
+            
+            {tool.isPivotFramework ? (
+              // PIVOT Framework display
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {(tool.benefits as any[]).map((item, index) => (
+                  <div key={index} style={{
                     display: 'flex',
                     alignItems: 'flex-start',
-                    gap: '12px',
-                    padding: '10px 0',
-                    borderBottom: i < (tool.benefits as any[]).length - 1 ? '1px solid #f1f5f9' : 'none'
+                    gap: '14px'
                   }}>
                     <span style={{
-                      width: '24px',
-                      height: '24px',
-                      borderRadius: '6px',
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '10px',
                       background: tool.color,
                       color: 'white',
-                      fontWeight: 700,
-                      fontSize: '11px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      fontWeight: 700,
+                      fontSize: '16px',
                       flexShrink: 0
                     }}>
                       {item.letter}
                     </span>
                     <div>
-                      <strong style={{ color: '#0D2C54' }}>{item.title}</strong>
-                      <span style={{ color: '#475569' }}> — {item.desc}</span>
+                      <div style={{ fontWeight: 600, color: '#0D2C54', fontSize: '15px' }}>
+                        {item.title}
+                      </div>
+                      <div style={{ fontSize: '14px', color: '#64748b', marginTop: '2px' }}>
+                        {item.desc}
+                      </div>
                     </div>
-                  </li>
+                  </div>
                 ))}
-              </ul>
-            </>
-          )}
-
-          {/* Standard Benefits */}
-          {!tool.isPivotFramework && tool.benefits && typeof tool.benefits[0] === 'string' && (
-            <>
-              <div style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8', marginBottom: '12px' }}>
-                What You'll Get
               </div>
-              <ul style={{ listStyle: 'none', marginBottom: '24px' }}>
-                {(tool.benefits as string[]).map((benefit, i) => (
-                  <li key={i} style={{
+            ) : (
+              // Standard benefits list
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {(tool.benefits as string[]).map((benefit, index) => (
+                  <div key={index} style={{
                     display: 'flex',
                     alignItems: 'flex-start',
-                    gap: '12px',
-                    padding: '10px 0',
-                    fontSize: '14px',
-                    color: '#334155',
-                    borderBottom: i < (tool.benefits as string[]).length - 1 ? '1px solid #f1f5f9' : 'none'
+                    gap: '14px'
                   }}>
-                    <span style={{
-                      width: '24px',
-                      height: '24px',
-                      borderRadius: '6px',
-                      background: '#f0fdfa',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      color: '#0097A9'
-                    }}>
-                      <CheckCircle size={14} />
+                    <CheckCircle size={22} style={{ color: tool.color, flexShrink: 0, marginTop: '1px' }} />
+                    <span style={{ fontSize: '15px', color: '#334155', lineHeight: 1.5 }}>
+                      {benefit}
                     </span>
-                    {benefit}
-                  </li>
+                  </div>
                 ))}
-              </ul>
-            </>
-          )}
-
-          {/* Meta Row */}
-          <div style={{
-            display: 'flex',
-            gap: '24px',
-            padding: '16px 20px',
-            background: '#f8fafc',
-            borderRadius: '12px',
-            marginBottom: '24px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#475569' }}>
-              <Clock size={18} color="#0097A9" />
-              {tool.time}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#475569' }}>
-              <File size={18} color="#0097A9" />
-              {tool.output}
-            </div>
-            {tool.audience && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#475569' }}>
-                <Users size={18} color="#0097A9" />
-                {tool.audience}
               </div>
             )}
           </div>
 
-          {/* Admin Setup Box */}
-          {tool.requiresSetup && (
-            <div style={{
-              background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
-              border: '1px solid #F59E0B',
-              borderRadius: '12px',
-              padding: '20px',
-              marginBottom: '24px'
-            }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                fontSize: '14px',
-                fontWeight: 700,
-                color: '#92400E',
-                marginBottom: '8px'
+          {/* Topics for Ask the Professor */}
+          {tool.topics && (
+            <div style={{ marginBottom: '28px' }}>
+              <h3 style={{ 
+                fontSize: '13px', 
+                fontWeight: 700, 
+                color: '#94a3b8', 
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+                margin: '0 0 14px 0'
               }}>
-                <Settings size={18} />
-                Admin Setup Required
-              </div>
-              <p style={{ fontSize: '13px', color: '#92400E', lineHeight: 1.6, marginBottom: '16px' }}>
-                Before participants can take this assessment, an administrator needs to:
-              </p>
-              <ul style={{ listStyle: 'none', marginBottom: '16px' }}>
-                {tool.setupSteps?.map((step, i) => (
-                  <li key={i} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '13px',
-                    color: '#92400E',
-                    padding: '4px 0'
+                Popular Topics
+              </h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                {tool.topics.map((topic, index) => (
+                  <span key={index} style={{
+                    padding: '8px 16px',
+                    background: '#f1f5f9',
+                    borderRadius: '20px',
+                    fontSize: '14px',
+                    color: '#475569',
+                    fontWeight: 500
                   }}>
-                    <AlertCircle size={16} />
+                    {topic}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Setup Steps for Board Assessment / CEO Evaluation */}
+          {tool.requiresSetup && tool.setupSteps && (
+            <div style={{
+              background: '#fffbeb',
+              border: '1px solid #fcd34d',
+              borderRadius: '14px',
+              padding: '20px',
+              marginBottom: '28px'
+            }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '10px',
+                marginBottom: '14px'
+              }}>
+                <Settings size={20} style={{ color: '#b45309' }} />
+                <span style={{ fontWeight: 700, color: '#92400e', fontSize: '15px' }}>
+                  Admin Setup Required
+                </span>
+              </div>
+              <p style={{ fontSize: '14px', color: '#78350f', margin: '0 0 14px 0', lineHeight: 1.6 }}>
+                Before your team can take this assessment, you'll need to:
+              </p>
+              <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                {tool.setupSteps.map((step, index) => (
+                  <li key={index} style={{ 
+                    fontSize: '14px', 
+                    color: '#78350f',
+                    marginBottom: '8px',
+                    lineHeight: 1.5
+                  }}>
                     {step}
                   </li>
                 ))}
               </ul>
-              <button
-                onClick={onSetup}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '10px 20px',
-                  background: '#92400E',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
-              >
-                <Settings size={16} />
-                Setup as Admin
-              </button>
             </div>
           )}
 
-          {/* Don't Show Again */}
-          <label style={{
+          {/* Meta Info */}
+          <div style={{
             display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            fontSize: '13px',
-            color: '#64748b',
-            cursor: 'pointer'
+            gap: '12px',
+            flexWrap: 'wrap',
+            padding: '20px',
+            background: '#f8fafc',
+            borderRadius: '14px',
+            marginBottom: '8px'
           }}>
-            <input
-              type="checkbox"
-              checked={dontShowAgain}
-              onChange={(e) => setDontShowAgain(e.target.checked)}
-              style={{ width: '18px', height: '18px' }}
-            />
-            Don't show this again
-          </label>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '10px 18px',
+              background: 'white',
+              borderRadius: '10px',
+              border: '1px solid #e2e8f0'
+            }}>
+              <Clock size={18} style={{ color: '#64748b' }} />
+              <span style={{ fontSize: '14px', color: '#334155', fontWeight: 500 }}>
+                {tool.time}
+              </span>
+            </div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '10px 18px',
+              background: 'white',
+              borderRadius: '10px',
+              border: '1px solid #e2e8f0'
+            }}>
+              <File size={18} style={{ color: '#64748b' }} />
+              <span style={{ fontSize: '14px', color: '#334155', fontWeight: 500 }}>
+                {tool.output}
+              </span>
+            </div>
+            {tool.audience && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '10px 18px',
+                background: 'white',
+                borderRadius: '10px',
+                border: '1px solid #e2e8f0'
+              }}>
+                <Users size={18} style={{ color: '#64748b' }} />
+                <span style={{ fontSize: '14px', color: '#334155', fontWeight: 500 }}>
+                  {tool.audience}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Footer */}
         <div style={{
-          padding: '20px 28px',
-          borderTop: '1px solid #f1f5f9',
+          padding: isMobile ? '16px 20px 24px' : '20px 32px 28px',
+          borderTop: '1px solid #e2e8f0',
           display: 'flex',
-          gap: '12px',
-          justifyContent: 'flex-end'
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: isMobile ? 'stretch' : 'center',
+          justifyContent: 'space-between',
+          gap: '12px'
         }}>
-          <button
-            onClick={onClose}
-            style={{
-              padding: '14px 24px',
-              border: '1px solid #e2e8f0',
-              borderRadius: '10px',
-              background: 'white',
-              color: '#64748b',
-              fontSize: '14px',
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleStart}
-            style={{
-              padding: '14px 28px',
-              border: 'none',
-              borderRadius: '10px',
-              background: `linear-gradient(135deg, ${tool.color} 0%, ${tool.color}dd 100%)`,
-              color: 'white',
-              fontSize: '14px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}
-          >
-            {tool.id === 'grant-review' ? 'Upload Proposal' : 
-             tool.id === 'ask-professor' ? 'Start Conversation' :
-             tool.id === 'scenario-planner' ? 'Start Planning' :
-             tool.requiresSetup ? 'Take Assessment' : 'Start Check-Up'}
-            <ChevronRight size={18} />
-          </button>
+          <div />
+
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: '12px',
+            width: isMobile ? '100%' : 'auto'
+          }}>
+            {!isMobile && (
+              <button
+                onClick={onClose}
+                style={{
+                  padding: '14px 28px',
+                  background: '#f1f5f9',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontSize: '15px',
+                  fontWeight: 600,
+                  color: '#64748b',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#e2e8f0';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#f1f5f9';
+                }}
+              >
+                Cancel
+              </button>
+            )}
+            
+            {tool.requiresSetup && onSetup ? (
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: '12px',
+                width: isMobile ? '100%' : 'auto'
+              }}>
+                <button
+                  onClick={handleStart}
+                  style={{
+                    padding: isMobile ? '16px 24px' : '14px 28px',
+                    background: tool.color,
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '15px',
+                    fontWeight: 600,
+                    color: 'white',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s',
+                    boxShadow: `0 4px 14px ${tool.color}40`,
+                    width: isMobile ? '100%' : 'auto'
+                  }}
+                >
+                  Take Assessment
+                  <ChevronRight size={18} />
+                </button>
+                <button
+                  onClick={onSetup}
+                  style={{
+                    padding: isMobile ? '16px 24px' : '14px 28px',
+                    background: '#fef3c7',
+                    border: '2px solid #f59e0b',
+                    borderRadius: '12px',
+                    fontSize: '15px',
+                    fontWeight: 600,
+                    color: '#92400e',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s',
+                    width: isMobile ? '100%' : 'auto'
+                  }}
+                >
+                  <Settings size={18} />
+                  Setup as Admin
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleStart}
+                style={{
+                  padding: isMobile ? '16px 32px' : '14px 32px',
+                  background: tool.color,
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontSize: '15px',
+                  fontWeight: 600,
+                  color: 'white',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s',
+                  boxShadow: `0 4px 14px ${tool.color}40`,
+                  width: isMobile ? '100%' : 'auto'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = `0 6px 20px ${tool.color}50`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = `0 4px 14px ${tool.color}40`;
+                }}
+              >
+                {toolId === 'ask-professor' ? 'Start Chatting' : 'Get Started'}
+                <ChevronRight size={18} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
       <style>{`
-        @keyframes modalIn {
+        @keyframes modalSlideIn {
           from {
             opacity: 0;
-            transform: scale(0.95) translateY(10px);
+            transform: translateY(-20px) scale(0.95);
           }
           to {
             opacity: 1;
-            transform: scale(1) translateY(0);
+            transform: translateY(0) scale(1);
+          }
+        }
+        @keyframes modalSlideUp {
+          from {
+            opacity: 0;
+            transform: translateY(100%);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
           }
         }
       `}</style>
@@ -622,4 +673,3 @@ const ToolIntroModal: React.FC<ToolIntroModalProps> = ({
 };
 
 export default ToolIntroModal;
-export { TOOL_CONFIGS };
