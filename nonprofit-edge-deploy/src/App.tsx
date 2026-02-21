@@ -569,6 +569,9 @@ const App: React.FC = () => {
         return requireAuth(<BoardAssessment onNavigate={navigate} />);
       
       case '/ceo-evaluation/use':
+        return requireAuth(<CEOEvaluation onNavigate={navigate} />);
+
+      case '/board-ceo-evaluation/use':
         return requireAuth(<CEOEvaluationSetup />);
       
       case '/scenario-planner/use':
