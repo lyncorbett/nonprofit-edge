@@ -60,6 +60,7 @@ import AIGuideChatbot from './components/AIGuideChatbot';
 // ============================================
 import StrategicPlanCheckup from './components/StrategicPlanCheckup';
 import CEOEvaluation from './components/CEOEvaluation';
+import CEOSelfAssessment from './components/CEOSelfAssessment';
 import BoardAssessment from './components/BoardAssessment';
 import GrantReview from './components/GrantReview';
 import GrantReviewLanding from "./GrantReviewLanding";
@@ -569,7 +570,7 @@ const App: React.FC = () => {
         return requireAuth(<BoardAssessment onNavigate={navigate} />);
       
       case '/ceo-evaluation/use':
-        return requireAuth(<CEOEvaluation onNavigate={navigate} />);
+        return requireAuth(<CEOSelfAssessment onNavigate={navigate} />);
 
       case '/board-ceo-evaluation/use':
         return requireAuth(<CEOEvaluationSetup />);
