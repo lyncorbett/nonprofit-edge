@@ -71,6 +71,10 @@ import LeadershipAssessment from './components/LeadershipAssessment';
 import LeadershipReport from './components/LeadershipReport';
 import LeadershipProfile from './components/LeadershipProfile';
 
+// CEO Evaluation (Admin setup + Public evaluator form)
+import CEOEvaluationSetup from './components/CEOEvaluationSetup';
+import EvaluatorForm from './pages/EvaluatorForm';
+
 // Landing Page Components
 import ScenarioPlannerLanding from './ScenarioPlannerLanding';
 import BoardAssessmentLanding from './BoardAssessmentLanding';
@@ -565,7 +569,7 @@ const App: React.FC = () => {
         return requireAuth(<BoardAssessment onNavigate={navigate} />);
       
       case '/ceo-evaluation/use':
-        return requireAuth(<CEOEvaluation onNavigate={navigate} />);
+        return requireAuth(<CEOEvaluationSetup />);
       
       case '/scenario-planner/use':
         return requireAuth(<ScenarioPlanner onNavigate={navigate} />);
@@ -701,9 +705,26 @@ const App: React.FC = () => {
         return null;
 
       // ============================================
+      // CEO EVALUATION — PUBLIC EVALUATOR FORM
+      // ============================================
+      // Token-based route: /eval/[uuid]
+      // Board members land here from invitation email
+
+      // ============================================
       // DEFAULT
       // ============================================
       default:
+        if (currentRoute.startsWith('/eval/')) {
+          const token = currentRoute.replace('/eval/', '');
+          if (token === 'unsubscribed') {
+            return (
+              <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'sans-serif', color: '#64748b' }}>
+                <p>You've been unsubscribed from evaluation reminders.</p>
+              </div>
+            );
+          }
+          return <EvaluatorForm token={token} />;
+        }
         if (currentRoute.startsWith('/tools/')) {
           navigate('/dashboard');
           return null;
