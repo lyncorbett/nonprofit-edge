@@ -75,6 +75,8 @@ import LeadershipProfile from './components/LeadershipProfile';
 // CEO Evaluation (Admin setup + Public evaluator form)
 import CEOEvaluationSetup from './components/CEOEvaluationSetup';
 import EvaluatorForm from './pages/EvaluatorForm';
+import CEOSelfRating from './components/CEOSelfRating';
+import CEOEvaluationReport from './components/CEOEvaluationReport';
 
 // Landing Page Components
 import ScenarioPlannerLanding from './ScenarioPlannerLanding';
@@ -728,6 +730,14 @@ const App: React.FC = () => {
             );
           }
           return <EvaluatorForm token={token} />;
+        }
+        if (currentRoute.startsWith(`/ceo-self-rating/`)) {
+          const token = currentRoute.replace(`/ceo-self-rating/`, ``);
+          return <CEOSelfRating token={token} />;
+        }
+        if (currentRoute.startsWith(`/board-ceo-evaluation/report/`)) {
+          const evalId = currentRoute.replace(`/board-ceo-evaluation/report/`, ``);
+          return requireAuth(<CEOEvaluationReport evaluationId={evalId} />);
         }
         if (currentRoute.startsWith('/tools/')) {
           navigate('/dashboard');

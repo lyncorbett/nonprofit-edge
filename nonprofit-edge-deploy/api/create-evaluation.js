@@ -30,6 +30,7 @@ export default async function handler(req, res) {
     has_committees,
     committee_list,
     reminder_config,
+    report_recipients,
     evaluators // array of { name, email, board_role, committee_memberships }
   } = req.body;
 
@@ -56,6 +57,7 @@ export default async function handler(req, res) {
         has_committees: has_committees || false,
         committee_list: committee_list || [],
         reminder_config: reminder_config || {},
+        report_recipients: report_recipients || [],
         status: 'active',
         published_at: new Date().toISOString()
       })

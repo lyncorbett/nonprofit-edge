@@ -8,5 +8,11 @@
       "source": "/((?!api|landing-pages|images|assets).*)",
       "destination": "/index.html"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/send-ceo-reminders",
+      "schedule": "0 8 * * 1"
+    }
   ]
 }

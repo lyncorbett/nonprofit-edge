@@ -1,6 +1,6 @@
 // src/components/CEOEvaluationSetup.tsx
 // Admin-facing setup flow inside the platform
-// Route: /ceo-evaluation or /tools/ceo-evaluation
+// Route: /board-ceo-evaluation/use
 
 import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
@@ -13,9 +13,10 @@ const supabase = createClient(
 const COMMITTEES = ['Executive', 'Finance & Audit', 'Programs', 'Fundraising', 'Governance', 'HR'];
 
 type Evaluator = { name: string; email: string; board_role: 'exec' | 'atlarge'; committee_memberships: string[] };
+type Recipient = { name: string; email: string; role: string };
 
 export default function CEOEvaluationSetup() {
-  const [step, setStep] = useState<'setup' | 'evaluators' | 'reminders' | 'confirm' | 'launched'>('setup');
+  const [step, setStep] = useState<'setup' | 'evaluators' | 'reminders' | 'recipients' | 'confirm' | 'launched'>('setup');
   const [submitting, setSubmitting] = useState(false);
   const [launchResult, setLaunchResult] = useState<any>(null);
 
@@ -41,6 +42,9 @@ export default function CEOEvaluationSetup() {
   const [reminders, setReminders] = useState({ seven_day: true, three_day: true, day_of: true, post_deadline: true });
   const [customDate, setCustomDate] = useState('');
 
+  // Step 5 — report recipients
+  const [recipients, setRecipients] = useState<Recipient[]>([]);
+
   function addEvaluator() {
     setEvaluators(prev => [...prev, { name: '', email: '', board_role: 'atlarge', committee_memberships: [] }]);
   }
@@ -61,6 +65,18 @@ export default function CEOEvaluationSetup() {
     updateEvaluator(evalIndex, 'committee_memberships', updated);
   }
 
+  function addRecipient() {
+    setRecipients(prev => [...prev, { name: '', email: '', role: '' }]);
+  }
+
+  function removeRecipient(i: number) {
+    setRecipients(prev => prev.filter((_, idx) => idx !== i));
+  }
+
+  function updateRecipient(i: number, field: keyof Recipient, value: string) {
+    setRecipients(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: value } : r));
+  }
+
   async function launch() {
     setSubmitting(true);
     try {
@@ -79,6 +95,7 @@ export default function CEOEvaluationSetup() {
           share_results_with_ceo: shareWithCEO,
           has_committees: hasCommittees || false,
           committee_list: selectedCommittees,
+          report_recipients: recipients.filter(r => r.name && r.email),
           reminder_config: {
             invite: true,
             seven_day: reminders.seven_day,
@@ -115,6 +132,9 @@ export default function CEOEvaluationSetup() {
             <div><strong>CEO:</strong> {ceoName}</div>
             <div style={{ marginTop: 6 }}><strong>Deadline:</strong> {new Date(deadline).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
             <div style={{ marginTop: 6 }}><strong>Evaluators invited:</strong> {launchResult?.evaluators_invited}</div>
+            {recipients.length > 0 && (
+              <div style={{ marginTop: 6 }}><strong>Report recipients:</strong> {recipients.filter(r => r.name && r.email).map(r => r.name).join(', ')}</div>
+            )}
           </div>
           <button onClick={() => { setStep('setup'); setLaunchResult(null); }} style={{ ...btnSecondary, marginTop: 20, width: '100%' }}>
             Start Another Evaluation
@@ -124,22 +144,26 @@ export default function CEOEvaluationSetup() {
     );
   }
 
+  const STEPS = ['setup', 'evaluators', 'reminders', 'recipients', 'confirm'] as const;
+  const STEP_LABELS = ['Setup', 'Board Members', 'Reminders', 'Recipients', 'Confirm'];
+  const currentStepIndex = STEPS.indexOf(step as any);
+
   return (
     <PageWrap>
       {/* Step indicator */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 28, alignItems: 'center' }}>
-        {(['setup', 'evaluators', 'reminders', 'confirm'] as const).map((s, i) => (
+      <div style={{ display: 'flex', gap: 8, marginBottom: 28, alignItems: 'center', flexWrap: 'wrap' }}>
+        {STEPS.map((s, i) => (
           <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{
               width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 12, fontWeight: 700,
-              background: step === s ? '#0D2C54' : ['setup', 'evaluators', 'reminders', 'confirm'].indexOf(step) > i ? '#0097A9' : '#e2e8f0',
-              color: step === s || ['setup', 'evaluators', 'reminders', 'confirm'].indexOf(step) > i ? 'white' : '#94a3b8',
+              background: step === s ? '#0D2C54' : currentStepIndex > i ? '#0097A9' : '#e2e8f0',
+              color: step === s || currentStepIndex > i ? 'white' : '#94a3b8',
             }}>{i + 1}</div>
-            <span style={{ fontSize: 12, color: step === s ? '#0D2C54' : '#94a3b8', fontWeight: step === s ? 700 : 400, display: i === 3 ? 'none' : 'inline' }}>
-              {['Setup', 'Board Members', 'Reminders', 'Confirm'][i]}
+            <span style={{ fontSize: 12, color: step === s ? '#0D2C54' : '#94a3b8', fontWeight: step === s ? 700 : 400, display: i === 4 ? 'none' : 'inline' }}>
+              {STEP_LABELS[i]}
             </span>
-            {i < 3 && <div style={{ width: 24, height: 1, background: '#e2e8f0' }} />}
+            {i < 4 && <div style={{ width: 20, height: 1, background: '#e2e8f0' }} />}
           </div>
         ))}
       </div>
@@ -161,7 +185,7 @@ export default function CEOEvaluationSetup() {
               <input style={inputStyle} value={ceoName} onChange={e => setCeoName(e.target.value)} placeholder="Full name" />
             </div>
             <div style={fieldGroup}>
-              <label style={labelStyle}>CEO Email <span style={{ color: '#94a3b8' }}>(for sharing results)</span></label>
+              <label style={labelStyle}>CEO Email <span style={{ color: '#94a3b8' }}>(for self-rating link)</span></label>
               <input style={inputStyle} type="email" value={ceoEmail} onChange={e => setCeoEmail(e.target.value)} placeholder="ceo@org.org" />
             </div>
           </div>
@@ -212,11 +236,6 @@ export default function CEOEvaluationSetup() {
                 ))}
               </div>
             )}
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#f8fafc', borderRadius: 8 }}>
-            <input type="checkbox" id="share" checked={shareWithCEO} onChange={e => setShareWithCEO(e.target.checked)} />
-            <label htmlFor="share" style={{ fontSize: 14, color: '#475569', cursor: 'pointer' }}>Share results with CEO after report is generated</label>
           </div>
 
           <div style={{ marginTop: 24, display: 'flex', justifyContent: 'flex-end' }}>
@@ -320,12 +339,78 @@ export default function CEOEvaluationSetup() {
 
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24 }}>
             <button onClick={() => setStep('evaluators')} style={btnSecondary}>← Back</button>
+            <button onClick={() => setStep('recipients')} style={btnPrimary}>Next: Report Recipients →</button>
+          </div>
+        </div>
+      )}
+
+      {/* ── STEP 4: Recipients ────────────────────────── */}
+      {step === 'recipients' && (
+        <div style={card}>
+          <h2 style={h2}>Report Recipients</h2>
+          <p style={subtext}>Who should receive the final report when you're ready to share it? The report stays with you until you decide to send it. You can always share it later from the dashboard.</p>
+
+          <div style={{ background: '#f0f9fa', borderRadius: 8, padding: '12px 16px', marginBottom: 20, border: '1px solid #b2e4ea' }}>
+            <p style={{ margin: 0, fontSize: 13, color: '#0D2C54', lineHeight: 1.65 }}>
+              <strong>Admin always receives the report.</strong> Add anyone else — board chair, CEO, specific board members — who should get a copy when you share it. This is optional and can be updated later.
+            </p>
+          </div>
+
+          {recipients.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '24px 0', color: '#94a3b8', fontSize: 14 }}>
+              No additional recipients added. The report will only go to you ({adminEmail}).
+            </div>
+          )}
+
+          {recipients.map((r, i) => (
+            <div key={i} style={{ background: '#f8fafc', borderRadius: 10, padding: '16px 20px', marginBottom: 12, border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: 12, alignItems: 'end' }}>
+                <div style={fieldGroup}>
+                  <label style={labelStyle}>Name *</label>
+                  <input style={inputStyle} value={r.name} onChange={e => updateRecipient(i, 'name', e.target.value)} placeholder="Full name" />
+                </div>
+                <div style={fieldGroup}>
+                  <label style={labelStyle}>Email *</label>
+                  <input style={inputStyle} type="email" value={r.email} onChange={e => updateRecipient(i, 'email', e.target.value)} placeholder="email@org.org" />
+                </div>
+                <div style={fieldGroup}>
+                  <label style={labelStyle}>Role</label>
+                  <input style={inputStyle} value={r.role} onChange={e => updateRecipient(i, 'role', e.target.value)} placeholder="e.g. Board Chair, CEO" />
+                </div>
+                <button onClick={() => removeRecipient(i)} style={{ background: 'none', border: '1px solid #fca5a5', color: '#dc2626', borderRadius: 8, padding: '8px 12px', cursor: 'pointer', fontSize: 18, marginBottom: 16 }}>×</button>
+              </div>
+            </div>
+          ))}
+
+          <button onClick={addRecipient} style={{ ...btnSecondary, width: '100%', marginBottom: 24 }}>
+            + Add Report Recipient
+          </button>
+
+          {/* Quick-add suggestions */}
+          <div style={{ background: '#f8fafc', borderRadius: 8, padding: '14px 16px', marginBottom: 24, border: '1px solid #e2e8f0' }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 10 }}>Quick add:</div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {[
+                { label: '+ Board Chair', role: 'Board Chair' },
+                { label: '+ CEO', role: 'CEO', name: ceoName, email: ceoEmail },
+                { label: '+ Executive Committee', role: 'Executive Committee' },
+              ].map(s => (
+                <button key={s.role} onClick={() => setRecipients(prev => [...prev, { name: s.name || '', email: s.email || '', role: s.role }])}
+                  style={{ padding: '5px 14px', borderRadius: 20, border: '1px solid #0097A9', background: 'white', color: '#0097A9', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <button onClick={() => setStep('reminders')} style={btnSecondary}>← Back</button>
             <button onClick={() => setStep('confirm')} style={btnPrimary}>Review & Launch →</button>
           </div>
         </div>
       )}
 
-      {/* ── STEP 4: Confirm ───────────────────────────── */}
+      {/* ── STEP 5: Confirm ───────────────────────────── */}
       {step === 'confirm' && (
         <div style={card}>
           <h2 style={h2}>Review & Launch</h2>
@@ -334,21 +419,21 @@ export default function CEOEvaluationSetup() {
           <div style={{ background: '#f8fafc', borderRadius: 10, padding: '20px 24px', marginBottom: 20, border: '1px solid #e2e8f0' }}>
             <Row label="Organization" value={orgName} />
             <Row label="CEO" value={ceoName} />
-            <Row label="Board Chair" value={`${adminName} (${adminEmail})`} />
+            <Row label="Board Chair / Admin" value={`${adminName} (${adminEmail})`} />
             <Row label="Deadline" value={new Date(deadline).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} />
             <Row label="Board members invited" value={String(evaluators.length)} />
             <Row label="Committees" value={hasCommittees ? selectedCommittees.join(', ') || 'None selected' : 'No'} />
-            <Row label="Share results with CEO" value={shareWithCEO ? 'Yes' : 'No'} last />
+            <Row label="Report recipients" value={recipients.filter(r => r.name && r.email).length > 0 ? recipients.filter(r => r.name && r.email).map(r => `${r.name} (${r.role})`).join(', ') : 'Admin only'} last />
           </div>
 
           <div style={{ background: '#fff7ed', borderRadius: 8, padding: '12px 16px', marginBottom: 24, border: '1px solid #fed7aa' }}>
             <p style={{ margin: 0, fontSize: 13, color: '#9a3412' }}>
-              ⚠️ Clicking Launch will immediately send invitation emails to all {evaluators.length} board members.
+              ⚠️ Clicking Launch will immediately send invitation emails to all {evaluators.length} board members{ceoEmail ? ' and a self-rating link to the CEO' : ''}.
             </p>
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <button onClick={() => setStep('reminders')} style={btnSecondary}>← Back</button>
+            <button onClick={() => setStep('recipients')} style={btnSecondary}>← Back</button>
             <button onClick={launch} disabled={submitting} style={submitting ? btnDisabled : { ...btnPrimary, background: '#0D2C54' }}>
               {submitting ? 'Launching...' : `🚀 Launch Evaluation`}
             </button>
@@ -363,7 +448,7 @@ function Row({ label, value, last }: { label: string; value: string; last?: bool
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: last ? 'none' : '1px solid #e2e8f0' }}>
       <span style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>{label}</span>
-      <span style={{ fontSize: 13, color: '#1e293b' }}>{value}</span>
+      <span style={{ fontSize: 13, color: '#1e293b', maxWidth: '60%', textAlign: 'right' }}>{value}</span>
     </div>
   );
 }
